@@ -1,0 +1,34 @@
+import { HTTPException } from "hono/http-exception";
+import { db } from "../../../core/db.js";
+import { ITEM_TRANSACTIONS_RELATIONS, type ItemTransaction } from "./types.js";
+
+export async function getItemTransactionById(id: string): Promise<ItemTransaction> {
+  const transaction = await db.query.itemTransactions.findFirst({
+    where: {
+      id: id
+    },
+    with: ITEM_TRANSACTIONS_RELATIONS
+  });
+
+  if(!transaction) {
+    throw new HTTPException(404, { message: "Item transaction not found" });
+  }
+
+  return transaction;
+}
+
+export async function findItemTransactions(
+  itemId?: string,
+  offset: number = 0,
+  limit: number = 20
+): Promise<ItemTransaction[]> {
+  return await db.query.itemTransactions.findMany({
+    where: {
+      ...(itemId ? { itemId: itemId } : {})
+    },
+    with: ITEM_TRANSACTIONS_RELATIONS,
+    offset: offset,
+    limit: limit,
+    orderBy: { createdAt: "desc" }
+  });
+}

@@ -1,0 +1,9 @@
+- **Language**: Respond in the same language used in the prompt.
+- **Scope**: Execute EXACTLY what is requested. Do not assume or add anything extra.
+- **Code Modification**: Only replace the specific code segments that require changes. Do not rewrite or overwrite the entire file to prevent unintended modifications.
+- **Context Verification**: Always inspect the current codebase before performing a task; do not rely on memory.
+- **Post-Task Review**: After execution, always confirm the actions taken and provide an objective critique (strengths, weaknesses, areas for improvement, etc.).
+- Always use `;`
+
+- **Services Layout**: Always put the getSomethingById functions to the very top
+- **General File Layout**: Always put the private functions (not export) to the bottom

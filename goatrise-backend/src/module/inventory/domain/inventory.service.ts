@@ -1,0 +1,88 @@
+import { db } from "../../../core/db.js";
+import { items } from "../schema/items.schema.js";
+import { itemTransactions } from "../schema/item-transactions.schema.js";
+import { HTTPException } from "hono/http-exception";
+import { eq, sql } from "drizzle-orm";
+import { uuidv7 } from "uuidv7";
+import { recordAuditLog } from "../../audit/domain/audit-logs.service.js";
+import { getItemById } from "./items.service.js";
+import type { AdjustItemQuantityRequest, ImportItemRequest } from "./validators.js";
+import type { Item } from "./types.js";
+
+export async function importItem(actorId: string, itemId: string, importReq: ImportItemRequest): Promise<Item> {
+  const itemBefore = await getItemById(itemId);
+
+  const newTransactionId = uuidv7();
+  await db.transaction(async (tx) => {
+    await tx.insert(itemTransactions).values({
+      id: newTransactionId,
+      itemId: itemId,
+      actorId: actorId,
+      supplierId: importReq.supplierId ?? null,
+      type: "IMPORT",
+      note: importReq.note ?? null,
+      quantity: importReq.quantity,
+      importUnitCost: importReq.importUnitCost.toString()
+    });
+
+    await tx.update(items).set({
+      quantity: sql`${items.quantity} + ${importReq.quantity}`
+    }).where(eq(items.id, itemId));
+  });
+
+  const itemAfter = await getItemById(itemId);
+
+  await recordAuditLog({
+    actorId: actorId,
+    code: "item-import",
+    referenceType: "item",
+    referenceId: itemId,
+    metadata: {
+      before: itemBefore,
+      after: itemAfter,
+      transactionId: newTransactionId
+    }
+  });
+
+  return itemAfter;
+}
+
+export async function manualAdjustItemQuantity(actorId: string, itemId: string, adjustReq: AdjustItemQuantityRequest): Promise<Item> {
+  const itemBefore = await getItemById(itemId);
+
+  if (itemBefore.quantity + adjustReq.quantityChange < 0) {
+    throw new HTTPException(409, { message: "Negative quantity not allowed" });
+  }
+
+  const newTransactionId = uuidv7();
+  await db.transaction(async (tx) => {
+    await tx.insert(itemTransactions).values({
+      id: newTransactionId,
+      itemId: itemId,
+      actorId: actorId,
+      type: "ADJUST",
+      note: adjustReq.note ?? null,
+      quantity: adjustReq.quantityChange
+    });
+
+    await tx.update(items).set({
+      quantity: sql`${items.quantity} + ${adjustReq.quantityChange}`
+    }).where(eq(items.id, itemId));
+  });
+
+  const itemAfter = await getItemById(itemId);
+
+  await recordAuditLog({
+    actorId: actorId,
+    code: "item-adjust",
+    referenceType: "item",
+    referenceId: itemId,
+    metadata: {
+      before: itemBefore,
+      after: itemAfter,
+      transactionId: newTransactionId
+    }
+  });
+
+  return itemAfter;
+}
