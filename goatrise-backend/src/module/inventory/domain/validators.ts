@@ -40,6 +40,6 @@ export type ImportItemRequest = z.infer<typeof ImportItemRequestSchema>;
 
 export const AdjustItemQuantityRequestSchema = z.object({
   quantityChange: z.number().int().refine((v) => v !== 0),
-  note: z.string().trim().optional()
+  note: z.string().trim().min(1)
 });
 export type AdjustItemQuantityRequest = z.infer<typeof AdjustItemQuantityRequestSchema>;

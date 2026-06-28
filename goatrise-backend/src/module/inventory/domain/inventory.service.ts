@@ -6,19 +6,24 @@ import { eq, sql } from "drizzle-orm";
 import { uuidv7 } from "uuidv7";
 import { recordAuditLog } from "../../audit/domain/audit-logs.service.js";
 import { getItemById } from "./items.service.js";
+import { getSupplierById } from "./suppliers.service.js";
 import type { AdjustItemQuantityRequest, ImportItemRequest } from "./validators.js";
 import type { Item } from "./types.js";
 
 export async function importItem(actorId: string, itemId: string, importReq: ImportItemRequest): Promise<Item> {
   const itemBefore = await getItemById(itemId);
+  const supplier = importReq.supplierId ? await getSupplierById(importReq.supplierId) : null;
 
   const newTransactionId = uuidv7();
   await db.transaction(async (tx) => {
     await tx.insert(itemTransactions).values({
       id: newTransactionId,
       itemId: itemId,
+      itemName: itemBefore.name,
+      itemSku: itemBefore.sku,
       actorId: actorId,
       supplierId: importReq.supplierId ?? null,
+      supplierName: supplier?.name ?? null,
       type: "IMPORT",
       note: importReq.note ?? null,
       quantity: importReq.quantity,
@@ -59,9 +64,11 @@ export async function manualAdjustItemQuantity(actorId: string, itemId: string, 
     await tx.insert(itemTransactions).values({
       id: newTransactionId,
       itemId: itemId,
+      itemName: itemBefore.name,
+      itemSku: itemBefore.sku,
       actorId: actorId,
       type: "ADJUST",
-      note: adjustReq.note ?? null,
+      note: adjustReq.note,
       quantity: adjustReq.quantityChange
     });
 

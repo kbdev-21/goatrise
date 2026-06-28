@@ -78,16 +78,6 @@ export async function updateSupplier(actorId: string, supplierId: string, update
 export async function deleteSupplier(actorId: string, supplierId: string): Promise<void> {
   const supplierBefore = await getSupplierById(supplierId);
 
-  const linkedTransaction = await db.query.itemTransactions.findFirst({
-    where: {
-      supplierId: supplierId
-    }
-  });
-
-  if (linkedTransaction) {
-    throw new HTTPException(409, { message: "Cannot delete supplier with linked items" });
-  }
-
   await db.delete(suppliers).where(eq(suppliers.id, supplierId));
 
   await recordAuditLog({

@@ -3,8 +3,11 @@ import { index, integer, numeric, pgTable, text, timestamp, uuid } from "drizzle
 export const itemTransactions = pgTable("item_transactions", {
   id: uuid("id").primaryKey(),
   itemId: uuid("item_id").notNull(),
+  itemName: text("item_name").notNull(),
+  itemSku: text("item_sku").notNull(),
   actorId: uuid("actor_id"),
   supplierId: uuid("supplier_id"),
+  supplierName: text("supplier_name"),
   type: text("type").$type<ItemTransactionType>().notNull(),
   note: text("note"),
 
