@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { authMiddleware } from "../../auth/middleware/auth.middleware.js";
 import { requiredRolesMiddleware } from "../../auth/middleware/required-roles.middleware.js";
 import type { ContextVariables } from "../../../core/types.js";
-import { createItem, deleteItem, findAllItems, updateItemInfo } from "../domain/items.service.js";
+import { createItem, deleteItem, findAllItems, getItemById, updateItemInfo } from "../domain/items.service.js";
 import { importItem, manualAdjustItemStock } from "../domain/inventory.service.js";
 import { findItemTransactions } from "../domain/item-transactions.service.js";
 import type { ItemTransactionType } from "../schema/item-transactions.schema.js";
@@ -17,6 +17,18 @@ itemsRouter.get("/api/items",
   async (c) => {
     const items = await findAllItems();
     return c.json(items);
+  }
+);
+
+itemsRouter.get("/api/items/:id",
+  authMiddleware,
+  requiredRolesMiddleware(["ADMIN", "STAFF"]),
+  async (c) => {
+    const itemId = c.req.param("id");
+
+    const item = await getItemById(itemId);
+
+    return c.json(item);
   }
 );
 

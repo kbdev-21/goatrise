@@ -3,6 +3,7 @@ import {
   adjustItemStock,
   createItem,
   deleteItem,
+  findItemById,
   findItemTransactions,
   findItems,
   importItem,
@@ -17,6 +18,7 @@ import {
 export const itemKeys = {
   all: ["items"] as const,
   list: () => [...itemKeys.all, "list"] as const,
+  detail: (itemId: string) => [...itemKeys.all, "detail", itemId] as const,
   transactions: (itemId: string, params?: FindItemTransactionsParams) =>
     [...itemKeys.all, itemId, "transactions", params] as const,
 };
@@ -25,6 +27,14 @@ export function useItems() {
   return useQuery({
     queryKey: itemKeys.list(),
     queryFn: findItems,
+  });
+}
+
+export function useItem(itemId: string) {
+  return useQuery({
+    queryKey: itemKeys.detail(itemId),
+    queryFn: () => findItemById(itemId),
+    enabled: !!itemId,
   });
 }
 

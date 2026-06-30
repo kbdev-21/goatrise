@@ -8,6 +8,11 @@ export async function findItems(): Promise<Item[]> {
   return res.data;
 }
 
+export async function findItemById(itemId: string): Promise<Item> {
+  const res = await axiosInstance.get<Item>(`/api/items/${itemId}`);
+  return res.data;
+}
+
 export async function createItem(request: CreateItemRequest): Promise<Item> {
   const res = await axiosInstance.post<Item>("/api/items", request);
   return res.data;

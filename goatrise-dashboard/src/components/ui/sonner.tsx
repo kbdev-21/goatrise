@@ -38,6 +38,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
       toastOptions={{
         classNames: {
           toast: "cn-toast",
+          error: "text-destructive! [&_[data-title]]:text-destructive!",
         },
       }}
       {...props}
