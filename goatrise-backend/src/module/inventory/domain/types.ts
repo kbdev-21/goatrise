@@ -1,15 +1,18 @@
 import { db } from "../../../core/db.js";
 
-const baseItemQuery = db.query.items.findFirst();
+export const ITEM_RELATIONS = {
+  product: true
+}
+const baseItemQuery = db.query.items.findFirst({
+  with: ITEM_RELATIONS
+});
 export type Item = NonNullable<Awaited<typeof baseItemQuery>>;
 
 const baseSupplierQuery = db.query.suppliers.findFirst();
 export type Supplier = NonNullable<Awaited<typeof baseSupplierQuery>>;
 
 export const ITEM_TRANSACTIONS_RELATIONS = {
-  item: true,
-  actor: true,
-  supplier: true
+  actor: true
 };
 const baseItemTransactionQuery = db.query.itemTransactions.findFirst({
   with: ITEM_TRANSACTIONS_RELATIONS

@@ -1,11 +1,23 @@
 import z from "zod";
 
+const ItemAttributeValuesSchema = z.object({
+  COLOR: z.object({
+    hex: z.string().trim().min(1),
+    enText: z.string().trim().min(1),
+    viText: z.string().trim().min(1)
+  }).optional(),
+  SIZE: z.string().trim().min(1).optional()
+});
+
 export const CreateItemRequestSchema = z.object({
   sku: z.string().trim().min(1).max(50),
   name: z.string().trim().min(1).max(100),
   note: z.string().trim().optional(),
   imgUrl: z.string().trim().optional(),
-  weight: z.number().int().nonnegative().optional()
+  weight: z.number().int().nonnegative().optional(),
+  productId: z.uuid().optional(),
+  price: z.number().nonnegative(),
+  attributeValues: ItemAttributeValuesSchema.optional()
 });
 export type CreateItemRequest = z.infer<typeof CreateItemRequestSchema>;
 
@@ -14,7 +26,10 @@ export const UpdateItemRequestSchema = z.object({
   name: z.string().trim().min(1).max(100).optional(),
   note: z.string().trim().optional(),
   imgUrl: z.string().trim().optional(),
-  weight: z.number().int().nonnegative().optional()
+  weight: z.number().int().nonnegative().optional(),
+  productId: z.uuid().optional(),
+  price: z.number().nonnegative().optional(),
+  attributeValues: ItemAttributeValuesSchema.optional()
 });
 export type UpdateItemRequest = z.infer<typeof UpdateItemRequestSchema>;
 
@@ -38,8 +53,8 @@ export const ImportItemRequestSchema = z.object({
 });
 export type ImportItemRequest = z.infer<typeof ImportItemRequestSchema>;
 
-export const AdjustItemQuantityRequestSchema = z.object({
-  quantityChange: z.number().int().refine((v) => v !== 0),
+export const AdjustItemStockRequestSchema = z.object({
+  stockChange: z.number().int().refine((v) => v !== 0),
   note: z.string().trim().min(1)
 });
-export type AdjustItemQuantityRequest = z.infer<typeof AdjustItemQuantityRequestSchema>;
+export type AdjustItemStockRequest = z.infer<typeof AdjustItemStockRequestSchema>;

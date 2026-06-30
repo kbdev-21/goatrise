@@ -2,9 +2,9 @@ import { Hono } from "hono";
 import { authMiddleware } from "../../auth/middleware/auth.middleware.js";
 import { requiredRolesMiddleware } from "../../auth/middleware/required-roles.middleware.js";
 import type { ContextVariables } from "../../../core/types.js";
-import { findUsers, updateUserInfo, updateUserRole } from "../domain/users.service.js";
+import { createUser, findUsers, updateUserInfo, updateUserRole } from "../domain/users.service.js";
 import { zValidator } from "@hono/zod-validator";
-import { UpdateUserRequestSchema, UpdateUserRoleRequestSchema } from "../domain/validators.js";
+import { CreateUserRequestSchema, UpdateUserRequestSchema, UpdateUserRoleRequestSchema } from "../domain/validators.js";
 import type { UserRole } from "../schema/users.schema.js";
 
 export const usersRouter = new Hono<{ Variables: ContextVariables }>();
@@ -38,6 +38,20 @@ usersRouter.get("/api/users",
     );
 
     return c.json(users);
+  }
+);
+
+usersRouter.post("/api/users",
+  authMiddleware,
+  requiredRolesMiddleware(["ADMIN"]),
+  zValidator("json", CreateUserRequestSchema),
+  async (c) => {
+    const currentUser = c.get("currentUser");
+    const createReq = c.req.valid("json");
+
+    const newUser = await createUser(currentUser.id, createReq);
+
+    return c.json(newUser, 201);
   }
 );
 

@@ -1,8 +1,9 @@
 import { db } from "../../../core/db.js";
 import { users, type UserRole } from "../schema/users.schema.js";
 import { HTTPException } from "hono/http-exception";
-import type { UpdateUserRequest } from "./validators.js";
+import type { CreateUserRequest, UpdateUserRequest } from "./validators.js";
 import { eq } from "drizzle-orm";
+import { uuidv7 } from "uuidv7";
 import { ADMIN_EMAIL_LIST } from "../../../core/env.js";
 import { normalizeVietnameseString } from "../../../core/utils.js";
 import { recordAuditLog } from "../../audit/domain/audit-logs.service.js";
@@ -50,6 +51,46 @@ export async function findUsers(
     limit: limit,
     orderBy: { [sortField]: direction }
   });
+}
+
+export async function createUser(
+  actorId: string,
+  createReq: CreateUserRequest
+): Promise<User> {
+  const existedUser = await db.query.users.findFirst({
+    where: {
+      email: createReq.email
+    }
+  });
+
+  if (existedUser) {
+    throw new HTTPException(409, { message: "Email already in use" });
+  }
+
+  const newUserId = uuidv7();
+  await db.insert(users).values({
+    id: newUserId,
+    role: createReq.role,
+    email: createReq.email,
+    fullName: createReq.fullName,
+    normalizedFullName: normalizeVietnameseString(createReq.fullName),
+    phoneNum: createReq.phoneNum ?? null,
+    avtUrl: createReq.avtUrl ?? null
+  });
+
+  const newUser = await getUserById(newUserId);
+
+  await recordAuditLog({
+    actorId: actorId,
+    code: "user-create",
+    referenceType: "user",
+    referenceId: newUserId,
+    metadata: {
+      user: newUser
+    }
+  });
+
+  return newUser;
 }
 
 export async function updateUserInfo(

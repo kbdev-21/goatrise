@@ -11,9 +11,9 @@ export const users = pgTable("users", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().$onUpdateFn(() => new Date()).notNull(),
 }, (t) => [
+  index().on(t.role),
   index().on(t.email),
   index().on(t.phoneNum),
-  index().on(t.normalizedFullName)
 ]);
 
 export type UserRole = "CUSTOMER" | "STAFF" | "ADMIN";

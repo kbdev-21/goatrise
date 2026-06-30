@@ -3,10 +3,11 @@ import { authMiddleware } from "../../auth/middleware/auth.middleware.js";
 import { requiredRolesMiddleware } from "../../auth/middleware/required-roles.middleware.js";
 import type { ContextVariables } from "../../../core/types.js";
 import { createItem, deleteItem, findAllItems, updateItemInfo } from "../domain/items.service.js";
-import { importItem, manualAdjustItemQuantity } from "../domain/inventory.service.js";
+import { importItem, manualAdjustItemStock } from "../domain/inventory.service.js";
 import { findItemTransactions } from "../domain/item-transactions.service.js";
+import type { ItemTransactionType } from "../schema/item-transactions.schema.js";
 import { zValidator } from "@hono/zod-validator";
-import { AdjustItemQuantityRequestSchema, CreateItemRequestSchema, ImportItemRequestSchema, UpdateItemRequestSchema } from "../domain/validators.js";
+import { AdjustItemStockRequestSchema, CreateItemRequestSchema, ImportItemRequestSchema, UpdateItemRequestSchema } from "../domain/validators.js";
 
 export const itemsRouter = new Hono<{ Variables: ContextVariables }>();
 
@@ -79,13 +80,13 @@ itemsRouter.post("/api/items/:id/import",
 itemsRouter.post("/api/items/:id/adjust",
   authMiddleware,
   requiredRolesMiddleware(["ADMIN", "STAFF"]),
-  zValidator("json", AdjustItemQuantityRequestSchema),
+  zValidator("json", AdjustItemStockRequestSchema),
   async (c) => {
     const currentUser = c.get("currentUser");
     const itemId = c.req.param("id");
     const adjustReq = c.req.valid("json");
 
-    const updatedItem = await manualAdjustItemQuantity(currentUser.id, itemId, adjustReq);
+    const updatedItem = await manualAdjustItemStock(currentUser.id, itemId, adjustReq);
 
     return c.json(updatedItem);
   }
@@ -97,12 +98,14 @@ itemsRouter.get("/api/items/:id/transactions",
   async (c) => {
     const itemId = c.req.param("id");
     const {
+      type,
       offset,
       limit,
     } = c.req.query();
 
     const transactions = await findItemTransactions(
       itemId,
+      type ? (type as ItemTransactionType) : undefined,
       offset ? Number(offset) : undefined,
       limit ? Number(limit) : undefined
     );

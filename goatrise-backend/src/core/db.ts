@@ -1,20 +1,26 @@
 import { defineRelations } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
-import { usersRelations } from "../module/users/schema/relations.js";
-import { itemTransactionsRelations } from "../module/inventory/schema/relations.js";
+import { itemsRelations } from "../module/inventory/schema/relations.js";
 import { users } from "../module/users/schema/users.schema.js";
 import { POSTGRES_CONNECTION_URL } from "./env.js";
 import { auditLogs } from "../module/audit/schema/audit-logs.schema.js";
 import { suppliers } from "../module/inventory/schema/suppliers.schema.js";
 import { itemTransactions } from "../module/inventory/schema/item-transactions.schema.js";
 import { items } from "../module/inventory/schema/items.schema.js";
+import { products } from "../module/catalog/schema/products.schema.js";
+import { collections } from "../module/catalog/schema/collections.schema.js";
+import { collectionProducts } from "../module/catalog/schema/collection-products.schema.js";
+import { productsRelations } from "../module/catalog/schema/relations.js";
 
 const root = defineRelations({
   users,
   auditLogs,
   suppliers,
   itemTransactions,
-  items
+  items,
+  products,
+  collections,
+  collectionProducts
 }, () => ({}));
 
 export const db = drizzle({
@@ -25,9 +31,9 @@ export const db = drizzle({
     // },
     ssl: false
   },
-  relations: { 
-    ...root, 
-    ...usersRelations, 
-    ...itemTransactionsRelations 
+  relations: {
+    ...root,
+    ...itemsRelations,
+    ...productsRelations
   }
 });

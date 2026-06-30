@@ -11,6 +11,7 @@ export async function findAuditLogs(
   return await db.query.auditLogs.findMany({
     where: search ? {
       OR: [
+        { RAW: (t, { sql }) => sql`${t.id}::text ilike ${`%${search}%`}` },
         { actorId: { ilike: `%${search}%` } },
         { code: { ilike: `%${search}%` } },
         { referenceType: { ilike: `%${search}%` } },

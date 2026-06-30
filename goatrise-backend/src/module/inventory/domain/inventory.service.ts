@@ -7,7 +7,7 @@ import { uuidv7 } from "uuidv7";
 import { recordAuditLog } from "../../audit/domain/audit-logs.service.js";
 import { getItemById } from "./items.service.js";
 import { getSupplierById } from "./suppliers.service.js";
-import type { AdjustItemQuantityRequest, ImportItemRequest } from "./validators.js";
+import type { AdjustItemStockRequest, ImportItemRequest } from "./validators.js";
 import type { Item } from "./types.js";
 
 export async function importItem(actorId: string, itemId: string, importReq: ImportItemRequest): Promise<Item> {
@@ -31,7 +31,7 @@ export async function importItem(actorId: string, itemId: string, importReq: Imp
     });
 
     await tx.update(items).set({
-      quantity: sql`${items.quantity} + ${importReq.quantity}`
+      stock: sql`${items.stock} + ${importReq.quantity}`
     }).where(eq(items.id, itemId));
   });
 
@@ -52,11 +52,11 @@ export async function importItem(actorId: string, itemId: string, importReq: Imp
   return itemAfter;
 }
 
-export async function manualAdjustItemQuantity(actorId: string, itemId: string, adjustReq: AdjustItemQuantityRequest): Promise<Item> {
+export async function manualAdjustItemStock(actorId: string, itemId: string, adjustReq: AdjustItemStockRequest): Promise<Item> {
   const itemBefore = await getItemById(itemId);
 
-  if (itemBefore.quantity + adjustReq.quantityChange < 0) {
-    throw new HTTPException(409, { message: "Negative quantity not allowed" });
+  if (itemBefore.stock + adjustReq.stockChange < 0) {
+    throw new HTTPException(409, { message: "Negative stock not allowed" });
   }
 
   const newTransactionId = uuidv7();
@@ -69,11 +69,11 @@ export async function manualAdjustItemQuantity(actorId: string, itemId: string, 
       actorId: actorId,
       type: "ADJUST",
       note: adjustReq.note,
-      quantity: adjustReq.quantityChange
+      quantity: adjustReq.stockChange
     });
 
     await tx.update(items).set({
-      quantity: sql`${items.quantity} + ${adjustReq.quantityChange}`
+      stock: sql`${items.stock} + ${adjustReq.stockChange}`
     }).where(eq(items.id, itemId));
   });
 

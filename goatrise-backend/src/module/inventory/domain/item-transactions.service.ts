@@ -1,6 +1,7 @@
 import { HTTPException } from "hono/http-exception";
 import { db } from "../../../core/db.js";
 import { ITEM_TRANSACTIONS_RELATIONS, type ItemTransaction } from "./types.js";
+import type { ItemTransactionType } from "../schema/item-transactions.schema.js";
 
 export async function getItemTransactionById(id: string): Promise<ItemTransaction> {
   const transaction = await db.query.itemTransactions.findFirst({
@@ -19,12 +20,14 @@ export async function getItemTransactionById(id: string): Promise<ItemTransactio
 
 export async function findItemTransactions(
   itemId?: string,
+  type?: ItemTransactionType,
   offset: number = 0,
   limit: number = 20
 ): Promise<ItemTransaction[]> {
   return await db.query.itemTransactions.findMany({
     where: {
-      ...(itemId ? { itemId: itemId } : {})
+      ...(itemId ? { itemId: itemId } : {}),
+      ...(type ? { type: type } : {})
     },
     with: ITEM_TRANSACTIONS_RELATIONS,
     offset: offset,
