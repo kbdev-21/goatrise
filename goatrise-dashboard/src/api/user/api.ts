@@ -10,6 +10,11 @@ export async function findUsers(params?: FindUsersParams): Promise<User[]> {
   return res.data;
 }
 
+export async function createUser(request: CreateUserRequest): Promise<User> {
+  const res = await axiosInstance.post<User>("/api/users", request);
+  return res.data;
+}
+
 export async function updateMe(request: UpdateUserRequest): Promise<User> {
   const res = await axiosInstance.patch<User>("/api/users/me", request);
   return res.data;
@@ -41,6 +46,14 @@ export type FindUsersParams = {
   sort?: string;
   offset?: number;
   limit?: number;
+};
+
+export type CreateUserRequest = {
+  fullName: string;
+  email: string;
+  role: UserRole;
+  phoneNum?: string;
+  avtUrl?: string;
 };
 
 export type UpdateUserRequest = {

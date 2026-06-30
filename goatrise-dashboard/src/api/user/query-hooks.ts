@@ -1,9 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  createUser,
   findUsers,
   getMe,
   updateMe,
   updateUserRole,
+  type CreateUserRequest,
   type FindUsersParams,
   type UpdateUserRequest,
   type UserRole,
@@ -30,6 +32,16 @@ export function useUsers(params?: FindUsersParams) {
   return useQuery({
     queryKey: userKeys.list(params),
     queryFn: () => findUsers(params),
+  });
+}
+
+export function useCreateUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (request: CreateUserRequest) => createUser(request),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: userKeys.all });
+    },
   });
 }
 

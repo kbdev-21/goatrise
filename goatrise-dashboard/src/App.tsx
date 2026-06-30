@@ -8,6 +8,7 @@ import LoginPage from "@/pages/login/LoginPage.tsx"
 import HomePage from "@/pages/home/HomePage.tsx"
 import UsersPage from "@/pages/users/UsersPage.tsx"
 import AuditLogsPage from "@/pages/audit-logs/AuditLogsPage.tsx"
+import ItemsPage from "@/pages/items/ItemsPage.tsx"
 
 export function App() {
   const init = useAuthStore((s) => s.init);
@@ -25,6 +26,7 @@ export function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/users" element={<UsersPage />} />
           <Route path="/audit-logs" element={<AuditLogsPage />} />
+          <Route path="/items" element={<ItemsPage />} />
         </Route>
       </Routes>
       <Toaster />

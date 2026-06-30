@@ -1,14 +1,17 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
+  Boxes,
   Contact,
   Globe,
   Home,
+  LineChart,
   LogOut,
   Package,
   ScrollText,
   ShoppingCart,
   Tags,
+  Truck,
   User,
   Users,
   type LucideIcon,
@@ -47,6 +50,13 @@ const WEBSITE_URL = "https://goatrise.com";
 
 const navGroups: NavGroup[] = [
   {
+    label: "Dashboard",
+    items: [
+      { title: "Home", url: "/", icon: Home },
+      { title: "Analytics", url: "/analytics", icon: LineChart },
+    ],
+  },
+  {
     label: "System",
     items: [
       { title: "Users", url: "/users", icon: Users },
@@ -65,6 +75,13 @@ const navGroups: NavGroup[] = [
     items: [
       { title: "Orders", url: "/orders", icon: ShoppingCart },
       { title: "Customers", url: "/customers", icon: Contact },
+    ],
+  },
+  {
+    label: "Inventory",
+    items: [
+      { title: "Items", url: "/items", icon: Package },
+      { title: "Suppliers", url: "/suppliers", icon: Truck },
     ],
   },
 ];
@@ -107,30 +124,8 @@ export default function AppSidebar() {
       <SidebarSeparator />
 
       <SidebarContent>
-        <SidebarGroup className="mt-2">
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={pathname === "/"}
-                  tooltip="Home"
-                  className={cn(
-                    pathname === "/" &&
-                    "bg-primary! text-primary-foreground! hover:bg-primary! hover:text-primary-foreground!"
-                  )}
-                >
-                  <Link to="/">
-                    <Home />
-                    <span>Home</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-        {navGroups.map((group) => (
-          <SidebarGroup key={group.label}>
+        {navGroups.map((group, index) => (
+          <SidebarGroup key={group.label} className={cn(index === 0 && "mt-2")}>
             <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>

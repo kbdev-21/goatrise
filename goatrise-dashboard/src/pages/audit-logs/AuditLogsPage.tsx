@@ -89,6 +89,7 @@ export default function AuditLogsPage() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>ID</TableHead>
                 <TableHead>Code</TableHead>
                 <TableHead>Actor ID</TableHead>
                 <TableHead>Reference ID</TableHead>
@@ -99,19 +100,27 @@ export default function AuditLogsPage() {
             <TableBody>
               {auditLogsQuery.isError ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-destructive text-center">
+                  <TableCell colSpan={6} className="text-destructive text-center">
                     Failed to load audit logs.
                   </TableCell>
                 </TableRow>
               ) : !auditLogsQuery.data || auditLogsQuery.data.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-muted-foreground text-center">
+                  <TableCell colSpan={6} className="text-muted-foreground text-center">
                     No audit logs found.
                   </TableCell>
                 </TableRow>
               ) : (
                 auditLogsQuery.data.map((log) => (
                   <TableRow key={log.id}>
+                    <TableCell>
+                      <span
+                        className="block truncate text-xs max-w-36"
+                        title={log.id}
+                      >
+                        {log.id}
+                      </span>
+                    </TableCell>
                     <TableCell className="font-medium">{log.code}</TableCell>
                     <TableCell>{log.actorId ?? "—"}</TableCell>
                     <TableCell>

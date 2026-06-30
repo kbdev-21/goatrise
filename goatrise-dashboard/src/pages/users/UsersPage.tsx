@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronsUp, Eye, Search } from "lucide-react";
+import { ChevronsUp, Eye, Plus, Search, User as UserIcon } from "lucide-react";
 import { toast } from "sonner";
 import { isAxiosError } from "axios";
-import { useMe, useUpdateUserRole, useUsers } from "@/api/user/query-hooks.ts";
-import type { User, UserRole } from "@/api/user/api.ts";
+import { useCreateUser, useMe, useUpdateUserRole, useUsers } from "@/api/user/query-hooks.ts";
+import type { CreateUserRequest, User, UserRole } from "@/api/user/api.ts";
 import { RoleBadge, ROLE_LABELS } from "@/components/shared/role-badge";
 import { Button } from "@/components/ui/button.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
@@ -58,6 +58,7 @@ export default function UsersPage() {
   const [offset, setOffset] = useState(0);
   const [roleUser, setRoleUser] = useState<User | null>(null);
   const [isUpdateRoleDialogOpen, setIsUpdateRoleDialogOpen] = useState(false);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
   // chỉ search khi nhấn Enter, không gọi request mỗi lần gõ
   function commitSearch() {
@@ -150,6 +151,17 @@ export default function UsersPage() {
             ))}
           </SelectContent>
         </Select>
+
+        {isAdmin && (
+          <Button
+            type="button"
+            className="ml-auto"
+            onClick={() => setIsCreateDialogOpen(true)}
+          >
+            <Plus className="size-4" />
+            New User
+          </Button>
+        )}
       </div>
 
       {/* ----- table ----- */}
@@ -195,7 +207,12 @@ export default function UsersPage() {
                         {user.id}
                       </span>
                     </TableCell>
-                    <TableCell className="font-medium">{user.fullName}</TableCell>
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-2">
+                        <UserAvatar user={user} />
+                        <span>{user.fullName}</span>
+                      </div>
+                    </TableCell>
                     <TableCell>{user.email}</TableCell>
                     <TableCell>{user.phoneNum ?? "—"}</TableCell>
                     <TableCell>
@@ -268,6 +285,12 @@ export default function UsersPage() {
         open={isUpdateRoleDialogOpen}
         user={roleUser}
         onClose={() => setIsUpdateRoleDialogOpen(false)}
+        onSuccess={() => usersQuery.refetch()}
+      />
+
+      <CreateUserDialog
+        open={isCreateDialogOpen}
+        onClose={() => setIsCreateDialogOpen(false)}
         onSuccess={() => usersQuery.refetch()}
       />
     </div>
@@ -378,5 +401,196 @@ function UpdateRoleDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function CreateUserDialog({
+  open,
+  onClose,
+  onSuccess,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onSuccess: () => void;
+}) {
+  const createUserMutation = useCreateUser();
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [role, setRole] = useState<UserRole>("CUSTOMER");
+  const [phoneNum, setPhoneNum] = useState("");
+  const [avtUrl, setAvtUrl] = useState("");
+  // cùng lý do với UpdateRoleDialog: tránh thao tác select bị Dialog hiểu là click ngoài
+  const selectOpenRef = useRef(false);
+  const selectClosedAtRef = useRef(0);
+
+  // reset form mỗi khi mở lại dialog
+  useEffect(() => {
+    if (open) {
+      setFullName("");
+      setEmail("");
+      setRole("CUSTOMER");
+      setPhoneNum("");
+      setAvtUrl("");
+    }
+  }, [open]);
+
+  const canSubmit = fullName.trim().length > 0 && email.trim().length > 0;
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        if (next) return;
+        if (selectOpenRef.current || Date.now() - selectClosedAtRef.current < 300) {
+          return;
+        }
+        onClose();
+      }}
+    >
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>New user</DialogTitle>
+        </DialogHeader>
+
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-1.5">
+            <FieldLabel required>Full name</FieldLabel>
+            <Input
+              placeholder="e.g. Nguyen Van A"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+            />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <FieldLabel required>Email</FieldLabel>
+            <Input
+              type="email"
+              placeholder="name@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <FieldLabel required>Role</FieldLabel>
+            <Select
+              value={role}
+              onValueChange={(value) => setRole(value as UserRole)}
+              onOpenChange={(selectOpen) => {
+                selectOpenRef.current = selectOpen;
+                if (!selectOpen) selectClosedAtRef.current = Date.now();
+              }}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {ROLE_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <FieldLabel>Phone</FieldLabel>
+            <Input
+              placeholder="0xxxxxxxxx"
+              value={phoneNum}
+              onChange={(e) => setPhoneNum(e.target.value)}
+            />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <FieldLabel>Avatar URL</FieldLabel>
+            <Input
+              placeholder="https://..."
+              value={avtUrl}
+              onChange={(e) => setAvtUrl(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={onClose}
+            disabled={createUserMutation.isPending}
+          >
+            Cancel
+          </Button>
+          <Button
+            disabled={createUserMutation.isPending || !canSubmit}
+            onClick={() => {
+              const request: CreateUserRequest = {
+                fullName: fullName.trim(),
+                email: email.trim(),
+                role: role,
+                phoneNum: phoneNum.trim() || undefined,
+                avtUrl: avtUrl.trim() || undefined,
+              };
+              createUserMutation.mutate(request, {
+                onSuccess: (user) => {
+                  toast.success(`Created user ${user.fullName}`);
+                  onSuccess();
+                  onClose();
+                },
+                onError: (error) => {
+                  toast.error(
+                    isAxiosError(error)
+                      ? error.response?.data || error.message
+                      : "Failed to create user",
+                  );
+                },
+              });
+            }}
+          >
+            {createUserMutation.isPending && <Spinner />}
+            Create
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function UserAvatar({ user }: { user: User }) {
+  const [error, setError] = useState(false);
+  return user.avtUrl && !error ? (
+    <img
+      src={user.avtUrl}
+      alt={user.fullName}
+      referrerPolicy="no-referrer"
+      onError={() => setError(true)}
+      className="size-8 shrink-0 rounded-full object-cover"
+    />
+  ) : (
+    <div className="bg-muted text-muted-foreground flex size-8 shrink-0 items-center justify-center rounded-full">
+      <UserIcon className="size-4" />
+    </div>
+  );
+}
+
+function FieldLabel({
+  children,
+  required,
+}: {
+  children: string;
+  required?: boolean;
+}) {
+  return (
+    <label className="text-sm font-medium">
+      {children}{" "}
+      {required ? (
+        <span className="text-destructive">*</span>
+      ) : (
+        <span className="text-muted-foreground text-xs font-normal">
+          (optional)
+        </span>
+      )}
+    </label>
   );
 }
