@@ -9,7 +9,6 @@ import { CreateProductRequestSchema, UpdateProductRequestSchema } from "../domai
 export const productsRouter = new Hono<{ Variables: ContextVariables }>();
 
 productsRouter.get("/api/products",
-  authMiddleware,
   async (c) => {
     const products = await findAllProducts();
     return c.json(products);
@@ -17,7 +16,6 @@ productsRouter.get("/api/products",
 );
 
 productsRouter.get("/api/products/by-slug/:slug",
-  authMiddleware,
   async (c) => {
     const slug = c.req.param("slug");
 
@@ -28,7 +26,6 @@ productsRouter.get("/api/products/by-slug/:slug",
 );
 
 productsRouter.get("/api/products/:id",
-  authMiddleware,
   async (c) => {
     const productId = c.req.param("id");
 
