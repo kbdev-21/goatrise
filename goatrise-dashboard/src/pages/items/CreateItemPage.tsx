@@ -48,8 +48,7 @@ export default function CreateItemPage() {
       imgUrl: value.imgUrl.trim() || undefined,
       weight: value.weight ? Number(value.weight) : undefined,
       productId: value.productId ?? undefined,
-      attributeValues:
-        Object.keys(attributeValues).length > 0 ? attributeValues : undefined,
+      attributeValues: attributeValues,
     };
 
     createItemMutation.mutate(request, {

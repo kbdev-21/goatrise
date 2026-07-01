@@ -1,13 +1,13 @@
 import { db } from "../../../core/db.js";
-import { items } from "../schema/items.schema.js";
+import { items, type ItemAttributeValues } from "../schema/items.schema.js";
 import { HTTPException } from "hono/http-exception";
 import { eq } from "drizzle-orm";
 import { uuidv7 } from "uuidv7";
 import { normalizeVietnameseString } from "../../../core/utils.js";
 import { recordAuditLog } from "../../audit/domain/audit-logs.service.js";
-import { checkIfItemsIsValidatedForProduct } from "../../catalog/domain/products.service.js";
 import type { CreateItemRequest, UpdateItemRequest } from "./validators.js";
 import { ITEM_RELATIONS, type Item } from "./types.js";
+import { areAttributeValuesValidForRequired, getProductById } from "../../catalog/domain/products.service.js";
 
 export async function getItemById(id: string): Promise<Item> {
   const item = await db.query.items.findFirst({
@@ -34,8 +34,8 @@ export async function findAllItems(): Promise<Item[]> {
 export async function createItem(actorId: string, createReq: CreateItemRequest): Promise<Item> {
   const newItemId = uuidv7();
 
-  if (createReq.productId && !checkIfItemsIsValidatedForProduct([createReq.attributeValues ?? {}], createReq.productId)) {
-    throw new HTTPException(409, { message: "Item attributes do not satisfy product's required attributes" });
+  if(createReq.productId) {
+    await validateProductIdWhenCreateOrUpdateItem(createReq.productId, createReq.attributeValues);
   }
 
   await db.insert(items).values({
@@ -48,7 +48,7 @@ export async function createItem(actorId: string, createReq: CreateItemRequest):
     imgUrl: createReq.imgUrl ?? null,
     weight: createReq.weight ?? null,
     price: createReq.price.toString(),
-    attributeValues: createReq.attributeValues ?? null
+    attributeValues: createReq.attributeValues
   });
 
   const newItem = await getItemById(newItemId);
@@ -69,14 +69,8 @@ export async function createItem(actorId: string, createReq: CreateItemRequest):
 export async function updateItemInfo(actorId: string, itemId: string, updateReq: UpdateItemRequest): Promise<Item> {
   const itemBefore = await getItemById(itemId);
 
-  const effectiveProductId = updateReq.productId !== undefined ? updateReq.productId : itemBefore.productId;
-  const effectiveAttrValues = updateReq.attributeValues !== undefined ? updateReq.attributeValues : itemBefore.attributeValues;
-  if (
-    (updateReq.productId !== undefined || updateReq.attributeValues !== undefined)
-    && effectiveProductId
-    && !checkIfItemsIsValidatedForProduct([effectiveAttrValues ?? {}], effectiveProductId)
-  ) {
-    throw new HTTPException(409, { message: "Item attributes do not satisfy product's required attributes" });
+  if(updateReq.productId) {
+    await validateProductIdWhenCreateOrUpdateItem(updateReq.productId, updateReq.attributeValues ?? itemBefore.attributeValues, itemId);
   }
 
   await db.update(items).set({
@@ -110,7 +104,7 @@ export async function updateItemInfo(actorId: string, itemId: string, updateReq:
 export async function deleteItem(actorId: string, itemId: string): Promise<void> {
   const itemBefore = await getItemById(itemId);
 
-  // TODO: chỉ cho phép delete nếu ko có product/variant nào link vào item, nếu có thì throw 409
+  // TODO: chỉ cho phép delete nếu chưa có order nào, nếu có rồi thì throw 409
 
   await db.delete(items).where(eq(items.id, itemId));
 
@@ -123,4 +117,19 @@ export async function deleteItem(actorId: string, itemId: string): Promise<void>
       item: itemBefore
     }
   });
+}
+
+async function validateProductIdWhenCreateOrUpdateItem(productId: string, itemAttributeValues: ItemAttributeValues, itemId?: string): Promise<void> {
+  const product = await getProductById(productId);
+
+  const itemsAttrValuesList = product.items
+    .filter((item) => item.id !== itemId)
+    .map((item) => item.attributeValues);
+  const productRequiredAttrs = product.requiredAttributes;
+
+  itemsAttrValuesList.push(itemAttributeValues);
+
+  if(!areAttributeValuesValidForRequired(itemsAttrValuesList, productRequiredAttrs)) {
+    throw new HTTPException(409, { message: "Linked items do not satisfy product's required attributes" });
+  }
 }

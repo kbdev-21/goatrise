@@ -9,7 +9,7 @@ export const items = pgTable("items", {
   name: text("name").notNull(),
   normalizedName: text("normalized_name").notNull(),
   imgUrl: text("img_url"),
-  attributeValues: jsonb("attribute_values").$type<ItemAttributeValues>(),
+  attributeValues: jsonb("attribute_values").$type<ItemAttributeValues>().notNull().default({}),
 
   price: numeric("price", { precision: 15, scale: 2 }).notNull(),
   weight: integer("weight"),

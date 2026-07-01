@@ -17,7 +17,7 @@ export const CreateItemRequestSchema = z.object({
   weight: z.number().int().nonnegative().optional(),
   productId: z.uuid().optional(),
   price: z.number().nonnegative(),
-  attributeValues: ItemAttributeValuesSchema.optional()
+  attributeValues: ItemAttributeValuesSchema
 });
 export type CreateItemRequest = z.infer<typeof CreateItemRequestSchema>;
 

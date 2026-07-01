@@ -4,6 +4,7 @@ import { usersRouter } from "./module/users/router/users.router.js";
 import { auditLogsRouter } from "./module/audit/router/audit-logs.router.js";
 import { suppliersRouter } from "./module/inventory/router/suppliers.router.js";
 import { itemsRouter } from "./module/inventory/router/items.router.js";
+import { productsRouter } from "./module/catalog/router/products.router.js";
 import { cors } from "hono/cors";
 
 const app = new Hono();
@@ -22,6 +23,7 @@ app.route("/", usersRouter);
 app.route("/", auditLogsRouter);
 app.route("/", suppliersRouter);
 app.route("/", itemsRouter);
+app.route("/", productsRouter);
 
 serve({
   fetch: app.fetch,

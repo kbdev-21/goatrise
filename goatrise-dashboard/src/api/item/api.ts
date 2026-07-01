@@ -69,7 +69,7 @@ export type Item = {
   normalizedName: string;
   note: string | null;
   imgUrl: string | null;
-  attributeValues: ItemAttributeValues | null;
+  attributeValues: ItemAttributeValues;
   status: ItemStatus;
   price: string;
   weight: number | null;
@@ -123,7 +123,7 @@ export type CreateItemRequest = {
   weight?: number;
   productId?: string;
   price: number;
-  attributeValues?: ItemAttributeValues;
+  attributeValues: ItemAttributeValues;
 };
 
 export type UpdateItemRequest = {

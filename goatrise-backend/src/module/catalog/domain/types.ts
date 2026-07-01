@@ -7,7 +7,7 @@ export const PRODUCT_RELATIONS = {
 const fullProductQuery = db.query.products.findFirst({
   with: PRODUCT_RELATIONS
 });
-export type Product = NonNullable<Awaited<typeof fullProductQuery>>;
+export type ProductDetail = NonNullable<Awaited<typeof fullProductQuery>>;
 
 export const PRODUCT_LIGHT_RELATIONS = {
   items: true
@@ -16,4 +16,4 @@ export const PRODUCT_LIGHT_RELATIONS = {
 const lightProductQuery = db.query.products.findFirst({
   with: PRODUCT_LIGHT_RELATIONS
 });
-export type ProductSummary = NonNullable<Awaited<typeof lightProductQuery>>;
+export type Product = NonNullable<Awaited<typeof lightProductQuery>>;
