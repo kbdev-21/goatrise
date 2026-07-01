@@ -7,6 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.tsx";
+import type { Product } from "@/api/product/api.ts";
 
 const PRODUCT_NONE = "NONE";
 
@@ -49,7 +50,7 @@ export default function ItemInfoForm({
 }: {
   value: ItemInfoFormValue;
   onChange: (value: ItemInfoFormValue) => void;
-  products: { name: string }[];
+  products: Product[];
 }) {
   const set = (patch: Partial<ItemInfoFormValue>) => onChange({ ...value, ...patch });
 
@@ -77,15 +78,18 @@ export default function ItemInfoForm({
 
       <div className="flex flex-col gap-1.5">
         <FieldLabel>Product</FieldLabel>
-        <Select value={value.productId ?? PRODUCT_NONE}>
+        <Select
+          value={value.productId ?? PRODUCT_NONE}
+          onValueChange={(v) => set({ productId: v === PRODUCT_NONE ? null : v })}
+        >
           <SelectTrigger className="w-full">
             <SelectValue placeholder="No product" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value={PRODUCT_NONE}>No product</SelectItem>
             {products.map((product) => (
-              <SelectItem key={product.name} value={product.name}>
-                {product.name}
+              <SelectItem key={product.id} value={product.id}>
+                {product.title.en}
               </SelectItem>
             ))}
           </SelectContent>

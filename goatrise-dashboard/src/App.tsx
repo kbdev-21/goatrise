@@ -11,6 +11,9 @@ import AuditLogsPage from "@/pages/audit-logs/AuditLogsPage.tsx"
 import ItemsPage from "@/pages/items/ItemsPage.tsx"
 import CreateItemPage from "@/pages/items/CreateItemPage.tsx"
 import ItemDetailPage from "@/pages/items/ItemDetailPage.tsx"
+import ProductsPage from "@/pages/products/ProductsPage.tsx"
+import CreateProductPage from "@/pages/products/CreateProductPage.tsx"
+import ProductDetailPage from "@/pages/products/ProductDetailPage.tsx"
 
 export function App() {
   const init = useAuthStore((s) => s.init);
@@ -28,6 +31,9 @@ export function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/users" element={<UsersPage />} />
           <Route path="/audit-logs" element={<AuditLogsPage />} />
+          <Route path="/products" element={<ProductsPage />} />
+          <Route path="/products/create" element={<CreateProductPage />} />
+          <Route path="/products/:id" element={<ProductDetailPage />} />
           <Route path="/items" element={<ItemsPage />} />
           <Route path="/items/create" element={<CreateItemPage />} />
           <Route path="/items/:id" element={<ItemDetailPage />} />

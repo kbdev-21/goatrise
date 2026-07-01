@@ -21,7 +21,8 @@ import type {
   UpdateItemRequest,
 } from "@/api/item/api.ts";
 import { useSuppliers } from "@/api/supplier/query-hooks.ts";
-import { capitalize } from "@/core/utils.ts";
+import { useProducts } from "@/api/product/query-hooks.ts";
+import { capitalize, formatPriceVn } from "@/core/utils.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
@@ -61,18 +62,12 @@ const TRANSACTION_PAGE_SIZE = 10;
 
 const SUPPLIER_NONE = "NONE";
 
-// TODO: thay bằng data từ products API khi có
-const PLACEHOLDER_PRODUCTS: { name: string }[] = [
-  { name: "Product A" },
-  { name: "Product B" },
-  { name: "Product C" },
-];
-
 export default function ItemDetailPage() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const itemQuery = useItem(id ?? "");
   const updateItemMutation = useUpdateItem();
+  const productsQuery = useProducts();
 
   const [value, setValue] = useState<ItemInfoFormValue | null>(null);
   const [txType, setTxType] = useState<ItemTransactionType | typeof TRANSACTION_TYPE_ALL>(
@@ -216,7 +211,7 @@ export default function ItemDetailPage() {
               <Spinner className="text-muted-foreground" />
             </div>
           ) : (
-            <ItemInfoForm value={value} onChange={setValue} products={PLACEHOLDER_PRODUCTS} />
+            <ItemInfoForm value={value} onChange={setValue} products={productsQuery.data ?? []} />
           )}
         </div>
 
@@ -333,7 +328,7 @@ export default function ItemDetailPage() {
                           <TableCell>{capitalize(tx.type)}</TableCell>
                           <TableCell>{tx.quantity}</TableCell>
                           <TableCell>
-                            {tx.importUnitCost ?? tx.soldUnitPrice ?? "—"}
+                            {formatPriceVn(tx.importUnitCost ?? tx.soldUnitPrice)}
                           </TableCell>
                           <TableCell>
                             {new Date(tx.createdAt).toLocaleString("en-GB")}
@@ -439,11 +434,11 @@ function ItemTransactionDetailDialog({
             <DetailRow label="Quantity" value={String(transaction.quantity)} />
             <DetailRow
               label="Import unit cost"
-              value={transaction.importUnitCost ?? "—"}
+              value={formatPriceVn(transaction.importUnitCost)}
             />
             <DetailRow
               label="Sold unit price"
-              value={transaction.soldUnitPrice ?? "—"}
+              value={formatPriceVn(transaction.soldUnitPrice)}
             />
             <DetailRow label="Supplier" value={transaction.supplierName ?? "—"} />
             <DetailRow label="By" value={transaction.actor?.fullName ?? "—"} />

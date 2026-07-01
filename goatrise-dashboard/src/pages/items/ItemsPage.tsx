@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { useAdjustItemStock, useImportItem, useItems } from "@/api/item/query-hooks.ts";
 import type { AdjustItemStockRequest, ImportItemRequest, Item } from "@/api/item/api.ts";
 import { useSuppliers } from "@/api/supplier/query-hooks.ts";
-import { normalizeVietnameseString } from "@/core/utils.ts";
+import { formatPriceVn, normalizeVietnameseString } from "@/core/utils.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
 import { Input } from "@/components/ui/input.tsx";
@@ -224,7 +224,7 @@ export default function ItemsPage() {
                       </div>
                     </TableCell>
                     <TableCell>{item.product ? item.product.title.vi : "—"}</TableCell>
-                    <TableCell>{item.price}</TableCell>
+                    <TableCell>{formatPriceVn(item.price)}</TableCell>
                     <TableCell>{item.stock}</TableCell>
                     <TableCell>{item.sold}</TableCell>
                     <TableCell>

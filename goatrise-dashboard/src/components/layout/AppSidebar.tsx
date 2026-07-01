@@ -9,6 +9,7 @@ import {
   LogOut,
   Package,
   ScrollText,
+  Shirt,
   ShoppingCart,
   Tags,
   Truck,
@@ -64,10 +65,12 @@ const navGroups: NavGroup[] = [
     ],
   },
   {
-    label: "Catalog",
+    label: "Catalog & Inventory",
     items: [
-      { title: "Products", url: "/products", icon: Package },
-      { title: "Categories", url: "/categories", icon: Tags },
+      { title: "Products", url: "/products", icon: Shirt },
+      { title: "Collections", url: "/collections", icon: Tags },
+      { title: "Items", url: "/items", icon: Package },
+      { title: "Suppliers", url: "/suppliers", icon: Truck },
     ],
   },
   {
@@ -75,13 +78,6 @@ const navGroups: NavGroup[] = [
     items: [
       { title: "Orders", url: "/orders", icon: ShoppingCart },
       { title: "Customers", url: "/customers", icon: Contact },
-    ],
-  },
-  {
-    label: "Inventory",
-    items: [
-      { title: "Items", url: "/items", icon: Package },
-      { title: "Suppliers", url: "/suppliers", icon: Truck },
     ],
   },
 ];

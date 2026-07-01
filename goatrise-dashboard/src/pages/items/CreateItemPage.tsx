@@ -5,20 +5,15 @@ import { toast } from "sonner";
 import { isAxiosError } from "axios";
 import { useCreateItem } from "@/api/item/query-hooks.ts";
 import type { CreateItemRequest, ItemAttributeValues } from "@/api/item/api.ts";
+import { useProducts } from "@/api/product/query-hooks.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
 import ItemInfoForm, { EMPTY_ITEM_INFO_FORM_VALUE, type ItemInfoFormValue } from "./ItemInfoForm.tsx";
 
-// TODO: thay bằng data từ products API khi có
-const PLACEHOLDER_PRODUCTS: { name: string }[] = [
-  { name: "Product A" },
-  { name: "Product B" },
-  { name: "Product C" },
-];
-
 export default function CreateItemPage() {
   const navigate = useNavigate();
   const createItemMutation = useCreateItem();
+  const productsQuery = useProducts();
 
   const [value, setValue] = useState<ItemInfoFormValue>(EMPTY_ITEM_INFO_FORM_VALUE);
 
@@ -95,7 +90,7 @@ export default function CreateItemPage() {
         </Button>
       </div>
 
-      <ItemInfoForm value={value} onChange={setValue} products={PLACEHOLDER_PRODUCTS} />
+      <ItemInfoForm value={value} onChange={setValue} products={productsQuery.data ?? []} />
     </div>
   );
 }

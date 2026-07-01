@@ -107,9 +107,10 @@ export async function createProduct(actorId: string, createReq: CreateProductReq
 export async function updateProduct(actorId: string, productId: string, updateReq: UpdateProductRequest): Promise<Product> {
   const productBefore = await getProductById(productId);
 
-  if (updateReq.itemIds !== undefined) {
+  if (updateReq.itemIds !== undefined || updateReq.requiredAttributes !== undefined) {
+    const effectiveItemIds = updateReq.itemIds ?? productBefore.items.map((item) => item.id);
     const effectiveRequiredAttributes = updateReq.requiredAttributes ?? productBefore.requiredAttributes;
-    await validateItemIdsForProduct(updateReq.itemIds, effectiveRequiredAttributes);
+    await validateItemIdsForProduct(effectiveItemIds, effectiveRequiredAttributes);
   }
 
   await db.transaction(async (tx) => {
