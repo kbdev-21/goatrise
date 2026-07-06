@@ -1,4 +1,4 @@
-import { integer, pgTable, text, timestamp, uuid, numeric, jsonb, index } from "drizzle-orm/pg-core";
+import { integer, pgTable, text, timestamp, uuid, bigint, jsonb, index } from "drizzle-orm/pg-core";
 import { products } from "../../catalog/schema/products.schema.js";
 
 export const items = pgTable("items", {
@@ -11,7 +11,7 @@ export const items = pgTable("items", {
   imgUrl: text("img_url"),
   attributeValues: jsonb("attribute_values").$type<ItemAttributeValues>().notNull().default({}),
 
-  price: numeric("price", { precision: 15, scale: 2 }).notNull(),
+  price: bigint("price", { mode: "number" }).notNull(),
   weight: integer("weight"),
 
   stock: integer("stock").default(0).notNull(),

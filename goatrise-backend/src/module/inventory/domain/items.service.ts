@@ -47,7 +47,7 @@ export async function createItem(actorId: string, createReq: CreateItemRequest):
     note: createReq.note ?? null,
     imgUrl: createReq.imgUrl ?? null,
     weight: createReq.weight ?? null,
-    price: createReq.price.toString(),
+    price: createReq.price,
     attributeValues: createReq.attributeValues
   });
 
@@ -81,7 +81,7 @@ export async function updateItemInfo(actorId: string, itemId: string, updateReq:
     note: updateReq.note,
     imgUrl: updateReq.imgUrl,
     weight: updateReq.weight,
-    price: updateReq.price?.toString(),
+    price: updateReq.price,
     attributeValues: updateReq.attributeValues
   }).where(eq(items.id, itemId));
 

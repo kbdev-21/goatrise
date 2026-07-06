@@ -401,7 +401,7 @@ function itemToFormValue(item: Item): ItemInfoFormValue {
     sku: item.sku,
     name: item.name,
     productId: item.productId,
-    price: item.price,
+    price: String(item.price),
     weight: item.weight !== null ? String(item.weight) : "",
     imgUrl: item.imgUrl ?? "",
     note: item.note ?? "",

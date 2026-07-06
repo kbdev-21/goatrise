@@ -9,8 +9,6 @@ import type { ItemAttribute, ItemAttributeValues } from "../../inventory/schema/
 import type { CreateProductRequest, UpdateProductRequest } from "./validators.js";
 import { PRODUCT_LIGHT_RELATIONS, PRODUCT_RELATIONS, type Product, type ProductDetail } from "./types.js";
 
-type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
-
 export async function getProductById(id: string): Promise<Product> {
   const product = await db.query.products.findFirst({
     where: {
@@ -78,8 +76,8 @@ export async function createProduct(actorId: string, createReq: CreateProductReq
       shortDescription: createReq.shortDescription,
       markdownDescription: createReq.markdownDescription ?? null,
       imgUrls: createReq.imgUrls ?? null,
-      displayPrice: createReq.displayPrice?.toString() ?? null,
-      comparePrice: createReq.comparePrice?.toString() ?? null,
+      displayPrice: createReq.displayPrice ?? null,
+      comparePrice: createReq.comparePrice ?? null,
       status: createReq.status,
       requiredAttributes: createReq.requiredAttributes
     });
@@ -120,8 +118,8 @@ export async function updateProduct(actorId: string, productId: string, updateRe
       shortDescription: updateReq.shortDescription,
       markdownDescription: updateReq.markdownDescription,
       imgUrls: updateReq.imgUrls,
-      displayPrice: updateReq.displayPrice?.toString(),
-      comparePrice: updateReq.comparePrice?.toString(),
+      displayPrice: updateReq.displayPrice,
+      comparePrice: updateReq.comparePrice,
       status: updateReq.status,
       requiredAttributes: updateReq.requiredAttributes
     }).where(eq(products.id, productId));
@@ -205,7 +203,7 @@ async function validateItemIdsForProduct(itemIds: string[], productRequiredAttri
   }
 }
 
-async function reconcileProductItems(tx: Tx, productId: string, itemIds: string[]): Promise<void> {
+async function reconcileProductItems(tx: Parameters<Parameters<typeof db.transaction>[0]>[0], productId: string, itemIds: string[]): Promise<void> {
   if (itemIds.length === 0) {
     await tx.update(items).set({ productId: null }).where(eq(items.productId, productId));
     return;

@@ -27,7 +27,7 @@ export async function importItem(actorId: string, itemId: string, importReq: Imp
       type: "IMPORT",
       note: importReq.note ?? null,
       quantity: importReq.quantity,
-      importUnitCost: importReq.importUnitCost.toString()
+      importUnitCost: importReq.importUnitCost
     });
 
     await tx.update(items).set({

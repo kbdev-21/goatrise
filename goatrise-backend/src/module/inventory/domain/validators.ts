@@ -16,7 +16,7 @@ export const CreateItemRequestSchema = z.object({
   imgUrl: z.string().trim().optional(),
   weight: z.number().int().nonnegative().optional(),
   productId: z.uuid().optional(),
-  price: z.number().nonnegative(),
+  price: z.number().int().nonnegative(),
   attributeValues: ItemAttributeValuesSchema
 });
 export type CreateItemRequest = z.infer<typeof CreateItemRequestSchema>;
@@ -28,7 +28,7 @@ export const UpdateItemRequestSchema = z.object({
   imgUrl: z.string().trim().optional(),
   weight: z.number().int().nonnegative().optional(),
   productId: z.uuid().optional(),
-  price: z.number().nonnegative().optional(),
+  price: z.number().int().nonnegative().optional(),
   attributeValues: ItemAttributeValuesSchema.optional()
 });
 export type UpdateItemRequest = z.infer<typeof UpdateItemRequestSchema>;
@@ -47,7 +47,7 @@ export type UpdateSupplierRequest = z.infer<typeof UpdateSupplierRequestSchema>;
 
 export const ImportItemRequestSchema = z.object({
   quantity: z.number().int().positive(),
-  importUnitCost: z.number().nonnegative(),
+  importUnitCost: z.number().int().nonnegative(),
   supplierId: z.uuid().optional(),
   note: z.string().trim().optional()
 });

@@ -1,4 +1,4 @@
-import { index, integer, numeric, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { bigint, index, integer, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 
 export const itemTransactions = pgTable("item_transactions", {
   id: uuid("id").primaryKey(),
@@ -12,8 +12,8 @@ export const itemTransactions = pgTable("item_transactions", {
   note: text("note"),
 
   quantity: integer("quantity").notNull(),
-  importUnitCost: numeric("import_unit_cost", { precision: 15, scale: 2 }),
-  soldUnitPrice: numeric("sold_unit_price", { precision: 15, scale: 2 }),
+  importUnitCost: bigint("import_unit_cost", { mode: "number" }),
+  soldUnitPrice: bigint("sold_unit_price", { mode: "number" }),
 
   createdAt: timestamp("created_at").defaultNow().notNull()
 }, (t) => [

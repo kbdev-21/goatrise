@@ -16,8 +16,8 @@ export const CreateProductRequestSchema = z.object({
   shortDescription: LanguageStringSchema,
   markdownDescription: LanguageStringSchema.optional(),
   imgUrls: z.array(z.string().trim().min(1)).optional(),
-  displayPrice: z.number().nonnegative().optional(),
-  comparePrice: z.number().nonnegative().optional(),
+  displayPrice: z.number().int().nonnegative().optional(),
+  comparePrice: z.number().int().nonnegative().optional(),
   status: z.enum(["ACTIVE", "INACTIVE"]).optional(),
   requiredAttributes: z.array(ItemAttributeSchema),
   itemIds: ItemIdsSchema.optional()
@@ -30,8 +30,8 @@ export const UpdateProductRequestSchema = z.object({
   shortDescription: LanguageStringSchema.optional(),
   markdownDescription: LanguageStringSchema.optional(),
   imgUrls: z.array(z.string().trim().min(1)).optional(),
-  displayPrice: z.number().nonnegative().optional(),
-  comparePrice: z.number().nonnegative().optional(),
+  displayPrice: z.number().int().nonnegative().optional(),
+  comparePrice: z.number().int().nonnegative().nullable().optional(),
   status: z.enum(["ACTIVE", "INACTIVE"]).optional(),
   requiredAttributes: z.array(ItemAttributeSchema).optional(),
   itemIds: ItemIdsSchema.optional()

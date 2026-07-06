@@ -1,4 +1,4 @@
-import { index, integer, jsonb, numeric, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { bigint, index, integer, jsonb, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import type { LanguageString } from "../../../core/types.js";
 import type { ItemAttribute } from "../../inventory/schema/items.schema.js";
 
@@ -10,8 +10,8 @@ export const products = pgTable("products", {
   shortDescription: jsonb("short_description").$type<LanguageString>().notNull(),
   markdownDescription: jsonb("markdown_description").$type<LanguageString>(),
   imgUrls: jsonb("img_urls").$type<string[]>(),
-  displayPrice: numeric("display_price", { precision: 15, scale: 2 }),
-  comparePrice: numeric("compare_price", { precision: 15, scale: 2 }),
+  displayPrice: bigint("display_price", { mode: "number" }),
+  comparePrice: bigint("compare_price", { mode: "number" }),
 
   status: text("status").$type<ProductStatus>().notNull().default("ACTIVE"),
   requiredAttributes: jsonb("required_attributes").$type<ItemAttribute[]>().notNull(),

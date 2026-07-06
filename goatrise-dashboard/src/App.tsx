@@ -14,6 +14,7 @@ import ItemDetailPage from "@/pages/items/ItemDetailPage.tsx"
 import ProductsPage from "@/pages/products/ProductsPage.tsx"
 import CreateProductPage from "@/pages/products/CreateProductPage.tsx"
 import ProductDetailPage from "@/pages/products/ProductDetailPage.tsx"
+import OrdersPage from "@/pages/orders/OrdersPage.tsx"
 
 export function App() {
   const init = useAuthStore((s) => s.init);
@@ -37,6 +38,7 @@ export function App() {
           <Route path="/items" element={<ItemsPage />} />
           <Route path="/items/create" element={<CreateItemPage />} />
           <Route path="/items/:id" element={<ItemDetailPage />} />
+          <Route path="/orders" element={<OrdersPage />} />
         </Route>
       </Routes>
       <Toaster />

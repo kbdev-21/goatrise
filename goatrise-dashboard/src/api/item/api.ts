@@ -71,7 +71,7 @@ export type Item = {
   imgUrl: string | null;
   attributeValues: ItemAttributeValues;
   status: ItemStatus;
-  price: string;
+  price: number;
   weight: number | null;
   stock: number;
   sold: number;
@@ -84,8 +84,8 @@ export type Item = {
     shortDescription: LanguageString;
     markdownDescription: LanguageString | null;
     imgUrls: string[] | null;
-    displayPrice: string | null;
-    comparePrice: string | null;
+    displayPrice: number | null;
+    comparePrice: number | null;
     status: "ACTIVE" | "INACTIVE";
     requiredAttributes: ItemAttribute[];
     sold: number;
@@ -95,7 +95,7 @@ export type Item = {
 };
 
 // Mirror backend: module/inventory/schema/item-transactions.schema.ts + ITEM_TRANSACTIONS_RELATIONS
-// numeric columns are serialized as string
+// bigint columns are serialized as number
 export type ItemTransaction = {
   id: string;
   itemId: string;
@@ -107,8 +107,8 @@ export type ItemTransaction = {
   type: ItemTransactionType;
   note: string | null;
   quantity: number;
-  importUnitCost: string | null;
-  soldUnitPrice: string | null;
+  importUnitCost: number | null;
+  soldUnitPrice: number | null;
   createdAt: string;
   item: Item;
   actor: User | null;

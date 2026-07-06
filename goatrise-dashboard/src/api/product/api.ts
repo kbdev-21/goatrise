@@ -51,7 +51,7 @@ export type ProductCollection = {
 };
 
 // Mirror backend: module/catalog/domain/types.ts -> Product (PRODUCT_LIGHT_RELATIONS)
-// numeric columns serialized as string; items nhúng không kèm field `product`
+// bigint columns serialized as number; items nhúng không kèm field `product`
 export type Product = {
   id: string;
   slug: string;
@@ -59,8 +59,8 @@ export type Product = {
   shortDescription: LanguageString;
   markdownDescription: LanguageString | null;
   imgUrls: string[] | null;
-  displayPrice: string | null;
-  comparePrice: string | null;
+  displayPrice: number | null;
+  comparePrice: number | null;
   status: ProductStatus;
   requiredAttributes: ItemAttribute[];
   sold: number;
@@ -94,7 +94,7 @@ export type UpdateProductRequest = {
   markdownDescription?: LanguageString;
   imgUrls?: string[];
   displayPrice?: number;
-  comparePrice?: number;
+  comparePrice?: number | null;
   status?: ProductStatus;
   requiredAttributes?: ItemAttribute[];
   itemIds?: string[];
