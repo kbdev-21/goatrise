@@ -58,6 +58,7 @@ export type OrderLine = {
 export type Order = {
   id: string;
   code: string;
+  customerId: string;
   customerName: string;
   customerEmail: string | null;
   customerPhoneNum: string;

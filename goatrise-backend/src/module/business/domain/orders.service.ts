@@ -5,6 +5,7 @@ import { HTTPException } from "hono/http-exception";
 import { uuidv7 } from "uuidv7";
 import { recordAuditLog } from "../../audit/domain/audit-logs.service.js";
 import { calculateOrder } from "./order-calculation.service.js";
+import { getOrCreateOrSyncCustomer } from "../../customers/domain/customers-sync.service.js";
 import type { CreateOrderRequest } from "./validators.js";
 import type { OrderChannel, OrderStatus } from "../schema/orders.schema.js";
 import { ORDER_RELATIONS, type Order } from "./types.js";
@@ -66,10 +67,18 @@ export async function createOrder(actorId: string, createReq: CreateOrderRequest
     manualShippingFee: createReq.manualShippingFee
   });
 
+  // lấy/tạo/sync customer trước, rồi gắn id vào order khi insert
+  const customer = await getOrCreateOrSyncCustomer(
+    createReq.customerName,
+    createReq.customerEmail,
+    createReq.customerPhoneNum
+  );
+
   await db.transaction(async (tx) => {
     await tx.insert(orders).values({
       id: newOrderId,
       code: generateOrderCode(),
+      customerId: customer.id,
       customerName: createReq.customerName,
       customerEmail: createReq.customerEmail ?? null,
       customerPhoneNum: createReq.customerPhoneNum,

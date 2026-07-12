@@ -8,6 +8,7 @@ import { productsRouter } from "./module/catalog/router/products.router.js";
 import { collectionsRouter } from "./module/catalog/router/collections.router.js";
 import { cors } from "hono/cors";
 import { ordersRouter } from "./module/business/router/orders.router.js";
+import { customersRouter } from "./module/customers/router/customers.router.js";
 
 const app = new Hono();
 
@@ -28,6 +29,7 @@ app.route("/", itemsRouter);
 app.route("/", productsRouter);
 app.route("/", collectionsRouter);
 app.route("/", ordersRouter);
+app.route("/", customersRouter);
 
 serve({
   fetch: app.fetch,

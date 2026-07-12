@@ -14,6 +14,7 @@ import { productsRelations } from "../module/catalog/schema/relations.js";
 import { orders } from "../module/business/schema/orders.schema.js";
 import { orderLines } from "../module/business/schema/order-lines.schema.js";
 import { ordersRelations } from "../module/business/schema/relations.js";
+import { customers } from "../module/customers/schema/customers.schema.js";
 
 const root = defineRelations({
   users,
@@ -25,7 +26,8 @@ const root = defineRelations({
   collections,
   collectionProducts,
   orders,
-  orderLines
+  orderLines,
+  customers
 }, () => ({}));
 
 export const db = drizzle({

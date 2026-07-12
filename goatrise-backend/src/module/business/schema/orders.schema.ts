@@ -1,10 +1,12 @@
-import { bigint, jsonb, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { bigint, index, jsonb, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { customers } from "../../customers/schema/customers.schema.js";
 import type { Address } from "../../../core/types.js";
 
 export const orders = pgTable("orders", {
   id: uuid("id").primaryKey(),
   code: text("code").unique().notNull(),
 
+  customerId: uuid("customer_id").references(() => customers.id).notNull(),
   customerName: text("customer_name").notNull(),
   customerEmail: text("customer_email"),
   customerPhoneNum: text("customer_phone_num").notNull(),
@@ -35,7 +37,9 @@ export const orders = pgTable("orders", {
 
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().$onUpdateFn(() => new Date()).notNull(),
-});
+}, (t) => [
+  index().on(t.customerId)
+]);
 
 export type OrderStatus = "PENDING" | "PROCESSING" | "SHIPPING" | "COMPLETED" | "CANCELLED";
 export type OrderPaymentStatus = "PENDING" | "PAID" | "FAILED" | "REFUNDED";
