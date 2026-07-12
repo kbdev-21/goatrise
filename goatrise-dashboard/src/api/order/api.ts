@@ -1,6 +1,6 @@
 import axiosInstance from "@/api/axios-instance.ts";
 import type { ItemAttributeValues } from "@/api/item/api.ts";
-import type { LanguageString } from "@/core/types.ts";
+import type { Address, LanguageString } from "@/core/types.ts";
 
 export async function findOrders(params?: FindOrdersParams): Promise<Order[]> {
   const res = await axiosInstance.get<Order[]>("/api/orders", { params });
@@ -61,7 +61,7 @@ export type Order = {
   customerName: string;
   customerEmail: string | null;
   customerPhoneNum: string;
-  customerAddress: string;
+  customerAddress: Address;
   couponCode: string | null;
   subtotalAmount: number;
   manualDiscountAmount: number;
@@ -101,7 +101,7 @@ export type CreateOrderRequest = {
   customerName: string;
   customerEmail?: string;
   customerPhoneNum: string;
-  customerAddress: string;
+  customerAddress: Address;
   couponCode?: string;
   manualDiscountAmount?: number;
   manualShippingFee?: number;
@@ -117,7 +117,7 @@ export type CreateOrderRequest = {
 // Mirror backend: module/business/domain/validators.ts -> CalculateOrderRequestSchema
 export type CalculateOrderRequest = {
   customerEmail?: string;
-  customerAddress?: string;
+  customerAddress?: Address;
   couponCode?: string;
   paymentMethod?: OrderPaymentMethod;
   manualDiscountAmount?: number;

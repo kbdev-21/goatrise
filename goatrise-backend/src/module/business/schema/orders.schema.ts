@@ -1,4 +1,5 @@
-import { bigint, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { bigint, jsonb, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import type { Address } from "../../../core/types.js";
 
 export const orders = pgTable("orders", {
   id: uuid("id").primaryKey(),
@@ -7,7 +8,7 @@ export const orders = pgTable("orders", {
   customerName: text("customer_name").notNull(),
   customerEmail: text("customer_email"),
   customerPhoneNum: text("customer_phone_num").notNull(),
-  customerAddress: text("customer_address").notNull(),
+  customerAddress: jsonb("customer_address").$type<Address>().notNull(),
 
   couponCode: text("coupon_code"),
 

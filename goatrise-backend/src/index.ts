@@ -5,6 +5,7 @@ import { auditLogsRouter } from "./module/audit/router/audit-logs.router.js";
 import { suppliersRouter } from "./module/inventory/router/suppliers.router.js";
 import { itemsRouter } from "./module/inventory/router/items.router.js";
 import { productsRouter } from "./module/catalog/router/products.router.js";
+import { collectionsRouter } from "./module/catalog/router/collections.router.js";
 import { cors } from "hono/cors";
 import { ordersRouter } from "./module/business/router/orders.router.js";
 
@@ -25,6 +26,7 @@ app.route("/", auditLogsRouter);
 app.route("/", suppliersRouter);
 app.route("/", itemsRouter);
 app.route("/", productsRouter);
+app.route("/", collectionsRouter);
 app.route("/", ordersRouter);
 
 serve({

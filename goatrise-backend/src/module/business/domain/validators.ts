@@ -5,9 +5,16 @@ const OrderLineSchema = z.object({
   quantity: z.number().int().positive()
 });
 
+const AddressSchema = z.object({
+  countryCode: z.string(),
+  provinceCode: z.string().nullable(),
+  provinceName: z.string(),
+  address: z.string()
+});
+
 export const CalculateOrderRequestSchema = z.object({
   customerEmail: z.email().optional(),
-  customerAddress: z.string().trim().min(1).optional(),
+  customerAddress: AddressSchema.optional(),
   couponCode: z.string().trim().min(1).optional(),
   paymentMethod: z.enum(["COD", "MANUAL_TRANSFER", "MOMO", "VNPAY", "STRIPE"]).optional(),
   manualDiscountAmount: z.number().int().nonnegative().optional(),
@@ -25,7 +32,7 @@ export const CreateOrderRequestSchema = z.object({
   customerName: z.string().trim().min(1).max(100),
   customerEmail: z.email().optional(),
   customerPhoneNum: z.string().trim().min(1).max(20),
-  customerAddress: z.string().trim().min(1),
+  customerAddress: AddressSchema,
 
   couponCode: z.string().trim().min(1).optional(),
   

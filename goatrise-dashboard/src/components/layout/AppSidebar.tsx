@@ -126,7 +126,10 @@ export default function AppSidebar() {
             <SidebarGroupContent>
               <SidebarMenu>
                 {group.items.map((item) => {
-                  const active = pathname === item.url;
+                  const active =
+                    pathname === item.url ||
+                    (item.url !== "/" &&
+                      pathname.startsWith(item.url + "/"));
                   return (
                     <SidebarMenuItem key={item.title}>
                       <SidebarMenuButton

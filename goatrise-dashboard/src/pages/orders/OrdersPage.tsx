@@ -1,23 +1,333 @@
-import { Plus, ShoppingCart } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Plus, Search } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useOrders } from "@/api/order/query-hooks.ts";
+import type {
+  OrderChannel,
+  OrderPaymentStatus,
+  OrderStatus,
+} from "@/api/order/api.ts";
+import type { Address } from "@/core/types.ts";
+import { COUNTRIES } from "@/constant/countries.ts";
+import { capitalize, formatPriceVn } from "@/core/utils.ts";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button.tsx";
+import { Spinner } from "@/components/ui/spinner.tsx";
+import { Input } from "@/components/ui/input.tsx";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select.tsx";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table.tsx";
+
+const PAGE_SIZE = 20;
+const CHANNEL_ALL = "ALL";
+const STATUS_ALL = "ALL";
+
+const CHANNEL_OPTIONS: { label: string; value: OrderChannel }[] = [
+  { label: "Website", value: "WEBSITE" },
+  { label: "Instagram", value: "INSTAGRAM" },
+  { label: "Facebook", value: "FACEBOOK" },
+  { label: "TikTok", value: "TIKTOK" },
+  { label: "Shopee", value: "SHOPEE" },
+  { label: "Other", value: "OTHER" },
+];
+
+const STATUS_OPTIONS: { label: string; value: OrderStatus }[] = [
+  { label: "Pending", value: "PENDING" },
+  { label: "Processing", value: "PROCESSING" },
+  { label: "Shipping", value: "SHIPPING" },
+  { label: "Completed", value: "COMPLETED" },
+  { label: "Cancelled", value: "CANCELLED" },
+];
+
+const SORT_OPTIONS: { label: string; value: string }[] = [
+  { label: "Newest", value: "createdAt:DESC" },
+  { label: "Oldest", value: "createdAt:ASC" },
+  { label: "Total (high→low)", value: "totalAmount:DESC" },
+  { label: "Total (low→high)", value: "totalAmount:ASC" },
+];
+
+const ORDER_STATUS_CLASS: Record<OrderStatus, string> = {
+  PENDING: "bg-amber-100 text-amber-700",
+  PROCESSING: "bg-blue-100 text-blue-700",
+  SHIPPING: "bg-indigo-100 text-indigo-700",
+  COMPLETED: "bg-green-100 text-green-700",
+  CANCELLED: "bg-red-100 text-red-700",
+};
+
+const PAYMENT_STATUS_CLASS: Record<OrderPaymentStatus, string> = {
+  PENDING: "bg-amber-100 text-amber-700",
+  PAID: "bg-green-100 text-green-700",
+  FAILED: "bg-red-100 text-red-700",
+  REFUNDED: "bg-muted text-muted-foreground",
+};
 
 export default function OrdersPage() {
+  // ----- query states (mirror backend /api/orders filters) -----
+  const [searchInput, setSearchInput] = useState("");
+  const [search, setSearch] = useState("");
+  const [channel, setChannel] = useState<OrderChannel | typeof CHANNEL_ALL>(CHANNEL_ALL);
+  const [status, setStatus] = useState<OrderStatus | typeof STATUS_ALL>(STATUS_ALL);
+  const [sort, setSort] = useState<string>("createdAt:DESC");
+  const [offset, setOffset] = useState(0);
+
+  const navigate = useNavigate();
+
+  // chỉ search khi nhấn Enter, không gọi request mỗi lần gõ
+  function commitSearch() {
+    setSearch(searchInput.trim());
+    setOffset(0);
+  }
+
+  const params = useMemo(
+    () => ({
+      search: search || undefined,
+      channel: channel === CHANNEL_ALL ? undefined : channel,
+      status: status === STATUS_ALL ? undefined : status,
+      sort,
+      offset,
+      limit: PAGE_SIZE,
+    }),
+    [search, channel, status, sort, offset],
+  );
+
+  const ordersQuery = useOrders(params);
+
+  const page = Math.floor(offset / PAGE_SIZE) + 1;
+  const hasPrevious = offset > 0;
+  const hasNext = (ordersQuery.data?.length ?? 0) === PAGE_SIZE;
+
   return (
     <div className="flex min-h-svh flex-col gap-4 p-6">
       {/* ----- header ----- */}
       <div className="flex items-center justify-between gap-3">
         <h1 className="text-2xl font-medium">Orders</h1>
-        <Button disabled>
+        <Button onClick={() => navigate("/orders/create")}>
           <Plus className="size-4" />
           New Order
         </Button>
       </div>
 
-      {/* ----- placeholder ----- */}
-      <div className="bg-card text-muted-foreground flex flex-1 flex-col items-center justify-center gap-2 rounded-md border p-12">
-        <ShoppingCart className="size-8" />
-        <p className="text-sm">Orders management is coming soon.</p>
+      {/* ----- filters ----- */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="relative max-w-xs flex-1">
+          <Input
+            placeholder="Search code, name, phone or email..."
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") commitSearch();
+            }}
+            className="bg-card pr-9"
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={commitSearch}
+            aria-label="Search"
+            className="absolute top-1/2 right-1 size-7 -translate-y-1/2"
+          >
+            <Search className="size-3.5" />
+          </Button>
+        </div>
+
+        <Select
+          value={channel}
+          onValueChange={(value) => {
+            setChannel(value as OrderChannel | typeof CHANNEL_ALL);
+            setOffset(0);
+          }}
+        >
+          <SelectTrigger className="w-40 bg-card">
+            <SelectValue placeholder="Channel" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={CHANNEL_ALL}>All channels</SelectItem>
+            {CHANNEL_OPTIONS.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>
+                {opt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select
+          value={status}
+          onValueChange={(value) => {
+            setStatus(value as OrderStatus | typeof STATUS_ALL);
+            setOffset(0);
+          }}
+        >
+          <SelectTrigger className="w-40 bg-card">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={STATUS_ALL}>All statuses</SelectItem>
+            {STATUS_OPTIONS.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>
+                {opt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select
+          value={sort}
+          onValueChange={(value) => {
+            setSort(value);
+            setOffset(0);
+          }}
+        >
+          <SelectTrigger className="w-44 bg-card">
+            <SelectValue placeholder="Sort by" />
+          </SelectTrigger>
+          <SelectContent>
+            {SORT_OPTIONS.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>
+                {opt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* ----- table ----- */}
+      {ordersQuery.isLoading ? (
+        <div className="bg-card flex items-center justify-center rounded-md border p-6">
+          <Spinner className="text-muted-foreground" />
+        </div>
+      ) : (
+        <div className="bg-card rounded-md border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Code</TableHead>
+                <TableHead>Customer</TableHead>
+                <TableHead>Address</TableHead>
+                <TableHead>Total</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Payment</TableHead>
+                <TableHead>Channel</TableHead>
+                <TableHead>Date</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {ordersQuery.isError ? (
+                <TableRow>
+                  <TableCell colSpan={8} className="text-destructive text-center">
+                    Failed to load orders.
+                  </TableCell>
+                </TableRow>
+              ) : !ordersQuery.data || ordersQuery.data.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8} className="text-muted-foreground text-center">
+                    No orders found.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                ordersQuery.data.map((order) => (
+                  <TableRow key={order.id}>
+                    <TableCell className="font-mono text-xs">{order.code}</TableCell>
+                    <TableCell>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="font-medium">{order.customerName}</span>
+                        <span className="text-muted-foreground text-xs">
+                          {order.customerEmail || "None"}
+                        </span>
+                        <span className="text-muted-foreground text-xs">
+                          {order.customerPhoneNum || "None"}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <span
+                        className="block max-w-56 truncate text-xs"
+                        title={formatAddress(order.customerAddress)}
+                      >
+                        {formatAddress(order.customerAddress)}
+                      </span>
+                    </TableCell>
+                    <TableCell>{formatPriceVn(order.totalAmount)}</TableCell>
+                    <TableCell>
+                      <Badge
+                        label={capitalize(order.status)}
+                        className={ORDER_STATUS_CLASS[order.status]}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        label={capitalize(order.paymentStatus)}
+                        className={PAYMENT_STATUS_CLASS[order.paymentStatus]}
+                      />
+                    </TableCell>
+                    <TableCell>{capitalize(order.channel)}</TableCell>
+                    <TableCell>
+                      {new Date(order.createdAt).toLocaleString("en-GB")}
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      )}
+
+      {/* ----- pagination ----- */}
+      <div className="flex items-center justify-between">
+        <span className="text-muted-foreground text-xs">
+          Page {page}
+          {ordersQuery.isFetching ? " · updating..." : ""}
+        </span>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={!hasPrevious || ordersQuery.isFetching}
+            onClick={() => setOffset((prev) => Math.max(0, prev - PAGE_SIZE))}
+          >
+            Previous
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={!hasNext || ordersQuery.isFetching}
+            onClick={() => setOffset((prev) => prev + PAGE_SIZE)}
+          >
+            Next
+          </Button>
+        </div>
       </div>
     </div>
+  );
+}
+
+function formatAddress(address: Address): string {
+  const country =
+    COUNTRIES[address.countryCode as keyof typeof COUNTRIES]?.viName ?? address.countryCode;
+  return [address.address, address.provinceName, country].filter(Boolean).join(", ");
+}
+
+function Badge({ label, className }: { label: string; className: string }) {
+  return (
+    <span
+      className={cn(
+        "inline-flex rounded px-2 py-0.5 text-xs font-medium",
+        className,
+      )}
+    >
+      {label}
+    </span>
   );
 }
