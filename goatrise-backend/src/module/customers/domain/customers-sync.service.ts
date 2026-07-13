@@ -5,12 +5,19 @@ import { createCustomer } from "./customers.service.js";
 import type { Customer } from "./types.js";
 
 export async function getOrCreateOrSyncCustomer(name: string, email?: string, phoneNum?: string): Promise<Customer> {
-  // email là identity ưu tiên: có email thì CHỈ khớp theo email, ko fallback sang phone.
-  // (email mới + phone đã tồn tại -> vẫn là customer mới, ko lấy thằng trùng phone cũ)
-  // chỉ khi ko có email mới tìm theo phoneNum.
+  // email là identity ưu tiên.
   let existing: Customer | undefined;
   if (email) {
     existing = await db.query.customers.findFirst({ where: { email: email } });
+
+    // email chưa tồn tại: nếu có customer trùng phone mà CHƯA có email -> claim (ghi đè email lên đó).
+    // nếu customer trùng phone đã có email rồi -> để undefined để tạo customer mới.
+    if (!existing && phoneNum) {
+      const byPhone = await db.query.customers.findFirst({ where: { phoneNum: phoneNum } });
+      if (byPhone && !byPhone.email) {
+        existing = byPhone;
+      }
+    }
   } else if (phoneNum) {
     existing = await db.query.customers.findFirst({ where: { phoneNum: phoneNum } });
   }
