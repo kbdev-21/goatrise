@@ -1,13 +1,13 @@
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
-import { usersRouter } from "./module/users/router/users.router.js";
+import { usersRouter } from "./module/auth/router/users.router.js";
 import { auditLogsRouter } from "./module/audit/router/audit-logs.router.js";
 import { suppliersRouter } from "./module/inventory/router/suppliers.router.js";
 import { itemsRouter } from "./module/inventory/router/items.router.js";
 import { productsRouter } from "./module/catalog/router/products.router.js";
 import { collectionsRouter } from "./module/catalog/router/collections.router.js";
 import { cors } from "hono/cors";
-import { ordersRouter } from "./module/business/router/orders.router.js";
+import { ordersRouter } from "./module/orders/router/orders.router.js";
 import { customersRouter } from "./module/customers/router/customers.router.js";
 
 const app = new Hono();

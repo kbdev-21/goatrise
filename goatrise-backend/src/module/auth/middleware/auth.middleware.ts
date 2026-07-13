@@ -2,7 +2,7 @@ import { createMiddleware } from "hono/factory";
 import { HTTPException } from "hono/http-exception";
 import { auth } from "../../../core/auth.js";
 import { db } from "../../../core/db.js";
-import { syncUserWithGoogleAuthData } from "../../users/domain/users-auth-sync.service.js";
+import { syncUserWithGoogleAuthData } from "../domain/users-auth-sync.service.js";
 
 export const authMiddleware = createMiddleware(async (c, next) => {
   const authHeader = c.req.header("Authorization");

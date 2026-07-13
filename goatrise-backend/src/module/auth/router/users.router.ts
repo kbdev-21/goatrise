@@ -1,6 +1,6 @@
 import { Hono } from "hono";
-import { authMiddleware } from "../../auth/middleware/auth.middleware.js";
-import { requiredRolesMiddleware } from "../../auth/middleware/required-roles.middleware.js";
+import { authMiddleware } from "../middleware/auth.middleware.js";
+import { requiredRolesMiddleware } from "../middleware/required-roles.middleware.js";
 import type { ContextVariables } from "../../../core/types.js";
 import { db } from "../../../core/db.js";
 import { createUser, findUsers, updateUserInfo, updateUserRole } from "../domain/users.service.js";

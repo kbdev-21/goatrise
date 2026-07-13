@@ -2,7 +2,7 @@ import { defineRelationsPart } from "drizzle-orm";
 import { itemTransactions } from "./item-transactions.schema.js";
 import { items } from "./items.schema.js";
 import { suppliers } from "./suppliers.schema.js";
-import { users } from "../../users/schema/users.schema.js";
+import { users } from "../../auth/schema/users.schema.js";
 import { products } from "../../catalog/schema/products.schema.js";
 
 export const itemsRelations = defineRelationsPart({ itemTransactions, items, suppliers, users, products }, (r) => ({
