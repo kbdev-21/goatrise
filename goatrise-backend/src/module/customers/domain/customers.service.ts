@@ -5,7 +5,7 @@ import { eq } from "drizzle-orm";
 import { uuidv7 } from "uuidv7";
 import { normalizeVietnameseString } from "../../../core/utils.js";
 import { recordAuditLog } from "../../audit/domain/audit-logs.service.js";
-import type { CreateCustomerRequest, UpdateCustomerRequest } from "./validators.js";
+import type { CreateCustomerRequest, UpdateCustomerRequest, FindCustomersQuery } from "./validators.js";
 import type { Customer } from "./types.js";
 
 export async function getCustomerById(db: DbExec, id: string): Promise<Customer> {
@@ -22,13 +22,8 @@ export async function getCustomerById(db: DbExec, id: string): Promise<Customer>
   return customer;
 }
 
-export async function findCustomers(
-  db: DbExec,
-  search?: string,
-  sort: string = "createdAt:DESC",
-  offset: number = 0,
-  limit: number = 20
-): Promise<Customer[]> {
+export async function findCustomers(db: DbExec, query: FindCustomersQuery): Promise<Customer[]> {
+  const { search, sort, offset, limit } = query;
   const [sortField, sortDirection] = sort.split(":");
   const direction: "asc" | "desc" = sortDirection?.toLowerCase() === "asc" ? "asc" : "desc";
 

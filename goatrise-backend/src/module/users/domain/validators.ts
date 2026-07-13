@@ -24,3 +24,12 @@ export const UpdateUserRoleRequestSchema = z.object({
   role: z.enum(roles)
 });
 export type UpdateUserRoleRequest = z.infer<typeof UpdateUserRoleRequestSchema>;
+
+export const FindUsersQuerySchema = z.object({
+  search: z.string().optional(),
+  role: z.enum(roles).optional(),
+  sort: z.string().default("createdAt:DESC"),
+  offset: z.coerce.number().int().nonnegative().default(0),
+  limit: z.coerce.number().int().positive().default(20)
+});
+export type FindUsersQuery = z.infer<typeof FindUsersQuerySchema>;

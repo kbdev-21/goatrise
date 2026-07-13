@@ -5,35 +5,18 @@ import type { ContextVariables } from "../../../core/types.js";
 import { db } from "../../../core/db.js";
 import { calculateOrder } from "../domain/order-calculation.service.js";
 import { createOrder, findOrders } from "../domain/orders.service.js";
-import type { OrderChannel, OrderStatus } from "../schema/orders.schema.js";
 import { zValidator } from "@hono/zod-validator";
-import { CalculateOrderRequestSchema, CreateOrderRequestSchema } from "../domain/validators.js";
+import { CalculateOrderRequestSchema, CreateOrderRequestSchema, FindOrdersQuerySchema } from "../domain/validators.js";
 
 export const ordersRouter = new Hono<{ Variables: ContextVariables }>();
 
 ordersRouter.get("/api/orders",
   authMiddleware,
   requiredRolesMiddleware(["ADMIN", "STAFF"]),
+  zValidator("query", FindOrdersQuerySchema),
   async (c) => {
-    const {
-      search,
-      channel,
-      status,
-      sort,
-      offset,
-      limit,
-    } = c.req.query();
-
-    const orders = await findOrders(
-      db,
-      search,
-      channel ? (channel as OrderChannel) : undefined,
-      status ? (status as OrderStatus) : undefined,
-      sort,
-      offset ? Number(offset) : undefined,
-      limit ? Number(limit) : undefined
-    );
-
+    const query = c.req.valid("query");
+    const orders = await findOrders(db, query);
     return c.json(orders);
   }
 );

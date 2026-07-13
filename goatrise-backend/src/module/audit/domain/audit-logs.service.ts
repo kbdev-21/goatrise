@@ -2,13 +2,10 @@ import type { DbExec } from "../../../core/db.js";
 import { auditLogs } from "../schema/audit-logs.schema.js";
 import { uuidv7 } from "uuidv7";
 import type { AuditLog } from "./types.js";
+import type { FindAuditLogsQuery } from "./validators.js";
 
-export async function findAuditLogs(
-  db: DbExec,
-  search?: string,
-  offset: number = 0,
-  limit: number = 20
-): Promise<AuditLog[]> {
+export async function findAuditLogs(db: DbExec, query: FindAuditLogsQuery): Promise<AuditLog[]> {
+  const { search, offset, limit } = query;
   return await db.query.auditLogs.findMany({
     where: search ? {
       OR: [

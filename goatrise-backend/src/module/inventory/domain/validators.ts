@@ -1,4 +1,7 @@
 import z from "zod";
+import type { ItemTransactionType } from "../schema/item-transactions.schema.js";
+
+const itemTransactionTypes = ["IMPORT", "ADJUST", "SOLD"] satisfies ItemTransactionType[];
 
 const ItemAttributeValuesSchema = z.object({
   COLOR: z.object({
@@ -58,3 +61,10 @@ export const AdjustItemStockRequestSchema = z.object({
   note: z.string().trim().min(1)
 });
 export type AdjustItemStockRequest = z.infer<typeof AdjustItemStockRequestSchema>;
+
+export const FindItemTransactionsQuerySchema = z.object({
+  type: z.enum(itemTransactionTypes).optional(),
+  offset: z.coerce.number().int().nonnegative().default(0),
+  limit: z.coerce.number().int().positive().default(20)
+});
+export type FindItemTransactionsQuery = z.infer<typeof FindItemTransactionsQuerySchema>;

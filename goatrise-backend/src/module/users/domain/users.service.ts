@@ -1,7 +1,7 @@
 import type { DbExec } from "../../../core/db.js";
 import { users, type UserRole } from "../schema/users.schema.js";
 import { HTTPException } from "hono/http-exception";
-import type { CreateUserRequest, UpdateUserRequest } from "./validators.js";
+import type { CreateUserRequest, UpdateUserRequest, FindUsersQuery } from "./validators.js";
 import { eq } from "drizzle-orm";
 import { uuidv7 } from "uuidv7";
 import { ADMIN_EMAIL_LIST } from "../../../core/env.js";
@@ -25,14 +25,8 @@ export async function getUserById(db: DbExec, id: string): Promise<User> {
   return user;
 }
 
-export async function findUsers(
-  db: DbExec,
-  search?: string,
-  role?: UserRole,
-  sort: string = "createdAt:DESC",
-  offset: number = 0,
-  limit: number = 20
-): Promise<User[]> {
+export async function findUsers(db: DbExec, query: FindUsersQuery): Promise<User[]> {
+  const { search, role, sort, offset, limit } = query;
   const [sortField, sortDirection] = sort.split(":");
   const direction = sortDirection?.toLowerCase() === "asc" ? "asc" : "desc";
 

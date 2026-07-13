@@ -6,9 +6,8 @@ import { db } from "../../../core/db.js";
 import { createItem, deleteItem, findAllItems, getItemById, updateItemInfo } from "../domain/items.service.js";
 import { importItem, manualAdjustItemStock } from "../domain/inventory.service.js";
 import { findItemTransactions } from "../domain/item-transactions.service.js";
-import type { ItemTransactionType } from "../schema/item-transactions.schema.js";
 import { zValidator } from "@hono/zod-validator";
-import { AdjustItemStockRequestSchema, CreateItemRequestSchema, ImportItemRequestSchema, UpdateItemRequestSchema } from "../domain/validators.js";
+import { AdjustItemStockRequestSchema, CreateItemRequestSchema, ImportItemRequestSchema, UpdateItemRequestSchema, FindItemTransactionsQuerySchema } from "../domain/validators.js";
 
 export const itemsRouter = new Hono<{ Variables: ContextVariables }>();
 
@@ -108,21 +107,12 @@ itemsRouter.post("/api/items/:id/adjust",
 itemsRouter.get("/api/items/:id/transactions",
   authMiddleware,
   requiredRolesMiddleware(["ADMIN", "STAFF"]),
+  zValidator("query", FindItemTransactionsQuerySchema),
   async (c) => {
     const itemId = c.req.param("id");
-    const {
-      type,
-      offset,
-      limit,
-    } = c.req.query();
+    const query = c.req.valid("query");
 
-    const transactions = await findItemTransactions(
-      db,
-      itemId,
-      type ? (type as ItemTransactionType) : undefined,
-      offset ? Number(offset) : undefined,
-      limit ? Number(limit) : undefined
-    );
+    const transactions = await findItemTransactions(db, itemId, query);
 
     return c.json(transactions);
   }

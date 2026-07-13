@@ -1,4 +1,8 @@
 import z from "zod";
+import type { OrderChannel, OrderStatus } from "../schema/orders.schema.js";
+
+const orderChannels = ["WEBSITE", "INSTAGRAM", "FACEBOOK", "TIKTOK", "SHOPEE", "OTHER"] satisfies OrderChannel[];
+const orderStatuses = ["PENDING", "PROCESSING", "SHIPPING", "COMPLETED", "CANCELLED"] satisfies OrderStatus[];
 
 const OrderLineSchema = z.object({
   itemId: z.uuid(),
@@ -56,3 +60,13 @@ export const CreateOrderRequestSchema = z.object({
   })
 });
 export type CreateOrderRequest = z.infer<typeof CreateOrderRequestSchema>;
+
+export const FindOrdersQuerySchema = z.object({
+  search: z.string().optional(),
+  channel: z.enum(orderChannels).optional(),
+  status: z.enum(orderStatuses).optional(),
+  sort: z.string().default("createdAt:DESC"),
+  offset: z.coerce.number().int().nonnegative().default(0),
+  limit: z.coerce.number().int().positive().default(20)
+});
+export type FindOrdersQuery = z.infer<typeof FindOrdersQuerySchema>;

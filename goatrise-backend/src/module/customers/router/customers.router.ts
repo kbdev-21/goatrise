@@ -5,28 +5,18 @@ import type { ContextVariables } from "../../../core/types.js";
 import { db } from "../../../core/db.js";
 import { createCustomer, deleteCustomer, findCustomers, updateCustomer } from "../domain/customers.service.js";
 import { zValidator } from "@hono/zod-validator";
-import { CreateCustomerRequestSchema, UpdateCustomerRequestSchema } from "../domain/validators.js";
+import { CreateCustomerRequestSchema, UpdateCustomerRequestSchema, FindCustomersQuerySchema } from "../domain/validators.js";
 
 export const customersRouter = new Hono<{ Variables: ContextVariables }>();
 
 customersRouter.get("/api/customers",
   authMiddleware,
   requiredRolesMiddleware(["ADMIN", "STAFF"]),
+  zValidator("query", FindCustomersQuerySchema),
   async (c) => {
-    const {
-      search,
-      sort,
-      offset,
-      limit,
-    } = c.req.query();
+    const query = c.req.valid("query");
 
-    const customers = await findCustomers(
-      db,
-      search,
-      sort || undefined,
-      offset ? Number(offset) : undefined,
-      limit ? Number(limit) : undefined
-    );
+    const customers = await findCustomers(db, query);
 
     return c.json(customers);
   }

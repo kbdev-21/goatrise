@@ -36,3 +36,11 @@ export const UpdateCustomerRequestSchema = z.object({
   source: z.enum(sources).optional()
 });
 export type UpdateCustomerRequest = z.infer<typeof UpdateCustomerRequestSchema>;
+
+export const FindCustomersQuerySchema = z.object({
+  search: z.string().optional(),
+  sort: z.string().default("createdAt:DESC"),
+  offset: z.coerce.number().int().nonnegative().default(0),
+  limit: z.coerce.number().int().positive().default(20)
+});
+export type FindCustomersQuery = z.infer<typeof FindCustomersQuerySchema>;

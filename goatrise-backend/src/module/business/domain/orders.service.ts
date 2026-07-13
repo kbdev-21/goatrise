@@ -6,8 +6,7 @@ import { uuidv7 } from "uuidv7";
 import { recordAuditLog } from "../../audit/domain/audit-logs.service.js";
 import { calculateOrder } from "./order-calculation.service.js";
 import { getOrCreateOrSyncCustomer } from "../../customers/domain/customers-sync.service.js";
-import type { CreateOrderRequest } from "./validators.js";
-import type { OrderChannel, OrderStatus } from "../schema/orders.schema.js";
+import type { CreateOrderRequest, FindOrdersQuery } from "./validators.js";
 import { ORDER_RELATIONS, type Order } from "./types.js";
 
 export async function getOrderById(db: DbExec, id: string): Promise<Order> {
@@ -25,15 +24,8 @@ export async function getOrderById(db: DbExec, id: string): Promise<Order> {
   return order;
 }
 
-export async function findOrders(
-  db: DbExec,
-  search?: string,
-  channel?: OrderChannel,
-  status?: OrderStatus,
-  sort: string = "createdAt:DESC",
-  offset: number = 0,
-  limit: number = 20
-): Promise<Order[]> {
+export async function findOrders(db: DbExec, query: FindOrdersQuery): Promise<Order[]> {
+  const { search, channel, status, sort, offset, limit } = query;
   const [sortField, sortDirection] = sort.split(":");
   const direction: "asc" | "desc" = sortDirection === "ASC" ? "asc" : "desc";
 
