@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { authMiddleware } from "../../auth/middleware/auth.middleware.js";
 import { requiredRolesMiddleware } from "../../auth/middleware/required-roles.middleware.js";
 import type { ContextVariables } from "../../../core/types.js";
+import { db } from "../../../core/db.js";
 import { createUser, findUsers, updateUserInfo, updateUserRole } from "../domain/users.service.js";
 import { zValidator } from "@hono/zod-validator";
 import { CreateUserRequestSchema, UpdateUserRequestSchema, UpdateUserRoleRequestSchema } from "../domain/validators.js";
@@ -30,6 +31,7 @@ usersRouter.get("/api/users",
     } = c.req.query();
 
     const users = await findUsers(
+      db,
       search,
       role ? (role as UserRole) : undefined,
       sort || undefined,
@@ -49,7 +51,7 @@ usersRouter.post("/api/users",
     const currentUser = c.get("currentUser");
     const createReq = c.req.valid("json");
 
-    const newUser = await createUser(currentUser.id, createReq);
+    const newUser = await createUser(db, currentUser.id, createReq);
 
     return c.json(newUser, 201);
   }
@@ -62,7 +64,7 @@ usersRouter.patch("/api/users/me",
     const currentUser = c.get("currentUser");
     const updateReq = c.req.valid("json");
 
-    const updatedUser = await updateUserInfo(currentUser.id, currentUser.id, updateReq);
+    const updatedUser = await updateUserInfo(db, currentUser.id, currentUser.id, updateReq);
 
     return c.json(updatedUser);
   }
@@ -77,7 +79,7 @@ usersRouter.post("/api/users/:userId/update-role",
     const userId = c.req.param("userId");
     const { role } = c.req.valid("json");
 
-    const updatedUser = await updateUserRole(currentUser.id, userId, role);
+    const updatedUser = await updateUserRole(db, currentUser.id, userId, role);
 
     return c.json(updatedUser);
   }

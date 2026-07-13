@@ -1,4 +1,4 @@
-import { db } from "../../../core/db.js";
+import type { DbExec } from "../../../core/db.js";
 import { items } from "../schema/items.schema.js";
 import { itemTransactions } from "../schema/item-transactions.schema.js";
 import { HTTPException } from "hono/http-exception";
@@ -10,12 +10,13 @@ import { getSupplierById } from "./suppliers.service.js";
 import type { AdjustItemStockRequest, ImportItemRequest } from "./validators.js";
 import type { Item } from "./types.js";
 
-export async function importItem(actorId: string, itemId: string, importReq: ImportItemRequest): Promise<Item> {
-  const itemBefore = await getItemById(itemId);
-  const supplier = importReq.supplierId ? await getSupplierById(importReq.supplierId) : null;
-
+export async function importItem(db: DbExec, actorId: string, itemId: string, importReq: ImportItemRequest): Promise<Item> {
   const newTransactionId = uuidv7();
-  await db.transaction(async (tx) => {
+
+  return await db.transaction(async (tx) => {
+    const itemBefore = await getItemById(tx, itemId);
+    const supplier = importReq.supplierId ? await getSupplierById(tx, importReq.supplierId) : null;
+
     await tx.insert(itemTransactions).values({
       id: newTransactionId,
       itemId: itemId,
@@ -33,34 +34,35 @@ export async function importItem(actorId: string, itemId: string, importReq: Imp
     await tx.update(items).set({
       stock: sql`${items.stock} + ${importReq.quantity}`
     }).where(eq(items.id, itemId));
+
+    const itemAfter = await getItemById(tx, itemId);
+
+    await recordAuditLog(tx, {
+      actorId: actorId,
+      code: "item-import",
+      referenceType: "item",
+      referenceId: itemId,
+      metadata: {
+        before: itemBefore,
+        after: itemAfter,
+        transactionId: newTransactionId
+      }
+    });
+
+    return itemAfter;
   });
-
-  const itemAfter = await getItemById(itemId);
-
-  await recordAuditLog({
-    actorId: actorId,
-    code: "item-import",
-    referenceType: "item",
-    referenceId: itemId,
-    metadata: {
-      before: itemBefore,
-      after: itemAfter,
-      transactionId: newTransactionId
-    }
-  });
-
-  return itemAfter;
 }
 
-export async function manualAdjustItemStock(actorId: string, itemId: string, adjustReq: AdjustItemStockRequest): Promise<Item> {
-  const itemBefore = await getItemById(itemId);
-
-  if (itemBefore.stock + adjustReq.stockChange < 0) {
-    throw new HTTPException(409, { message: "Negative stock not allowed" });
-  }
-
+export async function manualAdjustItemStock(db: DbExec, actorId: string, itemId: string, adjustReq: AdjustItemStockRequest): Promise<Item> {
   const newTransactionId = uuidv7();
-  await db.transaction(async (tx) => {
+
+  return await db.transaction(async (tx) => {
+    const itemBefore = await getItemById(tx, itemId);
+
+    if (itemBefore.stock + adjustReq.stockChange < 0) {
+      throw new HTTPException(409, { message: "Negative stock not allowed" });
+    }
+
     await tx.insert(itemTransactions).values({
       id: newTransactionId,
       itemId: itemId,
@@ -75,21 +77,21 @@ export async function manualAdjustItemStock(actorId: string, itemId: string, adj
     await tx.update(items).set({
       stock: sql`${items.stock} + ${adjustReq.stockChange}`
     }).where(eq(items.id, itemId));
+
+    const itemAfter = await getItemById(tx, itemId);
+
+    await recordAuditLog(tx, {
+      actorId: actorId,
+      code: "item-adjust",
+      referenceType: "item",
+      referenceId: itemId,
+      metadata: {
+        before: itemBefore,
+        after: itemAfter,
+        transactionId: newTransactionId
+      }
+    });
+
+    return itemAfter;
   });
-
-  const itemAfter = await getItemById(itemId);
-
-  await recordAuditLog({
-    actorId: actorId,
-    code: "item-adjust",
-    referenceType: "item",
-    referenceId: itemId,
-    metadata: {
-      before: itemBefore,
-      after: itemAfter,
-      transactionId: newTransactionId
-    }
-  });
-
-  return itemAfter;
 }

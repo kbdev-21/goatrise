@@ -1,9 +1,10 @@
-import { db } from "../../../core/db.js";
+import type { DbExec } from "../../../core/db.js";
 import { auditLogs } from "../schema/audit-logs.schema.js";
 import { uuidv7 } from "uuidv7";
 import type { AuditLog } from "./types.js";
 
 export async function findAuditLogs(
+  db: DbExec,
   search?: string,
   offset: number = 0,
   limit: number = 20
@@ -24,7 +25,7 @@ export async function findAuditLogs(
   });
 }
 
-export async function recordAuditLog(audit: {
+export async function recordAuditLog(db: DbExec, audit: {
   actorId?: string | null;
   code: string;
   referenceType?: string | null;

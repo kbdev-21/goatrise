@@ -1,6 +1,7 @@
 import { createMiddleware } from "hono/factory";
 import { HTTPException } from "hono/http-exception";
 import { auth } from "../../../core/auth.js";
+import { db } from "../../../core/db.js";
 import { syncUserWithGoogleAuthData } from "../../users/domain/users-auth-sync.service.js";
 
 export const authMiddleware = createMiddleware(async (c, next) => {
@@ -25,7 +26,7 @@ export const authMiddleware = createMiddleware(async (c, next) => {
   const avtUrl: string | null = authUser.data.user.user_metadata.avt_url ?? authUser.data.user.user_metadata.picture ?? null;
 
   try {
-    const currentUser = await syncUserWithGoogleAuthData(email, fullName, avtUrl);
+    const currentUser = await syncUserWithGoogleAuthData(db, email, fullName, avtUrl);
     c.set("currentUser", currentUser);
   } catch (e) {
     throw new HTTPException(401, { message: "Unauthorized" });

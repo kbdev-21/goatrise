@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { authMiddleware } from "../../auth/middleware/auth.middleware.js";
 import { requiredRolesMiddleware } from "../../auth/middleware/required-roles.middleware.js";
 import type { ContextVariables } from "../../../core/types.js";
+import { db } from "../../../core/db.js";
 import { createItem, deleteItem, findAllItems, getItemById, updateItemInfo } from "../domain/items.service.js";
 import { importItem, manualAdjustItemStock } from "../domain/inventory.service.js";
 import { findItemTransactions } from "../domain/item-transactions.service.js";
@@ -15,7 +16,7 @@ itemsRouter.get("/api/items",
   authMiddleware,
   requiredRolesMiddleware(["ADMIN", "STAFF"]),
   async (c) => {
-    const items = await findAllItems();
+    const items = await findAllItems(db);
     return c.json(items);
   }
 );
@@ -26,7 +27,7 @@ itemsRouter.get("/api/items/:id",
   async (c) => {
     const itemId = c.req.param("id");
 
-    const item = await getItemById(itemId);
+    const item = await getItemById(db, itemId);
 
     return c.json(item);
   }
@@ -40,7 +41,7 @@ itemsRouter.post("/api/items",
     const currentUser = c.get("currentUser");
     const createReq = c.req.valid("json");
 
-    const newItem = await createItem(currentUser.id, createReq);
+    const newItem = await createItem(db, currentUser.id, createReq);
 
     return c.json(newItem, 201);
   }
@@ -55,7 +56,7 @@ itemsRouter.patch("/api/items/:id",
     const itemId = c.req.param("id");
     const updateReq = c.req.valid("json");
 
-    const updatedItem = await updateItemInfo(currentUser.id, itemId, updateReq);
+    const updatedItem = await updateItemInfo(db, currentUser.id, itemId, updateReq);
 
     return c.json(updatedItem);
   }
@@ -68,7 +69,7 @@ itemsRouter.delete("/api/items/:id",
     const currentUser = c.get("currentUser");
     const itemId = c.req.param("id");
 
-    await deleteItem(currentUser.id, itemId);
+    await deleteItem(db, currentUser.id, itemId);
 
     return c.body(null, 204);
   }
@@ -83,7 +84,7 @@ itemsRouter.post("/api/items/:id/import",
     const itemId = c.req.param("id");
     const importReq = c.req.valid("json");
 
-    const updatedItem = await importItem(currentUser.id, itemId, importReq);
+    const updatedItem = await importItem(db, currentUser.id, itemId, importReq);
 
     return c.json(updatedItem);
   }
@@ -98,7 +99,7 @@ itemsRouter.post("/api/items/:id/adjust",
     const itemId = c.req.param("id");
     const adjustReq = c.req.valid("json");
 
-    const updatedItem = await manualAdjustItemStock(currentUser.id, itemId, adjustReq);
+    const updatedItem = await manualAdjustItemStock(db, currentUser.id, itemId, adjustReq);
 
     return c.json(updatedItem);
   }
@@ -116,6 +117,7 @@ itemsRouter.get("/api/items/:id/transactions",
     } = c.req.query();
 
     const transactions = await findItemTransactions(
+      db,
       itemId,
       type ? (type as ItemTransactionType) : undefined,
       offset ? Number(offset) : undefined,

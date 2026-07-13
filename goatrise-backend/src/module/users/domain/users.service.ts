@@ -1,4 +1,4 @@
-import { db } from "../../../core/db.js";
+import type { DbExec } from "../../../core/db.js";
 import { users, type UserRole } from "../schema/users.schema.js";
 import { HTTPException } from "hono/http-exception";
 import type { CreateUserRequest, UpdateUserRequest } from "./validators.js";
@@ -11,7 +11,7 @@ import type { User } from "./types.js";
 
 const adminEmails = ADMIN_EMAIL_LIST.split(",");
 
-export async function getUserById(id: string): Promise<User> {
+export async function getUserById(db: DbExec, id: string): Promise<User> {
   const user = await db.query.users.findFirst({
     where: {
       id: id
@@ -26,6 +26,7 @@ export async function getUserById(id: string): Promise<User> {
 }
 
 export async function findUsers(
+  db: DbExec,
   search?: string,
   role?: UserRole,
   sort: string = "createdAt:DESC",
@@ -54,84 +55,93 @@ export async function findUsers(
 }
 
 export async function createUser(
+  db: DbExec,
   actorId: string,
   createReq: CreateUserRequest
 ): Promise<User> {
-  const existedUser = await db.query.users.findFirst({
-    where: {
-      email: createReq.email
+  return await db.transaction(async (tx) => {
+    const existedUser = await tx.query.users.findFirst({
+      where: {
+        email: createReq.email
+      }
+    });
+
+    if (existedUser) {
+      throw new HTTPException(409, { message: "Email already in use" });
     }
+
+    const newUserId = uuidv7();
+    await tx.insert(users).values({
+      id: newUserId,
+      role: createReq.role,
+      email: createReq.email,
+      fullName: createReq.fullName,
+      normalizedFullName: normalizeVietnameseString(createReq.fullName),
+      phoneNum: createReq.phoneNum ?? null,
+      avtUrl: createReq.avtUrl ?? null
+    });
+
+    const newUser = await getUserById(tx, newUserId);
+
+    await recordAuditLog(tx, {
+      actorId: actorId,
+      code: "user-create",
+      referenceType: "user",
+      referenceId: newUserId,
+      metadata: {
+        user: newUser
+      }
+    });
+
+    return newUser;
   });
-
-  if (existedUser) {
-    throw new HTTPException(409, { message: "Email already in use" });
-  }
-
-  const newUserId = uuidv7();
-  await db.insert(users).values({
-    id: newUserId,
-    role: createReq.role,
-    email: createReq.email,
-    fullName: createReq.fullName,
-    normalizedFullName: normalizeVietnameseString(createReq.fullName),
-    phoneNum: createReq.phoneNum ?? null,
-    avtUrl: createReq.avtUrl ?? null
-  });
-
-  const newUser = await getUserById(newUserId);
-
-  await recordAuditLog({
-    actorId: actorId,
-    code: "user-create",
-    referenceType: "user",
-    referenceId: newUserId,
-    metadata: {
-      user: newUser
-    }
-  });
-
-  return newUser;
 }
 
 export async function updateUserInfo(
+  db: DbExec,
   actorId: string,
   userId: string,
   updateReq: UpdateUserRequest
 ): Promise<User> {
-  await db.update(users).set({
-    fullName: updateReq.fullName,
-    normalizedFullName: updateReq.fullName ? normalizeVietnameseString(updateReq.fullName) : undefined,
-    avtUrl: updateReq.avtUrl,
-    phoneNum: updateReq.phoneNum
-  }).where(eq(users.id, userId));
+  return await db.transaction(async (tx) => {
+    await tx.update(users).set({
+      fullName: updateReq.fullName,
+      normalizedFullName: updateReq.fullName ? normalizeVietnameseString(updateReq.fullName) : undefined,
+      avtUrl: updateReq.avtUrl,
+      phoneNum: updateReq.phoneNum
+    }).where(eq(users.id, userId));
 
-  return getUserById(userId);
+    return await getUserById(tx, userId);
+  });
 }
 
 export async function updateUserRole(
+  db: DbExec,
   actorId: string,
   userId: string,
   newRole: UserRole
 ): Promise<User> {
-  const userBefore = await getUserById(userId);
-  if (adminEmails.includes(userBefore.email)) {
-    throw new HTTPException(409, { message: "Cannot change this user role" });
-  }
-
-  await db.update(users).set({
-    role: newRole
-  }).where(eq(users.id, userId));
-
-  await recordAuditLog({
-    actorId: actorId,
-    code: "user-role-update",
-    referenceType: "user",
-    referenceId: userId,
-    metadata: {
-      oldRole: userBefore.role,
-      newRole: newRole
+  return await db.transaction(async (tx) => {
+    const userBefore = await getUserById(tx, userId);
+    if (adminEmails.includes(userBefore.email)) {
+      throw new HTTPException(409, { message: "Cannot change this user role" });
     }
-  });
 
-  return getUserById(userId);
+    await tx.update(users).set({
+      role: newRole
+    }).where(eq(users.id, userId));
+
+    await recordAuditLog(tx, {
+      actorId: actorId,
+      code: "user-role-update",
+      referenceType: "user",
+      referenceId: userId,
+      metadata: {
+        oldRole: userBefore.role,
+        newRole: newRole
+      }
+    });
+
+    return await getUserById(tx, userId);
+  });
 }

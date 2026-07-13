@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { authMiddleware } from "../../auth/middleware/auth.middleware.js";
 import { requiredRolesMiddleware } from "../../auth/middleware/required-roles.middleware.js";
 import type { ContextVariables } from "../../../core/types.js";
+import { db } from "../../../core/db.js";
 import { calculateOrder } from "../domain/order-calculation.service.js";
 import { createOrder, findOrders } from "../domain/orders.service.js";
 import type { OrderChannel, OrderStatus } from "../schema/orders.schema.js";
@@ -24,6 +25,7 @@ ordersRouter.get("/api/orders",
     } = c.req.query();
 
     const orders = await findOrders(
+      db,
       search,
       channel ? (channel as OrderChannel) : undefined,
       status ? (status as OrderStatus) : undefined,
@@ -40,7 +42,7 @@ ordersRouter.post("/api/orders/calculate",
   zValidator("json", CalculateOrderRequestSchema),
   async (c) => {
     const req = c.req.valid("json");
-    const calculateResult = await calculateOrder(req);
+    const calculateResult = await calculateOrder(db, req);
     return c.json(calculateResult);
   }
 );
@@ -53,7 +55,7 @@ ordersRouter.post("/api/orders",
     const currentUser = c.get("currentUser");
     const createReq = c.req.valid("json");
 
-    const newOrder = await createOrder(currentUser.id, createReq);
+    const newOrder = await createOrder(db, currentUser.id, createReq);
 
     return c.json(newOrder, 201);
   }

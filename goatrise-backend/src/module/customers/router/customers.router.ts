@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { authMiddleware } from "../../auth/middleware/auth.middleware.js";
 import { requiredRolesMiddleware } from "../../auth/middleware/required-roles.middleware.js";
 import type { ContextVariables } from "../../../core/types.js";
+import { db } from "../../../core/db.js";
 import { createCustomer, deleteCustomer, findCustomers, updateCustomer } from "../domain/customers.service.js";
 import { zValidator } from "@hono/zod-validator";
 import { CreateCustomerRequestSchema, UpdateCustomerRequestSchema } from "../domain/validators.js";
@@ -20,6 +21,7 @@ customersRouter.get("/api/customers",
     } = c.req.query();
 
     const customers = await findCustomers(
+      db,
       search,
       sort || undefined,
       offset ? Number(offset) : undefined,
@@ -38,7 +40,7 @@ customersRouter.post("/api/customers",
     const currentUser = c.get("currentUser");
     const createReq = c.req.valid("json");
 
-    const newCustomer = await createCustomer(currentUser.id, createReq);
+    const newCustomer = await createCustomer(db, currentUser.id, createReq);
 
     return c.json(newCustomer, 201);
   }
@@ -53,7 +55,7 @@ customersRouter.patch("/api/customers/:id",
     const customerId = c.req.param("id");
     const updateReq = c.req.valid("json");
 
-    const updatedCustomer = await updateCustomer(currentUser.id, customerId, updateReq);
+    const updatedCustomer = await updateCustomer(db, currentUser.id, customerId, updateReq);
 
     return c.json(updatedCustomer);
   }
@@ -66,7 +68,7 @@ customersRouter.delete("/api/customers/:id",
     const currentUser = c.get("currentUser");
     const customerId = c.req.param("id");
 
-    await deleteCustomer(currentUser.id, customerId);
+    await deleteCustomer(db, currentUser.id, customerId);
 
     return c.body(null, 204);
   }

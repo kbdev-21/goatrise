@@ -1,4 +1,4 @@
-import { db } from "../../../core/db.js";
+import type { DbExec } from "../../../core/db.js";
 import { orders } from "../schema/orders.schema.js";
 import { orderLines } from "../schema/order-lines.schema.js";
 import { HTTPException } from "hono/http-exception";
@@ -10,7 +10,7 @@ import type { CreateOrderRequest } from "./validators.js";
 import type { OrderChannel, OrderStatus } from "../schema/orders.schema.js";
 import { ORDER_RELATIONS, type Order } from "./types.js";
 
-export async function getOrderById(id: string): Promise<Order> {
+export async function getOrderById(db: DbExec, id: string): Promise<Order> {
   const order = await db.query.orders.findFirst({
     where: {
       id: id
@@ -26,6 +26,7 @@ export async function getOrderById(id: string): Promise<Order> {
 }
 
 export async function findOrders(
+  db: DbExec,
   search?: string,
   channel?: OrderChannel,
   status?: OrderStatus,
@@ -58,23 +59,26 @@ export async function findOrders(
   });
 }
 
-export async function createOrder(actorId: string, createReq: CreateOrderRequest): Promise<Order> {
+export async function createOrder(db: DbExec, actorId: string, createReq: CreateOrderRequest): Promise<Order> {
   const newOrderId = uuidv7();
 
-  const calculation = await calculateOrder({
-    lines: createReq.lines,
-    manualDiscountAmount: createReq.manualDiscountAmount,
-    manualShippingFee: createReq.manualShippingFee
-  });
-
-  // lấy/tạo/sync customer trước, rồi gắn id vào order khi insert
+  // lấy/tạo/sync customer chạy NGOÀI transaction: cơ chế bắt unique-violation (23505) rồi
+  // đọc lại để xử lý race không hoạt động bên trong một transaction cha (Postgres abort cả tx
+  // khi một statement lỗi). Customer get-or-create là idempotent nên không cần atomic với order.
   const customer = await getOrCreateOrSyncCustomer(
+    db,
     createReq.customerName,
     createReq.customerEmail,
     createReq.customerPhoneNum
   );
 
-  await db.transaction(async (tx) => {
+  return await db.transaction(async (tx) => {
+    const calculation = await calculateOrder(tx, {
+      lines: createReq.lines,
+      manualDiscountAmount: createReq.manualDiscountAmount,
+      manualShippingFee: createReq.manualShippingFee
+    });
+
     await tx.insert(orders).values({
       id: newOrderId,
       code: generateOrderCode(),
@@ -112,21 +116,21 @@ export async function createOrder(actorId: string, createReq: CreateOrderRequest
     }));
 
     await tx.insert(orderLines).values(lineValues);
+
+    const newOrder = await getOrderById(tx, newOrderId);
+
+    await recordAuditLog(tx, {
+      actorId: actorId,
+      code: "order-create",
+      referenceType: "order",
+      referenceId: newOrderId,
+      metadata: {
+        order: newOrder
+      }
+    });
+
+    return newOrder;
   });
-
-  const newOrder = await getOrderById(newOrderId);
-
-  await recordAuditLog({
-    actorId: actorId,
-    code: "order-create",
-    referenceType: "order",
-    referenceId: newOrderId,
-    metadata: {
-      order: newOrder
-    }
-  });
-
-  return newOrder;
 }
 
 function generateOrderCode(): string {

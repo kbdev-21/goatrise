@@ -1,4 +1,4 @@
-import { db } from "../../../core/db.js";
+import type { DbExec } from "../../../core/db.js";
 import { collections } from "../schema/collections.schema.js";
 import { collectionProducts } from "../schema/collection-products.schema.js";
 import { products } from "../schema/products.schema.js";
@@ -9,7 +9,7 @@ import { recordAuditLog } from "../../audit/domain/audit-logs.service.js";
 import type { CreateCollectionRequest, UpdateCollectionRequest } from "./validators.js";
 import { COLLECTION_RELATIONS, type Collection } from "./types.js";
 
-export async function getCollectionById(id: string): Promise<Collection> {
+export async function getCollectionById(db: DbExec, id: string): Promise<Collection> {
   const collection = await db.query.collections.findFirst({
     where: {
       id: id
@@ -24,7 +24,7 @@ export async function getCollectionById(id: string): Promise<Collection> {
   return collection;
 }
 
-export async function getCollectionBySlug(slug: string): Promise<Collection> {
+export async function getCollectionBySlug(db: DbExec, slug: string): Promise<Collection> {
   const collection = await db.query.collections.findFirst({
     where: {
       slug: slug
@@ -39,21 +39,21 @@ export async function getCollectionBySlug(slug: string): Promise<Collection> {
   return collection;
 }
 
-export async function findAllCollections(): Promise<Collection[]> {
+export async function findAllCollections(db: DbExec): Promise<Collection[]> {
   return await db.query.collections.findMany({
     orderBy: { createdAt: "desc" },
     with: COLLECTION_RELATIONS
   });
 }
 
-export async function createCollection(actorId: string, createReq: CreateCollectionRequest): Promise<Collection> {
+export async function createCollection(db: DbExec, actorId: string, createReq: CreateCollectionRequest): Promise<Collection> {
   const newCollectionId = uuidv7();
 
-  if (createReq.productIds?.length) {
-    await validateProductIds(createReq.productIds);
-  }
+  return await db.transaction(async (tx) => {
+    if (createReq.productIds?.length) {
+      await validateProductIds(tx, createReq.productIds);
+    }
 
-  await db.transaction(async (tx) => {
     await tx.insert(collections).values({
       id: newCollectionId,
       slug: createReq.slug,
@@ -72,31 +72,31 @@ export async function createCollection(actorId: string, createReq: CreateCollect
         isFeatured: false
       })));
     }
+
+    const newCollection = await getCollectionById(tx, newCollectionId);
+
+    await recordAuditLog(tx, {
+      actorId: actorId,
+      code: "collection-create",
+      referenceType: "collection",
+      referenceId: newCollectionId,
+      metadata: {
+        collection: newCollection
+      }
+    });
+
+    return newCollection;
   });
-
-  const newCollection = await getCollectionById(newCollectionId);
-
-  await recordAuditLog({
-    actorId: actorId,
-    code: "collection-create",
-    referenceType: "collection",
-    referenceId: newCollectionId,
-    metadata: {
-      collection: newCollection
-    }
-  });
-
-  return newCollection;
 }
 
-export async function updateCollection(actorId: string, collectionId: string, updateReq: UpdateCollectionRequest): Promise<Collection> {
-  const collectionBefore = await getCollectionById(collectionId);
+export async function updateCollection(db: DbExec, actorId: string, collectionId: string, updateReq: UpdateCollectionRequest): Promise<Collection> {
+  return await db.transaction(async (tx) => {
+    const collectionBefore = await getCollectionById(tx, collectionId);
 
-  if (updateReq.productIds !== undefined) {
-    await validateProductIds(updateReq.productIds);
-  }
+    if (updateReq.productIds !== undefined) {
+      await validateProductIds(tx, updateReq.productIds);
+    }
 
-  await db.transaction(async (tx) => {
     await tx.update(collections).set({
       slug: updateReq.slug,
       type: updateReq.type,
@@ -109,44 +109,44 @@ export async function updateCollection(actorId: string, collectionId: string, up
     if (updateReq.productIds !== undefined) {
       await reconcileCollectionProducts(tx, collectionId, updateReq.productIds);
     }
+
+    const collectionAfter = await getCollectionById(tx, collectionId);
+
+    await recordAuditLog(tx, {
+      actorId: actorId,
+      code: "collection-update",
+      referenceType: "collection",
+      referenceId: collectionId,
+      metadata: {
+        before: collectionBefore,
+        after: collectionAfter
+      }
+    });
+
+    return collectionAfter;
   });
-
-  const collectionAfter = await getCollectionById(collectionId);
-
-  await recordAuditLog({
-    actorId: actorId,
-    code: "collection-update",
-    referenceType: "collection",
-    referenceId: collectionId,
-    metadata: {
-      before: collectionBefore,
-      after: collectionAfter
-    }
-  });
-
-  return collectionAfter;
 }
 
-export async function deleteCollection(actorId: string, collectionId: string): Promise<void> {
-  const collectionBefore = await getCollectionById(collectionId);
-
+export async function deleteCollection(db: DbExec, actorId: string, collectionId: string): Promise<void> {
   await db.transaction(async (tx) => {
+    const collectionBefore = await getCollectionById(tx, collectionId);
+
     await tx.delete(collectionProducts).where(eq(collectionProducts.collectionId, collectionId));
     await tx.delete(collections).where(eq(collections.id, collectionId));
-  });
 
-  await recordAuditLog({
-    actorId: actorId,
-    code: "collection-delete",
-    referenceType: "collection",
-    referenceId: collectionId,
-    metadata: {
-      collection: collectionBefore
-    }
+    await recordAuditLog(tx, {
+      actorId: actorId,
+      code: "collection-delete",
+      referenceType: "collection",
+      referenceId: collectionId,
+      metadata: {
+        collection: collectionBefore
+      }
+    });
   });
 }
 
-async function validateProductIds(productIds: string[]): Promise<void> {
+async function validateProductIds(db: DbExec, productIds: string[]): Promise<void> {
   if (productIds.length === 0) {
     return;
   }
@@ -158,7 +158,7 @@ async function validateProductIds(productIds: string[]): Promise<void> {
   }
 }
 
-async function reconcileCollectionProducts(tx: Parameters<Parameters<typeof db.transaction>[0]>[0], collectionId: string, productIds: string[]): Promise<void> {
+async function reconcileCollectionProducts(tx: DbExec, collectionId: string, productIds: string[]): Promise<void> {
   if (productIds.length === 0) {
     await tx.delete(collectionProducts).where(eq(collectionProducts.collectionId, collectionId));
     return;

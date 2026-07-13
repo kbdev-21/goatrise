@@ -1,10 +1,10 @@
-import { db } from "../../../core/db.js";
+import type { DbExec } from "../../../core/db.js";
 import { customers } from "../schema/customers.schema.js";
 import { eq } from "drizzle-orm";
 import { createCustomer } from "./customers.service.js";
 import type { Customer } from "./types.js";
 
-export async function getOrCreateOrSyncCustomer(name: string, email?: string, phoneNum?: string): Promise<Customer> {
+export async function getOrCreateOrSyncCustomer(db: DbExec, name: string, email?: string, phoneNum?: string): Promise<Customer> {
   // email là identity ưu tiên.
   let existing: Customer | undefined;
   if (email) {
@@ -24,13 +24,13 @@ export async function getOrCreateOrSyncCustomer(name: string, email?: string, ph
 
   // đã có customer -> sync (chỉ điền field còn thiếu), rồi return
   if (existing) {
-    return await syncMissingFields(existing, email, phoneNum);
+    return await syncMissingFields(db, existing, email, phoneNum);
   }
 
   // chưa có -> tạo mới (actorId null: luồng sync ko gắn với actor cụ thể).
   // 2 request cùng email chạy song song: INSERT sau vỡ unique(email) -> đọc lại bản kia vừa tạo.
   try {
-    return await createCustomer(null, { name: name, email: email, phoneNum: phoneNum });
+    return await createCustomer(db, null, { name: name, email: email, phoneNum: phoneNum });
   } catch (e) {
     if (!email || !isUniqueViolation(e)) {
       throw e;
@@ -41,11 +41,11 @@ export async function getOrCreateOrSyncCustomer(name: string, email?: string, ph
       throw e;
     }
 
-    return await syncMissingFields(raced, email, phoneNum);
+    return await syncMissingFields(db, raced, email, phoneNum);
   }
 }
 
-async function syncMissingFields(existing: Customer, email?: string, phoneNum?: string): Promise<Customer> {
+async function syncMissingFields(db: DbExec, existing: Customer, email?: string, phoneNum?: string): Promise<Customer> {
   const updates: Partial<Pick<Customer, "email" | "phoneNum">> = {};
 
   if (email && !existing.email) {

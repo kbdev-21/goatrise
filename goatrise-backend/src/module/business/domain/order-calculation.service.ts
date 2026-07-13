@@ -1,5 +1,5 @@
 import { HTTPException } from "hono/http-exception";
-import { db } from "../../../core/db.js";
+import type { DbExec } from "../../../core/db.js";
 import type { CalculateOrderRequest } from "./validators.js";
 import type { OrderLineSnapItem } from "../schema/order-lines.schema.js";
 
@@ -25,7 +25,7 @@ export type OrderCalculationResult = {
   total: number
 }
 
-export async function calculateOrder(req: CalculateOrderRequest): Promise<OrderCalculationResult> {
+export async function calculateOrder(db: DbExec, req: CalculateOrderRequest): Promise<OrderCalculationResult> {
   const itemIds = req.lines.map((line) => line.itemId);
   const foundItems = await db.query.items.findMany({
     columns: {

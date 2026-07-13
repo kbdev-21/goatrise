@@ -1,9 +1,9 @@
 import { HTTPException } from "hono/http-exception";
-import { db } from "../../../core/db.js";
+import type { DbExec } from "../../../core/db.js";
 import { ITEM_TRANSACTIONS_RELATIONS, type ItemTransaction } from "./types.js";
 import type { ItemTransactionType } from "../schema/item-transactions.schema.js";
 
-export async function getItemTransactionById(id: string): Promise<ItemTransaction> {
+export async function getItemTransactionById(db: DbExec, id: string): Promise<ItemTransaction> {
   const transaction = await db.query.itemTransactions.findFirst({
     where: {
       id: id
@@ -19,6 +19,7 @@ export async function getItemTransactionById(id: string): Promise<ItemTransactio
 }
 
 export async function findItemTransactions(
+  db: DbExec,
   itemId?: string,
   type?: ItemTransactionType,
   offset: number = 0,
