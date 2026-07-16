@@ -146,6 +146,7 @@ export default function CreateOrderPage() {
     calculateMutation.mutate(
       {
         lines: lines,
+        customerPhoneNum: customerPhoneNum.trim() || undefined,
         couponCode: coupon || undefined,
         manualDiscountAmount: discount,
         manualShippingFee: shipping,
@@ -228,6 +229,13 @@ export default function CreateOrderPage() {
       },
     });
   }
+
+  // ưu tiên message thật từ backend (vd "Coupon not applicable" / "Coupon not found")
+  const calcErrorMessage =
+    isAxiosError(calculateMutation.error) &&
+    typeof calculateMutation.error.response?.data === "string"
+      ? calculateMutation.error.response.data
+      : "Failed to calculate order.";
 
   return (
     <div className="flex min-h-svh flex-col gap-4 p-6">
@@ -444,7 +452,7 @@ export default function CreateOrderPage() {
               </div>
 
               {calculateMutation.isError ? (
-                <span className="text-destructive text-sm">Failed to calculate order.</span>
+                <span className="text-destructive text-sm">{calcErrorMessage}</span>
               ) : !calculation ? (
                 <span className="text-muted-foreground text-sm">
                   Add items to see the order total.

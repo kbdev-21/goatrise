@@ -3,9 +3,11 @@ import {
   calculateOrder,
   createOrder,
   findOrders,
+  updateOrder,
   type CalculateOrderRequest,
   type CreateOrderRequest,
   type FindOrdersParams,
+  type UpdateOrderRequest,
 } from "@/api/order/api.ts";
 
 export const orderKeys = {
@@ -31,6 +33,17 @@ export function useCreateOrder() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (request: CreateOrderRequest) => createOrder(request),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: orderKeys.all });
+    },
+  });
+}
+
+export function useUpdateOrder() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ orderId, request }: { orderId: string; request: UpdateOrderRequest }) =>
+      updateOrder(orderId, request),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: orderKeys.all });
     },

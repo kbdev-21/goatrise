@@ -1,5 +1,6 @@
 import axiosInstance from "@/api/axios-instance.ts";
 import type { ItemAttributeValues } from "@/api/item/api.ts";
+import type { Coupon } from "@/api/coupon/api.ts";
 import type { Address, LanguageString } from "@/core/types.ts";
 
 export async function findOrders(params?: FindOrdersParams): Promise<Order[]> {
@@ -17,6 +18,11 @@ export async function createOrder(request: CreateOrderRequest): Promise<Order> {
   return res.data;
 }
 
+export async function updateOrder(orderId: string, request: UpdateOrderRequest): Promise<Order> {
+  const res = await axiosInstance.patch<Order>(`/api/orders/${orderId}`, request);
+  return res.data;
+}
+
 export type OrderStatus = "PENDING" | "PROCESSING" | "SHIPPING" | "COMPLETED" | "CANCELLED";
 
 export type OrderPaymentStatus = "PENDING" | "PAID" | "FAILED" | "REFUNDED";
@@ -25,7 +31,7 @@ export type OrderPaymentMethod = "COD" | "MANUAL_TRANSFER" | "MOMO" | "VNPAY" | 
 
 export type OrderChannel = "WEBSITE" | "INSTAGRAM" | "FACEBOOK" | "TIKTOK" | "SHOPEE" | "OTHER";
 
-// Mirror backend: module/business/schema/order-lines.schema.ts -> OrderLineSnapItem
+// Mirror backend: module/orders/schema/order-lines.schema.ts -> OrderLineSnapItem
 export type OrderLineSnapItem = {
   sku: string;
   name: string;
@@ -39,7 +45,7 @@ export type OrderLineSnapItem = {
   } | null;
 };
 
-// Mirror backend: module/business/schema/order-lines.schema.ts (bigint serialized as number)
+// Mirror backend: module/orders/schema/order-lines.schema.ts (bigint serialized as number)
 export type OrderLine = {
   id: string;
   orderId: string;
@@ -53,7 +59,7 @@ export type OrderLine = {
   updatedAt: string;
 };
 
-// Mirror backend: module/business/domain/types.ts -> Order (ORDER_RELATIONS)
+// Mirror backend: module/orders/domain/types.ts -> Order (ORDER_RELATIONS)
 // bigint columns serialized as number; timestamps serialized as ISO string
 export type Order = {
   id: string;
@@ -63,7 +69,7 @@ export type Order = {
   customerEmail: string | null;
   customerPhoneNum: string;
   customerAddress: Address;
-  couponCode: string | null;
+  couponId: string | null;
   subtotalAmount: number;
   manualDiscountAmount: number;
   couponDiscountAmount: number;
@@ -81,6 +87,7 @@ export type Order = {
   createdAt: string;
   updatedAt: string;
   lines: OrderLine[];
+  coupon: Coupon | null;
 };
 
 export type FindOrdersParams = {
@@ -97,7 +104,7 @@ export type OrderLineRequest = {
   quantity: number;
 };
 
-// Mirror backend: module/business/domain/validators.ts -> CreateOrderRequestSchema
+// Mirror backend: module/orders/domain/validators.ts -> CreateOrderRequestSchema
 export type CreateOrderRequest = {
   customerName: string;
   customerEmail?: string;
@@ -115,9 +122,9 @@ export type CreateOrderRequest = {
   lines: OrderLineRequest[];
 };
 
-// Mirror backend: module/business/domain/validators.ts -> CalculateOrderRequestSchema
+// Mirror backend: module/orders/domain/validators.ts -> CalculateOrderRequestSchema
 export type CalculateOrderRequest = {
-  customerEmail?: string;
+  customerPhoneNum?: string;
   customerAddress?: Address;
   couponCode?: string;
   paymentMethod?: OrderPaymentMethod;
@@ -126,7 +133,14 @@ export type CalculateOrderRequest = {
   lines: OrderLineRequest[];
 };
 
-// Mirror backend: module/business/domain/order-calculation.service.ts -> OrderCalculationResult
+// Mirror backend: module/orders/domain/validators.ts -> UpdateOrderRequestSchema
+export type UpdateOrderRequest = {
+  paymentStatus?: OrderPaymentStatus;
+  status?: OrderStatus;
+  note?: string;
+};
+
+// Mirror backend: module/orders/domain/order-calculation.service.ts -> CalculateOrderResult
 export type OrderCalculationResult = {
   lines: {
     itemId: string;

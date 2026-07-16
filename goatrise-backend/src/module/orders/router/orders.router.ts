@@ -4,9 +4,9 @@ import { requiredRolesMiddleware } from "../../auth/middleware/required-roles.mi
 import type { ContextVariables } from "../../../core/types.js";
 import { db } from "../../../core/db.js";
 import { calculateOrder } from "../domain/order-calculation.service.js";
-import { createOrder, findOrders } from "../domain/orders.service.js";
+import { createOrder, findOrders, placeOrder, updateOrder } from "../domain/orders.service.js";
 import { zValidator } from "@hono/zod-validator";
-import { CalculateOrderRequestSchema, CreateOrderRequestSchema, FindOrdersQuerySchema } from "../domain/validators.js";
+import { CalculateOrderRequestSchema, CreateOrderRequestSchema, FindOrdersQuerySchema, PlaceOrderRequestSchema, UpdateOrderRequestSchema } from "../domain/validators.js";
 
 export const ordersRouter = new Hono<{ Variables: ContextVariables }>();
 
@@ -30,6 +30,17 @@ ordersRouter.post("/api/orders/calculate",
   }
 );
 
+ordersRouter.post("/api/orders/place",
+  zValidator("json", PlaceOrderRequestSchema),
+  async (c) => {
+    const placeReq = c.req.valid("json");
+
+    const newOrder = await placeOrder(db, placeReq);
+
+    return c.json(newOrder, 201);
+  }
+);
+
 ordersRouter.post("/api/orders",
   authMiddleware,
   requiredRolesMiddleware(["ADMIN", "STAFF"]),
@@ -41,5 +52,20 @@ ordersRouter.post("/api/orders",
     const newOrder = await createOrder(db, currentUser.id, createReq);
 
     return c.json(newOrder, 201);
+  }
+);
+
+ordersRouter.patch("/api/orders/:id",
+  authMiddleware,
+  requiredRolesMiddleware(["ADMIN", "STAFF"]),
+  zValidator("json", UpdateOrderRequestSchema),
+  async (c) => {
+    const currentUser = c.get("currentUser");
+    const orderId = c.req.param("id");
+    const updateReq = c.req.valid("json");
+
+    const updatedOrder = await updateOrder(db, currentUser.id, orderId, updateReq);
+
+    return c.json(updatedOrder);
   }
 );

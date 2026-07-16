@@ -12,6 +12,7 @@ import {
   Shirt,
   ShoppingCart,
   Tags,
+  TicketPercent,
   Truck,
   User,
   Users,
@@ -77,6 +78,7 @@ const navGroups: NavGroup[] = [
     label: "Business",
     items: [
       { title: "Orders", url: "/orders", icon: ShoppingCart },
+      { title: "Coupons", url: "/coupons", icon: TicketPercent },
       { title: "Customers", url: "/customers", icon: Contact },
     ],
   },

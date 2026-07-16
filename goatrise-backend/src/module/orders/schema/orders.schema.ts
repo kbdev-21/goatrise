@@ -1,5 +1,6 @@
 import { bigint, index, jsonb, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { customers } from "../../customers/schema/customers.schema.js";
+import { coupons } from "../../promotion/schema/coupons.schema.js";
 import type { Address } from "../../../core/types.js";
 
 export const orders = pgTable("orders", {
@@ -12,7 +13,7 @@ export const orders = pgTable("orders", {
   customerPhoneNum: text("customer_phone_num").notNull(),
   customerAddress: jsonb("customer_address").$type<Address>().notNull(),
 
-  couponCode: text("coupon_code"),
+  couponId: uuid("coupon_id").references(() => coupons.id),
 
   subtotalAmount: bigint("subtotal_amount", { mode: "number" }).notNull(),
 
@@ -38,7 +39,8 @@ export const orders = pgTable("orders", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().$onUpdateFn(() => new Date()).notNull(),
 }, (t) => [
-  index().on(t.customerId)
+  index().on(t.customerId),
+  index().on(t.couponId)
 ]);
 
 export type OrderStatus = "PENDING" | "PROCESSING" | "SHIPPING" | "COMPLETED" | "CANCELLED";

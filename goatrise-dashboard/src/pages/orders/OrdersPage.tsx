@@ -1,11 +1,15 @@
-import { useMemo, useState } from "react";
-import { Plus, Search } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Pencil, Plus, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useOrders } from "@/api/order/query-hooks.ts";
+import { toast } from "sonner";
+import { isAxiosError } from "axios";
+import { useOrders, useUpdateOrder } from "@/api/order/query-hooks.ts";
 import type {
+  Order,
   OrderChannel,
   OrderPaymentStatus,
   OrderStatus,
+  UpdateOrderRequest,
 } from "@/api/order/api.ts";
 import type { Address } from "@/core/types.ts";
 import { COUNTRIES } from "@/constant/countries.ts";
@@ -14,6 +18,14 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
 import { Input } from "@/components/ui/input.tsx";
+import { Textarea } from "@/components/ui/textarea.tsx";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog.tsx";
 import {
   Select,
   SelectContent,
@@ -51,6 +63,13 @@ const STATUS_OPTIONS: { label: string; value: OrderStatus }[] = [
   { label: "Cancelled", value: "CANCELLED" },
 ];
 
+const PAYMENT_STATUS_OPTIONS: { label: string; value: OrderPaymentStatus }[] = [
+  { label: "Pending", value: "PENDING" },
+  { label: "Paid", value: "PAID" },
+  { label: "Failed", value: "FAILED" },
+  { label: "Refunded", value: "REFUNDED" },
+];
+
 const SORT_OPTIONS: { label: string; value: string }[] = [
   { label: "Newest", value: "createdAt:DESC" },
   { label: "Oldest", value: "createdAt:ASC" },
@@ -81,6 +100,7 @@ export default function OrdersPage() {
   const [status, setStatus] = useState<OrderStatus | typeof STATUS_ALL>(STATUS_ALL);
   const [sort, setSort] = useState<string>("createdAt:DESC");
   const [offset, setOffset] = useState(0);
+  const [editingOrder, setEditingOrder] = useState<Order | null>(null);
 
   const navigate = useNavigate();
 
@@ -221,18 +241,19 @@ export default function OrdersPage() {
                 <TableHead>Payment</TableHead>
                 <TableHead>Channel</TableHead>
                 <TableHead>Date</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {ordersQuery.isError ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-destructive text-center">
+                  <TableCell colSpan={9} className="text-destructive text-center">
                     Failed to load orders.
                   </TableCell>
                 </TableRow>
               ) : !ordersQuery.data || ordersQuery.data.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-muted-foreground text-center">
+                  <TableCell colSpan={9} className="text-muted-foreground text-center">
                     No orders found.
                   </TableCell>
                 </TableRow>
@@ -276,6 +297,17 @@ export default function OrdersPage() {
                     <TableCell>
                       {new Date(order.createdAt).toLocaleString("en-GB")}
                     </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label="Update order"
+                        title="Update order"
+                        onClick={() => setEditingOrder(order)}
+                      >
+                        <Pencil className="size-4" />
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))
               )}
@@ -309,8 +341,170 @@ export default function OrdersPage() {
           </Button>
         </div>
       </div>
+
+      <UpdateOrderDialog
+        order={editingOrder}
+        onClose={() => setEditingOrder(null)}
+        onSuccess={() => ordersQuery.refetch()}
+      />
     </div>
   );
+}
+
+function UpdateOrderDialog({
+  order,
+  onClose,
+  onSuccess,
+}: {
+  order: Order | null;
+  onClose: () => void;
+  onSuccess: () => void;
+}) {
+  const updateMutation = useUpdateOrder();
+  const [status, setStatus] = useState<OrderStatus>("PENDING");
+  const [paymentStatus, setPaymentStatus] = useState<OrderPaymentStatus>("PENDING");
+  const [note, setNote] = useState("");
+  // select portal ra ngoài dialog -> click đóng dropdown bị Dialog hiểu nhầm là click ngoài
+  const selectOpenRef = useRef(false);
+  const selectClosedAtRef = useRef(0);
+
+  useEffect(() => {
+    if (order) {
+      setStatus(order.status);
+      setPaymentStatus(order.paymentStatus);
+      setNote(order.note ?? "");
+    }
+  }, [order]);
+
+  // mirror rule backend
+  const isLocked = order?.status === "COMPLETED";
+  const completingWithoutPaid = status === "COMPLETED" && paymentStatus !== "PAID";
+  const canSubmit = order !== null && !isLocked && !completingWithoutPaid;
+
+  function handleSubmit() {
+    if (!order) return;
+    const request: UpdateOrderRequest = {
+      status: status,
+      paymentStatus: paymentStatus,
+      note: note.trim() || undefined,
+    };
+    updateMutation.mutate(
+      { orderId: order.id, request },
+      {
+        onSuccess: () => {
+          toast.success(`Updated order ${order.code}`);
+          onSuccess();
+          onClose();
+        },
+        onError: (error) =>
+          toast.error(
+            isAxiosError(error) && typeof error.response?.data === "string"
+              ? error.response.data
+              : "Failed to update order",
+          ),
+      },
+    );
+  }
+
+  return (
+    <Dialog
+      open={order !== null}
+      onOpenChange={(next) => {
+        if (next) return;
+        if (selectOpenRef.current || Date.now() - selectClosedAtRef.current < 300) return;
+        onClose();
+      }}
+    >
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Update order {order?.code}</DialogTitle>
+        </DialogHeader>
+
+        {isLocked ? (
+          <p className="text-muted-foreground text-sm">
+            This order is completed and can no longer be changed.
+          </p>
+        ) : (
+          <div className="flex flex-col gap-4">
+            <div className="grid grid-cols-2 gap-2">
+              <div className="flex flex-col gap-1.5">
+                <FieldLabel>Status</FieldLabel>
+                <Select
+                  value={status}
+                  onValueChange={(v) => setStatus(v as OrderStatus)}
+                  onOpenChange={(open) => {
+                    selectOpenRef.current = open;
+                    if (!open) selectClosedAtRef.current = Date.now();
+                  }}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {STATUS_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <FieldLabel>Payment</FieldLabel>
+                <Select
+                  value={paymentStatus}
+                  onValueChange={(v) => setPaymentStatus(v as OrderPaymentStatus)}
+                  onOpenChange={(open) => {
+                    selectOpenRef.current = open;
+                    if (!open) selectClosedAtRef.current = Date.now();
+                  }}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PAYMENT_STATUS_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {completingWithoutPaid && (
+              <span className="text-destructive text-xs">
+                Payment must be Paid to complete the order.
+              </span>
+            )}
+
+            <div className="flex flex-col gap-1.5">
+              <FieldLabel>Note</FieldLabel>
+              <Textarea value={note} onChange={(e) => setNote(e.target.value)} />
+            </div>
+          </div>
+        )}
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose} disabled={updateMutation.isPending}>
+            {isLocked ? "Close" : "Cancel"}
+          </Button>
+          {!isLocked && (
+            <Button disabled={updateMutation.isPending || !canSubmit} onClick={handleSubmit}>
+              {updateMutation.isPending && <Spinner />}
+              Save
+            </Button>
+          )}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function FieldLabel({ children }: { children: string }) {
+  return <label className="text-xs font-medium">{children}</label>;
 }
 
 function formatAddress(address: Address): string {

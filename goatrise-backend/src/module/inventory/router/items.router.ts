@@ -4,7 +4,7 @@ import { requiredRolesMiddleware } from "../../auth/middleware/required-roles.mi
 import type { ContextVariables } from "../../../core/types.js";
 import { db } from "../../../core/db.js";
 import { createItem, deleteItem, findAllItems, getItemById, updateItemInfo } from "../domain/items.service.js";
-import { importItem, manualAdjustItemStock } from "../domain/inventory.service.js";
+import { importItemStock, manualAdjustItemStock } from "../domain/inventory.service.js";
 import { findItemTransactions } from "../domain/item-transactions.service.js";
 import { zValidator } from "@hono/zod-validator";
 import { AdjustItemStockRequestSchema, CreateItemRequestSchema, ImportItemRequestSchema, UpdateItemRequestSchema, FindItemTransactionsQuerySchema } from "../domain/validators.js";
@@ -83,7 +83,7 @@ itemsRouter.post("/api/items/:id/import",
     const itemId = c.req.param("id");
     const importReq = c.req.valid("json");
 
-    const updatedItem = await importItem(db, currentUser.id, itemId, importReq);
+    const updatedItem = await importItemStock(db, currentUser.id, itemId, importReq);
 
     return c.json(updatedItem);
   }
