@@ -21,7 +21,7 @@ export const CreateProductRequestSchema = z.object({
   imgUrls: z.array(z.string().trim().min(1)).optional(),
   displayPrice: z.number().int().nonnegative().optional(),
   comparePrice: z.number().int().nonnegative().optional(),
-  status: z.enum(["ACTIVE", "INACTIVE"]).optional(),
+  isActive: z.boolean().optional(),
   requiredAttributes: z.array(ItemAttributeSchema),
   itemIds: ItemIdsSchema.optional()
 });
@@ -35,7 +35,7 @@ export const UpdateProductRequestSchema = z.object({
   imgUrls: z.array(z.string().trim().min(1)).optional(),
   displayPrice: z.number().int().nonnegative().optional(),
   comparePrice: z.number().int().nonnegative().nullable().optional(),
-  status: z.enum(["ACTIVE", "INACTIVE"]).optional(),
+  isActive: z.boolean().optional(),
   requiredAttributes: z.array(ItemAttributeSchema).optional(),
   itemIds: ItemIdsSchema.optional()
 });
@@ -47,7 +47,8 @@ export const CreateCollectionRequestSchema = z.object({
   title: LanguageStringSchema,
   shortDescription: LanguageStringSchema,
   imgUrl: z.string().trim().min(1).optional(),
-  status: z.enum(["ACTIVE", "INACTIVE"]).optional(),
+  isActive: z.boolean().optional(),
+  priority: z.number().int().optional(),
   productIds: ProductIdsSchema.optional()
 });
 export type CreateCollectionRequest = z.infer<typeof CreateCollectionRequestSchema>;
@@ -58,7 +59,8 @@ export const UpdateCollectionRequestSchema = z.object({
   title: LanguageStringSchema.optional(),
   shortDescription: LanguageStringSchema.optional(),
   imgUrl: z.string().trim().min(1).nullable().optional(),
-  status: z.enum(["ACTIVE", "INACTIVE"]).optional(),
+  isActive: z.boolean().optional(),
+  priority: z.number().int().optional(),
   productIds: ProductIdsSchema.optional()
 });
 export type UpdateCollectionRequest = z.infer<typeof UpdateCollectionRequestSchema>;

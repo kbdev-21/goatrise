@@ -43,6 +43,7 @@ export default function CreateItemPage() {
       imgUrl: value.imgUrl.trim() || undefined,
       weight: value.weight ? Number(value.weight) : undefined,
       productId: value.productId ?? undefined,
+      isActive: value.isActive,
       attributeValues: attributeValues,
     };
 

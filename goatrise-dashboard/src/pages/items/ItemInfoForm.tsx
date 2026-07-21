@@ -1,5 +1,6 @@
 import { Input } from "@/components/ui/input.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
+import { Switch } from "@/components/ui/switch.tsx";
 import {
   Select,
   SelectContent,
@@ -19,6 +20,7 @@ export type ItemInfoFormValue = {
   weight: string;
   imgUrl: string;
   note: string;
+  isActive: boolean;
   colorEnabled: boolean;
   colorHex: string;
   colorEnText: string;
@@ -35,6 +37,7 @@ export const EMPTY_ITEM_INFO_FORM_VALUE: ItemInfoFormValue = {
   weight: "",
   imgUrl: "",
   note: "",
+  isActive: true,
   colorEnabled: true,
   colorHex: "",
   colorEnText: "",
@@ -56,7 +59,13 @@ export default function ItemInfoForm({
 
   return (
     <div className="bg-card flex flex-col gap-4 rounded-md border p-6">
-      <h2 className="text-base font-medium">Info</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-base font-medium">Info</h2>
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-medium">Active</span>
+          <Switch checked={value.isActive} onCheckedChange={(v) => set({ isActive: v })} />
+        </div>
+      </div>
 
       <div className="flex flex-col gap-1.5">
         <FieldLabel required>SKU</FieldLabel>
@@ -136,6 +145,7 @@ export default function ItemInfoForm({
           onChange={(e) => set({ note: e.target.value })}
         />
       </div>
+
 
       <div className="flex flex-col gap-1.5">
         <FieldLabel>Attributes</FieldLabel>

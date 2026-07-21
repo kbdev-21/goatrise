@@ -2,7 +2,8 @@ import { useMemo, useState } from "react";
 import { Eye, ImageOff, Plus, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useProducts } from "@/api/product/query-hooks.ts";
-import type { Product, ProductStatus } from "@/api/product/api.ts";
+import type { Product } from "@/api/product/api.ts";
+import { ActiveBadge } from "@/components/shared/active-badge.tsx";
 import { capitalize, formatPriceVn, normalizeVietnameseString } from "@/core/utils.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
@@ -194,7 +195,7 @@ export default function ProductsPage() {
                     </TableCell>
                     <TableCell>{product.sold}</TableCell>
                     <TableCell>
-                      <StatusBadge status={product.status} />
+                      <ActiveBadge isActive={product.isActive} />
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-1">
@@ -230,18 +231,6 @@ function minItemPrice(product: Product): string {
   if (product.items.length === 0) return "—";
   const min = Math.min(...product.items.map((item) => Number(item.price)));
   return min.toLocaleString("vi-VN");
-}
-
-function StatusBadge({ status }: { status: ProductStatus }) {
-  return status === "ACTIVE" ? (
-    <span className="inline-flex rounded bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
-      Active
-    </span>
-  ) : (
-    <span className="bg-muted text-muted-foreground inline-flex rounded px-2 py-0.5 text-xs font-medium">
-      Inactive
-    </span>
-  );
 }
 
 function ProductImage({ product }: { product: Product }) {

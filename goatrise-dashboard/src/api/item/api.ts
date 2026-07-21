@@ -45,8 +45,6 @@ export async function findItemTransactions(
   return res.data;
 }
 
-export type ItemStatus = "ACTIVE" | "INACTIVE";
-
 export type ItemTransactionType = "IMPORT" | "ADJUST" | "SOLD";
 
 export type ItemAttribute = "COLOR" | "SIZE";
@@ -70,7 +68,7 @@ export type Item = {
   note: string | null;
   imgUrl: string | null;
   attributeValues: ItemAttributeValues;
-  status: ItemStatus;
+  isActive: boolean;
   price: number;
   weight: number | null;
   stock: number;
@@ -86,7 +84,7 @@ export type Item = {
     imgUrls: string[] | null;
     displayPrice: number | null;
     comparePrice: number | null;
-    status: "ACTIVE" | "INACTIVE";
+    isActive: boolean;
     requiredAttributes: ItemAttribute[];
     sold: number;
     createdAt: string;
@@ -123,6 +121,7 @@ export type CreateItemRequest = {
   weight?: number;
   productId?: string;
   price: number;
+  isActive?: boolean;
   attributeValues: ItemAttributeValues;
 };
 
@@ -134,6 +133,7 @@ export type UpdateItemRequest = {
   weight?: number;
   productId?: string;
   price?: number;
+  isActive?: boolean;
   attributeValues?: ItemAttributeValues;
 };
 

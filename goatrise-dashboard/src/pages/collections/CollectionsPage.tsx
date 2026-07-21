@@ -10,7 +10,6 @@ import {
 } from "@/api/collection/query-hooks.ts";
 import type {
   Collection,
-  CollectionStatus,
   CollectionType,
   CreateCollectionRequest,
   UpdateCollectionRequest,
@@ -22,6 +21,8 @@ import { Spinner } from "@/components/ui/spinner.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
+import { Switch } from "@/components/ui/switch.tsx";
+import { ActiveBadge } from "@/components/shared/active-badge.tsx";
 import {
   Dialog,
   DialogContent,
@@ -56,6 +57,8 @@ const TYPE_ALL = "ALL";
 const SORT_OPTIONS: { label: string; value: string }[] = [
   { label: "Newest", value: "createdAt:DESC" },
   { label: "Oldest", value: "createdAt:ASC" },
+  { label: "Priority (high→low)", value: "priority:DESC" },
+  { label: "Priority (low→high)", value: "priority:ASC" },
 ];
 
 export default function CollectionsPage() {
@@ -99,11 +102,19 @@ export default function CollectionsPage() {
   }, [collectionsQuery.data, search, type]);
 
   const sortedCollections = useMemo(() => {
-    const [, direction] = sort.split(":");
+    const [field, direction] = sort.split(":");
     const factor = direction === "ASC" ? 1 : -1;
-    return [...filteredCollections].sort(
-      (a, b) => a.createdAt.localeCompare(b.createdAt) * factor,
-    );
+    return [...filteredCollections].sort((a, b) => {
+      let cmp: number;
+      switch (field) {
+        case "priority":
+          cmp = a.priority - b.priority;
+          break;
+        default:
+          cmp = a.createdAt.localeCompare(b.createdAt);
+      }
+      return cmp * factor;
+    });
   }, [filteredCollections, sort]);
 
   return (
@@ -184,6 +195,7 @@ export default function CollectionsPage() {
                 <TableHead>Name</TableHead>
                 <TableHead>Type</TableHead>
                 <TableHead>Products</TableHead>
+                <TableHead>Priority</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
@@ -191,13 +203,13 @@ export default function CollectionsPage() {
             <TableBody>
               {collectionsQuery.isError ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-destructive text-center">
+                  <TableCell colSpan={7} className="text-destructive text-center">
                     Failed to load collections.
                   </TableCell>
                 </TableRow>
               ) : sortedCollections.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-muted-foreground text-center">
+                  <TableCell colSpan={7} className="text-muted-foreground text-center">
                     No collections found.
                   </TableCell>
                 </TableRow>
@@ -216,8 +228,9 @@ export default function CollectionsPage() {
                       {collection.products.length} product
                       {collection.products.length === 1 ? "" : "s"}
                     </TableCell>
+                    <TableCell>{collection.priority}</TableCell>
                     <TableCell>
-                      <StatusBadge status={collection.status} />
+                      <ActiveBadge isActive={collection.isActive} />
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-1">
@@ -278,7 +291,8 @@ type CollectionFormState = {
   shortDescriptionVi: string;
   shortDescriptionEn: string;
   imgUrl: string;
-  status: CollectionStatus;
+  isActive: boolean;
+  priority: string;
   productIds: string[];
 };
 
@@ -290,7 +304,8 @@ const EMPTY_FORM_STATE: CollectionFormState = {
   shortDescriptionVi: "",
   shortDescriptionEn: "",
   imgUrl: "",
-  status: "ACTIVE",
+  isActive: true,
+  priority: "0",
   productIds: [],
 };
 
@@ -333,7 +348,8 @@ function CollectionFormDialog({
         shortDescriptionVi: collection.shortDescription.vi,
         shortDescriptionEn: collection.shortDescription.en,
         imgUrl: collection.imgUrl ?? "",
-        status: collection.status,
+        isActive: collection.isActive,
+        priority: String(collection.priority),
         productIds: collection.products.map((product) => product.id),
       });
     } else {
@@ -378,7 +394,8 @@ function CollectionFormDialog({
         title: title,
         shortDescription: shortDescription,
         imgUrl: form.imgUrl.trim() || null,
-        status: form.status,
+        isActive: form.isActive,
+        priority: Number(form.priority) || 0,
         productIds: form.productIds,
       };
       updateMutation.mutate(
@@ -398,7 +415,8 @@ function CollectionFormDialog({
         title: title,
         shortDescription: shortDescription,
         imgUrl: form.imgUrl.trim() || undefined,
-        status: form.status,
+        isActive: form.isActive,
+        priority: Number(form.priority) || 0,
         productIds: form.productIds.length > 0 ? form.productIds : undefined,
       };
       createMutation.mutate(request, {
@@ -492,35 +510,36 @@ function CollectionFormDialog({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
-            <div className="flex flex-col gap-1.5">
-              <FieldLabel>Image URL</FieldLabel>
-              <Input
-                placeholder="https://..."
-                value={form.imgUrl}
-                onChange={(e) => set({ imgUrl: e.target.value })}
-              />
-            </div>
+          <div className="flex flex-col gap-1.5">
+            <FieldLabel>Image URL</FieldLabel>
+            <Input
+              placeholder="https://..."
+              value={form.imgUrl}
+              onChange={(e) => set({ imgUrl: e.target.value })}
+            />
+          </div>
 
-            <div className="flex flex-col gap-1.5">
-              <FieldLabel required>Status</FieldLabel>
-              <Select
-                value={form.status}
-                onValueChange={(value) => set({ status: value as CollectionStatus })}
-                onOpenChange={(selectOpen) => {
-                  selectOpenRef.current = selectOpen;
-                  if (!selectOpen) selectClosedAtRef.current = Date.now();
-                }}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ACTIVE">Active</SelectItem>
-                  <SelectItem value="INACTIVE">Inactive</SelectItem>
-                </SelectContent>
-              </Select>
+          <div className="flex flex-col gap-1.5">
+            <FieldLabel>Priority</FieldLabel>
+            <Input
+              type="number"
+              placeholder="0"
+              value={form.priority}
+              onChange={(e) => set({ priority: e.target.value })}
+            />
+          </div>
+
+          <div className="flex items-center justify-between rounded-md border p-3">
+            <div className="flex flex-col gap-0.5">
+              <span className="text-xs font-medium">Active</span>
+              <span className="text-muted-foreground text-xs">
+                Inactive collections are hidden from the storefront.
+              </span>
             </div>
+            <Switch
+              checked={form.isActive}
+              onCheckedChange={(v) => set({ isActive: v })}
+            />
           </div>
 
           {/* ----- product multi-select (thay toàn bộ products của collection) ----- */}
@@ -631,18 +650,6 @@ function DeleteCollectionDialog({
 
 function errorMessage(error: unknown, fallback: string): string {
   return isAxiosError(error) ? error.response?.data || error.message : fallback;
-}
-
-function StatusBadge({ status }: { status: CollectionStatus }) {
-  return status === "ACTIVE" ? (
-    <span className="inline-flex rounded bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
-      Active
-    </span>
-  ) : (
-    <span className="bg-muted text-muted-foreground inline-flex rounded px-2 py-0.5 text-xs font-medium">
-      Inactive
-    </span>
-  );
 }
 
 function CollectionImage({ collection }: { collection: Collection }) {

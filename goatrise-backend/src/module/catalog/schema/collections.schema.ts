@@ -1,4 +1,4 @@
-import { bigint, index, jsonb, numeric, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { bigint, boolean, index, integer, jsonb, numeric, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import type { LanguageString } from "../../../core/types.js";
 
 export const collections = pgTable("collections", {
@@ -10,11 +10,11 @@ export const collections = pgTable("collections", {
   shortDescription: jsonb("short_description").$type<LanguageString>().notNull(),
   imgUrl: text("img_url"),
 
-  status: text("status").$type<CollectionStatus>().notNull().default("ACTIVE"),
+  isActive: boolean("is_active").notNull().default(true),
+  priority: integer("priority").notNull().default(0),
 
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().$onUpdateFn(() => new Date()).notNull(),
 });
 
 export type CollectionType = "COLLECTION" | "CATEGORY" | "EVENT";
-export type CollectionStatus = "ACTIVE" | "INACTIVE";

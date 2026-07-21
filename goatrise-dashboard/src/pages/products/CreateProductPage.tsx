@@ -50,7 +50,7 @@ export default function CreateProductPage() {
       imgUrls: imgUrls.length > 0 ? imgUrls : undefined,
       displayPrice: undefined,
       comparePrice: value.comparePriceEnabled ? Number(value.comparePrice || "0") : undefined,
-      status: value.status,
+      isActive: value.isActive,
       requiredAttributes: requiredAttributes,
       itemIds: itemIds.length > 0 ? itemIds : undefined,
     };

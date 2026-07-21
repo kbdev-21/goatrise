@@ -31,11 +31,7 @@ export async function deleteProduct(productId: string): Promise<void> {
   await axiosInstance.delete(`/api/products/${productId}`);
 }
 
-export type ProductStatus = "ACTIVE" | "INACTIVE";
-
 export type CollectionType = "COLLECTION" | "CATEGORY" | "EVENT";
-
-export type CollectionStatus = "ACTIVE" | "INACTIVE";
 
 // Collection nhúng trong ProductDetail (mirror module/catalog/schema/collections.schema.ts)
 export type ProductCollection = {
@@ -45,7 +41,7 @@ export type ProductCollection = {
   title: LanguageString;
   shortDescription: LanguageString;
   imgUrl: string | null;
-  status: CollectionStatus;
+  isActive: boolean;
   createdAt: string;
   updatedAt: string;
 };
@@ -61,7 +57,7 @@ export type Product = {
   imgUrls: string[] | null;
   displayPrice: number | null;
   comparePrice: number | null;
-  status: ProductStatus;
+  isActive: boolean;
   requiredAttributes: ItemAttribute[];
   sold: number;
   createdAt: string;
@@ -82,7 +78,7 @@ export type CreateProductRequest = {
   imgUrls?: string[];
   displayPrice?: number;
   comparePrice?: number;
-  status?: ProductStatus;
+  isActive?: boolean;
   requiredAttributes: ItemAttribute[];
   itemIds?: string[];
 };
@@ -95,7 +91,7 @@ export type UpdateProductRequest = {
   imgUrls?: string[];
   displayPrice?: number;
   comparePrice?: number | null;
-  status?: ProductStatus;
+  isActive?: boolean;
   requiredAttributes?: ItemAttribute[];
   itemIds?: string[];
 };

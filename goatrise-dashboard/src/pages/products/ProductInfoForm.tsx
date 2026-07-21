@@ -5,13 +5,6 @@ import { Textarea } from "@/components/ui/textarea.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
-import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -19,8 +12,8 @@ import {
 } from "@/components/ui/dialog.tsx";
 import { cn } from "@/lib/utils";
 import { formatPriceVn, normalizeVietnameseString } from "@/core/utils.ts";
-import type { ProductStatus } from "@/api/product/api.ts";
 import type { Item } from "@/api/item/api.ts";
+import { Switch } from "@/components/ui/switch.tsx";
 
 export type ProductInfoFormValue = {
   slug: string;
@@ -33,7 +26,7 @@ export type ProductInfoFormValue = {
   imgUrls: string[];
   comparePrice: string;
   comparePriceEnabled: boolean;
-  status: ProductStatus;
+  isActive: boolean;
   colorRequired: boolean;
   sizeRequired: boolean;
   itemIds: string[];
@@ -50,7 +43,7 @@ export const EMPTY_PRODUCT_INFO_FORM_VALUE: ProductInfoFormValue = {
   imgUrls: [],
   comparePrice: "",
   comparePriceEnabled: false,
-  status: "ACTIVE",
+  isActive: true,
   colorRequired: false,
   sizeRequired: false,
   itemIds: [],
@@ -97,7 +90,16 @@ export default function ProductInfoForm({
       <div className="flex items-start gap-4">
         {/* ----- card 1: info thường ----- */}
         <div className="bg-card flex flex-1 flex-col gap-4 rounded-md border p-6">
-        <h2 className="text-base font-medium">Info</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-base font-medium">Info</h2>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-medium">Active</span>
+            <Switch
+              checked={value.isActive}
+              onCheckedChange={(v) => set({ isActive: v })}
+            />
+          </div>
+        </div>
 
         <div className="flex flex-col gap-1.5">
           <FieldLabel required>Title</FieldLabel>
@@ -214,21 +216,6 @@ export default function ProductInfoForm({
             />
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <FieldLabel>Status</FieldLabel>
-            <Select
-              value={value.status}
-              onValueChange={(v) => set({ status: v as ProductStatus })}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ACTIVE">Active</SelectItem>
-                <SelectItem value="INACTIVE">Inactive</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
         </div>
       </div>
 

@@ -1,7 +1,6 @@
 import axiosInstance from "@/api/axios-instance.ts";
 import type { LanguageString } from "@/core/types.ts";
 import type { ItemAttribute } from "@/api/item/api.ts";
-import type { ProductStatus } from "@/api/product/api.ts";
 
 export async function findCollections(): Promise<Collection[]> {
   const res = await axiosInstance.get<Collection[]>("/api/collections");
@@ -34,8 +33,6 @@ export async function deleteCollection(collectionId: string): Promise<void> {
 
 export type CollectionType = "COLLECTION" | "CATEGORY" | "EVENT";
 
-export type CollectionStatus = "ACTIVE" | "INACTIVE";
-
 // Product nhúng trong Collection (mirror COLLECTION_RELATIONS -> products: true, base columns)
 export type CollectionProduct = {
   id: string;
@@ -46,7 +43,7 @@ export type CollectionProduct = {
   imgUrls: string[] | null;
   displayPrice: number | null;
   comparePrice: number | null;
-  status: ProductStatus;
+  isActive: boolean;
   requiredAttributes: ItemAttribute[];
   sold: number;
   createdAt: string;
@@ -61,7 +58,8 @@ export type Collection = {
   title: LanguageString;
   shortDescription: LanguageString;
   imgUrl: string | null;
-  status: CollectionStatus;
+  isActive: boolean;
+  priority: number;
   createdAt: string;
   updatedAt: string;
   products: CollectionProduct[];
@@ -73,7 +71,8 @@ export type CreateCollectionRequest = {
   title: LanguageString;
   shortDescription: LanguageString;
   imgUrl?: string;
-  status?: CollectionStatus;
+  isActive?: boolean;
+  priority?: number;
   productIds?: string[];
 };
 
@@ -83,6 +82,7 @@ export type UpdateCollectionRequest = {
   title?: LanguageString;
   shortDescription?: LanguageString;
   imgUrl?: string | null;
-  status?: CollectionStatus;
+  isActive?: boolean;
+  priority?: number;
   productIds?: string[];
 };

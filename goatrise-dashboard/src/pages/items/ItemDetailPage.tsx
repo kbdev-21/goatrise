@@ -131,6 +131,7 @@ export default function ItemDetailPage() {
       imgUrl: value.imgUrl.trim() || undefined,
       weight: value.weight ? Number(value.weight) : undefined,
       productId: value.productId ?? undefined,
+      isActive: value.isActive,
       attributeValues:
         Object.keys(attributeValues).length > 0 ? attributeValues : undefined,
     };
@@ -405,6 +406,7 @@ function itemToFormValue(item: Item): ItemInfoFormValue {
     weight: item.weight !== null ? String(item.weight) : "",
     imgUrl: item.imgUrl ?? "",
     note: item.note ?? "",
+    isActive: item.isActive,
     colorEnabled: !!item.attributeValues?.COLOR,
     colorHex: item.attributeValues?.COLOR?.hex ?? "",
     colorEnText: item.attributeValues?.COLOR?.enText ?? "",

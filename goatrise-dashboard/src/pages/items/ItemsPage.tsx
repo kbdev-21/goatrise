@@ -9,6 +9,7 @@ import { useSuppliers } from "@/api/supplier/query-hooks.ts";
 import { formatPriceVn, normalizeVietnameseString } from "@/core/utils.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
+import { ActiveBadge } from "@/components/shared/active-badge.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import {
   Dialog,
@@ -172,19 +173,20 @@ export default function ItemsPage() {
                 <TableHead>Price</TableHead>
                 <TableHead>Stock</TableHead>
                 <TableHead>Sold</TableHead>
+                <TableHead>Status</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {itemsQuery.isError ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-destructive text-center">
+                  <TableCell colSpan={9} className="text-destructive text-center">
                     Failed to load items.
                   </TableCell>
                 </TableRow>
               ) : sortedItems.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-muted-foreground text-center">
+                  <TableCell colSpan={9} className="text-muted-foreground text-center">
                     No items found.
                   </TableCell>
                 </TableRow>
@@ -227,6 +229,9 @@ export default function ItemsPage() {
                     <TableCell>{formatPriceVn(item.price)}</TableCell>
                     <TableCell>{item.stock}</TableCell>
                     <TableCell>{item.sold}</TableCell>
+                    <TableCell>
+                      <ActiveBadge isActive={item.isActive} />
+                    </TableCell>
                     <TableCell>
                       <div className="flex gap-1">
                         <Button

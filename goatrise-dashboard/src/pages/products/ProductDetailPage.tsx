@@ -79,7 +79,7 @@ export default function ProductDetailPage() {
       imgUrls: imgUrls.length > 0 ? imgUrls : undefined,
       displayPrice: undefined,
       comparePrice: value.comparePriceEnabled ? Number(value.comparePrice || "0") : null,
-      status: value.status,
+      isActive: value.isActive,
       requiredAttributes: requiredAttributes,
       itemIds: itemIds,
     };
@@ -240,7 +240,7 @@ function productToFormValue(product: ProductDetail): ProductInfoFormValue {
     imgUrls: product.imgUrls ?? [],
     comparePrice: product.comparePrice?.toString() ?? "",
     comparePriceEnabled: product.comparePrice !== null,
-    status: product.status,
+    isActive: product.isActive,
     colorRequired: product.requiredAttributes.includes("COLOR"),
     sizeRequired: product.requiredAttributes.includes("SIZE"),
     itemIds: product.items.map((item) => item.id),

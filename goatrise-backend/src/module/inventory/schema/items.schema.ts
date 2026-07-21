@@ -1,4 +1,4 @@
-import { integer, pgTable, text, timestamp, uuid, bigint, jsonb, index } from "drizzle-orm/pg-core";
+import { boolean, integer, pgTable, text, timestamp, uuid, bigint, jsonb, index } from "drizzle-orm/pg-core";
 import { products } from "../../catalog/schema/products.schema.js";
 
 export const items = pgTable("items", {
@@ -16,7 +16,7 @@ export const items = pgTable("items", {
 
   stock: integer("stock").default(0).notNull(),
   sold: integer("sold").default(0).notNull(),
-  status: text("status").$type<ItemStatus>().default("ACTIVE").notNull(),
+  isActive: boolean("is_active").notNull().default(true),
   note: text("note"),
 
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -24,8 +24,6 @@ export const items = pgTable("items", {
 }, (t) => [
   index().on(t.productId),
 ]);
-
-export type ItemStatus = "ACTIVE" | "INACTIVE";
 
 export type ItemAttribute = "COLOR" | "SIZE";
 export type ItemAttributeValues = {
