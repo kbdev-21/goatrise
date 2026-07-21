@@ -1,5 +1,5 @@
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
-import { ImageOff, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { ImageOff, ImagePlus, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { isAxiosError } from "axios";
 import {
@@ -23,6 +23,8 @@ import { Textarea } from "@/components/ui/textarea.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { ActiveBadge } from "@/components/shared/active-badge.tsx";
+import { ImageThumbnail } from "@/components/shared/image-thumbnail.tsx";
+import { NewImageDialog } from "@/components/shared/new-image-dialog.tsx";
 import {
   Dialog,
   DialogContent,
@@ -333,6 +335,9 @@ function CollectionFormDialog({
   const selectOpenRef = useRef(false);
   const selectClosedAtRef = useRef(0);
 
+  const [imgDialogOpen, setImgDialogOpen] = useState(false);
+  const imgDialogClosedAtRef = useRef(0);
+
   const set = (patch: Partial<CollectionFormState>) => setForm((prev) => ({ ...prev, ...patch }));
 
   // reset form mỗi khi mở dialog (theo collection đang sửa hoặc rỗng khi tạo mới)
@@ -435,6 +440,8 @@ function CollectionFormDialog({
       onOpenChange={(next) => {
         if (next) return;
         if (selectOpenRef.current || Date.now() - selectClosedAtRef.current < 300) return;
+        // dialog ảnh lồng bên trong: đừng để việc đóng nó kéo theo đóng dialog collection
+        if (imgDialogOpen || Date.now() - imgDialogClosedAtRef.current < 300) return;
         onClose();
       }}
     >
@@ -511,12 +518,21 @@ function CollectionFormDialog({
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <FieldLabel>Image URL</FieldLabel>
-            <Input
-              placeholder="https://..."
-              value={form.imgUrl}
-              onChange={(e) => set({ imgUrl: e.target.value })}
-            />
+            <FieldLabel>Image</FieldLabel>
+            <div className="flex flex-wrap items-center gap-2">
+              {form.imgUrl ? (
+                <ImageThumbnail url={form.imgUrl} onRemove={() => set({ imgUrl: "" })} />
+              ) : (
+                <button
+                  type="button"
+                  aria-label="Add image"
+                  className="text-muted-foreground hover:border-foreground/30 hover:text-foreground flex size-20 shrink-0 items-center justify-center rounded-md border border-dashed"
+                  onClick={() => setImgDialogOpen(true)}
+                >
+                  <ImagePlus className="size-5" />
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="flex flex-col gap-1.5">
@@ -593,6 +609,15 @@ function CollectionFormDialog({
             {isEdit ? "Save" : "Create"}
           </Button>
         </DialogFooter>
+
+        <NewImageDialog
+          open={imgDialogOpen}
+          onOpenChange={(next) => {
+            if (!next) imgDialogClosedAtRef.current = Date.now();
+            setImgDialogOpen(next);
+          }}
+          onConfirm={(url) => set({ imgUrl: url })}
+        />
       </DialogContent>
     </Dialog>
   );

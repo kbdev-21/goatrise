@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Search, X } from "lucide-react";
+import { ImagePlus, Plus, Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -15,6 +15,8 @@ import { formatPriceVn, normalizeVietnameseString } from "@/core/utils.ts";
 import type { Item } from "@/api/item/api.ts";
 import { Switch } from "@/components/ui/switch.tsx";
 import { ItemAttributeBadges } from "@/components/shared/item-attribute-badges.tsx";
+import { NewImageDialog } from "@/components/shared/new-image-dialog.tsx";
+import { ImageThumbnail } from "@/components/shared/image-thumbnail.tsx";
 
 export type ProductInfoFormValue = {
   slug: string;
@@ -62,12 +64,11 @@ export default function ProductInfoForm({
   const set = (patch: Partial<ProductInfoFormValue>) => onChange({ ...value, ...patch });
 
   const [itemDialogOpen, setItemDialogOpen] = useState(false);
+  const [imgDialogOpen, setImgDialogOpen] = useState(false);
   const [shortDescLang, setShortDescLang] = useState<"en" | "vi">("vi");
   const [markdownDescLang, setMarkdownDescLang] = useState<"en" | "vi">("vi");
 
-  const setImgUrl = (index: number, url: string) =>
-    set({ imgUrls: value.imgUrls.map((u, i) => (i === index ? url : u)) });
-  const addImgUrl = () => set({ imgUrls: [...value.imgUrls, ""] });
+  const addImgUrl = (url: string) => set({ imgUrls: [...value.imgUrls, url] });
   const removeImgUrl = (index: number) =>
     set({ imgUrls: value.imgUrls.filter((_, i) => i !== index) });
 
@@ -163,38 +164,24 @@ export default function ProductInfoForm({
           />
         </div>
 
-        {/* TODO: tạm nhập URL trực tiếp; thay bằng image upload sau */}
         <div className="flex flex-col gap-1.5">
-          <FieldLabel>Image URLs</FieldLabel>
-          <div className="flex flex-col gap-2">
+          <FieldLabel>Images</FieldLabel>
+          <div className="flex flex-wrap items-center gap-2">
             {value.imgUrls.map((url, index) => (
-              <div key={index} className="flex items-center gap-2">
-                <Input
-                  placeholder="https://..."
-                  value={url}
-                  onChange={(e) => setImgUrl(index, e.target.value)}
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  aria-label="Remove image URL"
-                  onClick={() => removeImgUrl(index)}
-                >
-                  <X className="size-4" />
-                </Button>
-              </div>
+              <ImageThumbnail
+                key={index}
+                url={url}
+                onRemove={() => removeImgUrl(index)}
+              />
             ))}
-            <Button
+            <button
               type="button"
-              variant="outline"
-              size="sm"
-              className="w-fit"
-              onClick={addImgUrl}
+              aria-label="Add image"
+              className="text-muted-foreground hover:border-foreground/30 hover:text-foreground flex size-20 shrink-0 items-center justify-center rounded-md border border-dashed"
+              onClick={() => setImgDialogOpen(true)}
             >
-              <Plus className="size-4" />
-              Add image URL
-            </Button>
+              <ImagePlus className="size-5" />
+            </button>
           </div>
         </div>
 
@@ -296,6 +283,12 @@ export default function ProductInfoForm({
         items={items}
         selectedIds={value.itemIds}
         onAdd={addItemId}
+      />
+
+      <NewImageDialog
+        open={imgDialogOpen}
+        onOpenChange={setImgDialogOpen}
+        onConfirm={addImgUrl}
       />
     </>
   );

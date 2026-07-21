@@ -1,6 +1,10 @@
+import { useState } from "react";
+import { ImagePlus } from "lucide-react";
 import { Input } from "@/components/ui/input.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
+import { NewImageDialog } from "@/components/shared/new-image-dialog.tsx";
+import { ImageThumbnail } from "@/components/shared/image-thumbnail.tsx";
 import {
   Select,
   SelectContent,
@@ -52,6 +56,8 @@ export default function ItemInfoForm({
   products: Product[];
 }) {
   const set = (patch: Partial<ItemInfoFormValue>) => onChange({ ...value, ...patch });
+
+  const [imgDialogOpen, setImgDialogOpen] = useState(false);
 
   return (
     <div className="bg-card flex flex-col gap-4 rounded-md border p-6">
@@ -123,14 +129,22 @@ export default function ItemInfoForm({
         />
       </div>
 
-      {/* TODO: tạm nhập URL trực tiếp; thay bằng image upload sau */}
       <div className="flex flex-col gap-1.5">
-        <FieldLabel>Image URL</FieldLabel>
-        <Input
-          placeholder="https://..."
-          value={value.imgUrl}
-          onChange={(e) => set({ imgUrl: e.target.value })}
-        />
+        <FieldLabel>Image</FieldLabel>
+        <div className="flex flex-wrap items-center gap-2">
+          {value.imgUrl ? (
+            <ImageThumbnail url={value.imgUrl} onRemove={() => set({ imgUrl: "" })} />
+          ) : (
+            <button
+              type="button"
+              aria-label="Add image"
+              className="text-muted-foreground hover:border-foreground/30 hover:text-foreground flex size-20 shrink-0 items-center justify-center rounded-md border border-dashed"
+              onClick={() => setImgDialogOpen(true)}
+            >
+              <ImagePlus className="size-5" />
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="flex flex-col gap-1.5">
@@ -185,6 +199,12 @@ export default function ItemInfoForm({
           </div>
         </div>
       </div>
+
+      <NewImageDialog
+        open={imgDialogOpen}
+        onOpenChange={setImgDialogOpen}
+        onConfirm={(url) => set({ imgUrl: url })}
+      />
     </div>
   );
 }

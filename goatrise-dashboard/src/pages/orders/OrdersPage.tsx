@@ -213,10 +213,10 @@ export default function OrdersPage() {
                 <TableHead>Code</TableHead>
                 <TableHead>Customer</TableHead>
                 <TableHead>Address</TableHead>
+                <TableHead>Items</TableHead>
                 <TableHead>Total</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Payment</TableHead>
                 <TableHead>Channel</TableHead>
+                <TableHead>Status</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
@@ -258,27 +258,47 @@ export default function OrdersPage() {
                     </TableCell>
                     <TableCell>
                       <span
-                        className="block max-w-56 truncate text-xs"
+                        className="block max-w-32 truncate text-xs 2xl:max-w-48"
                         title={formatAddress(order.customerAddress)}
                       >
                         {formatAddress(order.customerAddress)}
                       </span>
                     </TableCell>
+                    <TableCell>
+                      <div className="flex max-w-56 flex-col gap-0.5">
+                        {order.lines.map((line) => (
+                          <span
+                            key={line.id}
+                            className="truncate text-xs"
+                            title={`${line.snapItem.name} × ${line.quantity}`}
+                          >
+                            {line.snapItem.name}
+                            <span className="text-muted-foreground"> × {line.quantity}</span>
+                          </span>
+                        ))}
+                      </div>
+                    </TableCell>
                     <TableCell>{formatPriceVn(order.totalAmount)}</TableCell>
                     <TableCell>
-                      <Badge
-                        label={capitalize(order.status)}
-                        className={ORDER_STATUS_CLASS[order.status]}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        label={capitalize(order.paymentStatus)}
-                        className={PAYMENT_STATUS_CLASS[order.paymentStatus]}
-                      />
-                    </TableCell>
-                    <TableCell>
                       <SalesChannelBadge channel={order.channel} />
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-muted-foreground text-xs">Payment:</span>
+                          <Badge
+                            label={capitalize(order.paymentStatus)}
+                            className={PAYMENT_STATUS_CLASS[order.paymentStatus]}
+                          />
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-muted-foreground text-xs">Status:</span>
+                          <Badge
+                            label={capitalize(order.status)}
+                            className={ORDER_STATUS_CLASS[order.status]}
+                          />
+                        </div>
+                      </div>
                     </TableCell>
                     <TableCell>
                       {new Date(order.createdAt).toLocaleString("en-GB")}

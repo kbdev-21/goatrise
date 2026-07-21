@@ -35,7 +35,7 @@ export const COUNTRIES = {
       HA_NOI: "Hà Nội",
       HAI_PHONG: "Hải Phòng",
       DA_NANG: "Đà Nẵng",
-      HO_CHI_MINH: "Thành phố Hồ Chí Minh",
+      HO_CHI_MINH: "TPHCM",
       CAN_THO: "Cần Thơ",
     },
   },

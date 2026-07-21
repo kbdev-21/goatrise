@@ -247,24 +247,8 @@ export default function OrderDetailPage() {
               <Input disabled value={order.code} className="font-mono" />
             </Field>
 
-            {/* editable: status */}
-            <Field label="Status">
-              <Select
-                value={status}
-                onValueChange={(v) => setStatus(v as OrderStatus)}
-                disabled={isLocked}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {STATUS_OPTIONS.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <Field label="Payment method">
+              <Input disabled value={PAYMENT_METHOD_LABELS[order.paymentMethod]} />
             </Field>
 
             {/* editable: payment status */}
@@ -287,6 +271,26 @@ export default function OrderDetailPage() {
               </Select>
             </Field>
 
+            {/* editable: status */}
+            <Field label="Status">
+              <Select
+                value={status}
+                onValueChange={(v) => setStatus(v as OrderStatus)}
+                disabled={isLocked}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {STATUS_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
+
             {isLocked && (
               <span className="text-muted-foreground text-xs">
                 Completed order: status and payment can no longer be changed.
@@ -298,9 +302,6 @@ export default function OrderDetailPage() {
               </span>
             )}
 
-            <Field label="Payment method">
-              <Input disabled value={PAYMENT_METHOD_LABELS[order.paymentMethod]} />
-            </Field>
             <Field label="Channel">
               <Input disabled value={CHANNEL_LABELS[order.channel]} />
             </Field>
