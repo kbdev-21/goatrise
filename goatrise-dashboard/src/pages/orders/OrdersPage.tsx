@@ -1,31 +1,14 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Pencil, Plus, Search } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Eye, Plus, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
-import { isAxiosError } from "axios";
-import { useOrders, useUpdateOrder } from "@/api/order/query-hooks.ts";
-import type {
-  Order,
-  OrderChannel,
-  OrderPaymentStatus,
-  OrderStatus,
-  UpdateOrderRequest,
-} from "@/api/order/api.ts";
-import type { Address } from "@/core/types.ts";
+import { useOrders } from "@/api/order/query-hooks.ts";
+import type { OrderPaymentStatus, OrderStatus } from "@/api/order/api.ts";
+import type { Address, SalesChannel } from "@/core/types.ts";
 import { COUNTRIES } from "@/constant/countries.ts";
 import { capitalize, formatPriceVn } from "@/core/utils.ts";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { Textarea } from "@/components/ui/textarea.tsx";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog.tsx";
 import {
   Select,
   SelectContent,
@@ -41,33 +24,29 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table.tsx";
+import { Badge } from "@/components/shared/badge.tsx";
+import { SalesChannelBadge } from "@/components/shared/sales-channel-badge.tsx";
 
 const PAGE_SIZE = 20;
 const CHANNEL_ALL = "ALL";
 const STATUS_ALL = "ALL";
 
-const CHANNEL_OPTIONS: { label: string; value: OrderChannel }[] = [
+const CHANNEL_OPTIONS: { label: string; value: SalesChannel }[] = [
   { label: "Website", value: "WEBSITE" },
   { label: "Instagram", value: "INSTAGRAM" },
   { label: "Facebook", value: "FACEBOOK" },
   { label: "TikTok", value: "TIKTOK" },
+  { label: "Zalo", value: "ZALO" },
   { label: "Shopee", value: "SHOPEE" },
+  { label: "Referral", value: "REFERRAL" },
   { label: "Other", value: "OTHER" },
 ];
 
 const STATUS_OPTIONS: { label: string; value: OrderStatus }[] = [
   { label: "Pending", value: "PENDING" },
-  { label: "Processing", value: "PROCESSING" },
   { label: "Shipping", value: "SHIPPING" },
   { label: "Completed", value: "COMPLETED" },
   { label: "Cancelled", value: "CANCELLED" },
-];
-
-const PAYMENT_STATUS_OPTIONS: { label: string; value: OrderPaymentStatus }[] = [
-  { label: "Pending", value: "PENDING" },
-  { label: "Paid", value: "PAID" },
-  { label: "Failed", value: "FAILED" },
-  { label: "Refunded", value: "REFUNDED" },
 ];
 
 const SORT_OPTIONS: { label: string; value: string }[] = [
@@ -78,29 +57,27 @@ const SORT_OPTIONS: { label: string; value: string }[] = [
 ];
 
 const ORDER_STATUS_CLASS: Record<OrderStatus, string> = {
-  PENDING: "bg-amber-100 text-amber-700",
-  PROCESSING: "bg-blue-100 text-blue-700",
-  SHIPPING: "bg-indigo-100 text-indigo-700",
-  COMPLETED: "bg-green-100 text-green-700",
+  PENDING: "bg-green-100 text-green-700",
+  SHIPPING: "bg-amber-100 text-amber-700",
+  COMPLETED: "bg-muted text-muted-foreground",
   CANCELLED: "bg-red-100 text-red-700",
 };
 
 const PAYMENT_STATUS_CLASS: Record<OrderPaymentStatus, string> = {
-  PENDING: "bg-amber-100 text-amber-700",
-  PAID: "bg-green-100 text-green-700",
+  PENDING: "bg-green-100 text-green-700",
+  PAID: "bg-muted text-muted-foreground",
   FAILED: "bg-red-100 text-red-700",
-  REFUNDED: "bg-muted text-muted-foreground",
+  REFUNDED: "bg-orange-100 text-orange-700",
 };
 
 export default function OrdersPage() {
   // ----- query states (mirror backend /api/orders filters) -----
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
-  const [channel, setChannel] = useState<OrderChannel | typeof CHANNEL_ALL>(CHANNEL_ALL);
+  const [channel, setChannel] = useState<SalesChannel | typeof CHANNEL_ALL>(CHANNEL_ALL);
   const [status, setStatus] = useState<OrderStatus | typeof STATUS_ALL>(STATUS_ALL);
   const [sort, setSort] = useState<string>("createdAt:DESC");
   const [offset, setOffset] = useState(0);
-  const [editingOrder, setEditingOrder] = useState<Order | null>(null);
 
   const navigate = useNavigate();
 
@@ -166,7 +143,7 @@ export default function OrdersPage() {
         <Select
           value={channel}
           onValueChange={(value) => {
-            setChannel(value as OrderChannel | typeof CHANNEL_ALL);
+            setChannel(value as SalesChannel | typeof CHANNEL_ALL);
             setOffset(0);
           }}
         >
@@ -260,7 +237,14 @@ export default function OrdersPage() {
               ) : (
                 ordersQuery.data.map((order) => (
                   <TableRow key={order.id}>
-                    <TableCell className="font-mono text-xs">{order.code}</TableCell>
+                    <TableCell className="font-mono text-xs">
+                      <span
+                        className="cursor-pointer hover:underline"
+                        onClick={() => navigate(`/orders/${order.id}`)}
+                      >
+                        {order.code}
+                      </span>
+                    </TableCell>
                     <TableCell>
                       <div className="flex flex-col gap-0.5">
                         <span className="font-medium">{order.customerName}</span>
@@ -293,7 +277,9 @@ export default function OrdersPage() {
                         className={PAYMENT_STATUS_CLASS[order.paymentStatus]}
                       />
                     </TableCell>
-                    <TableCell>{capitalize(order.channel)}</TableCell>
+                    <TableCell>
+                      <SalesChannelBadge channel={order.channel} />
+                    </TableCell>
                     <TableCell>
                       {new Date(order.createdAt).toLocaleString("en-GB")}
                     </TableCell>
@@ -301,11 +287,11 @@ export default function OrdersPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        aria-label="Update order"
-                        title="Update order"
-                        onClick={() => setEditingOrder(order)}
+                        aria-label="View order"
+                        title="View order"
+                        onClick={() => navigate(`/orders/${order.id}`)}
                       >
-                        <Pencil className="size-4" />
+                        <Eye className="size-4" />
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -341,170 +327,8 @@ export default function OrdersPage() {
           </Button>
         </div>
       </div>
-
-      <UpdateOrderDialog
-        order={editingOrder}
-        onClose={() => setEditingOrder(null)}
-        onSuccess={() => ordersQuery.refetch()}
-      />
     </div>
   );
-}
-
-function UpdateOrderDialog({
-  order,
-  onClose,
-  onSuccess,
-}: {
-  order: Order | null;
-  onClose: () => void;
-  onSuccess: () => void;
-}) {
-  const updateMutation = useUpdateOrder();
-  const [status, setStatus] = useState<OrderStatus>("PENDING");
-  const [paymentStatus, setPaymentStatus] = useState<OrderPaymentStatus>("PENDING");
-  const [note, setNote] = useState("");
-  // select portal ra ngoài dialog -> click đóng dropdown bị Dialog hiểu nhầm là click ngoài
-  const selectOpenRef = useRef(false);
-  const selectClosedAtRef = useRef(0);
-
-  useEffect(() => {
-    if (order) {
-      setStatus(order.status);
-      setPaymentStatus(order.paymentStatus);
-      setNote(order.note ?? "");
-    }
-  }, [order]);
-
-  // mirror rule backend
-  const isLocked = order?.status === "COMPLETED";
-  const completingWithoutPaid = status === "COMPLETED" && paymentStatus !== "PAID";
-  const canSubmit = order !== null && !isLocked && !completingWithoutPaid;
-
-  function handleSubmit() {
-    if (!order) return;
-    const request: UpdateOrderRequest = {
-      status: status,
-      paymentStatus: paymentStatus,
-      note: note.trim() || undefined,
-    };
-    updateMutation.mutate(
-      { orderId: order.id, request },
-      {
-        onSuccess: () => {
-          toast.success(`Updated order ${order.code}`);
-          onSuccess();
-          onClose();
-        },
-        onError: (error) =>
-          toast.error(
-            isAxiosError(error) && typeof error.response?.data === "string"
-              ? error.response.data
-              : "Failed to update order",
-          ),
-      },
-    );
-  }
-
-  return (
-    <Dialog
-      open={order !== null}
-      onOpenChange={(next) => {
-        if (next) return;
-        if (selectOpenRef.current || Date.now() - selectClosedAtRef.current < 300) return;
-        onClose();
-      }}
-    >
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Update order {order?.code}</DialogTitle>
-        </DialogHeader>
-
-        {isLocked ? (
-          <p className="text-muted-foreground text-sm">
-            This order is completed and can no longer be changed.
-          </p>
-        ) : (
-          <div className="flex flex-col gap-4">
-            <div className="grid grid-cols-2 gap-2">
-              <div className="flex flex-col gap-1.5">
-                <FieldLabel>Status</FieldLabel>
-                <Select
-                  value={status}
-                  onValueChange={(v) => setStatus(v as OrderStatus)}
-                  onOpenChange={(open) => {
-                    selectOpenRef.current = open;
-                    if (!open) selectClosedAtRef.current = Date.now();
-                  }}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {STATUS_OPTIONS.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <FieldLabel>Payment</FieldLabel>
-                <Select
-                  value={paymentStatus}
-                  onValueChange={(v) => setPaymentStatus(v as OrderPaymentStatus)}
-                  onOpenChange={(open) => {
-                    selectOpenRef.current = open;
-                    if (!open) selectClosedAtRef.current = Date.now();
-                  }}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {PAYMENT_STATUS_OPTIONS.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            {completingWithoutPaid && (
-              <span className="text-destructive text-xs">
-                Payment must be Paid to complete the order.
-              </span>
-            )}
-
-            <div className="flex flex-col gap-1.5">
-              <FieldLabel>Note</FieldLabel>
-              <Textarea value={note} onChange={(e) => setNote(e.target.value)} />
-            </div>
-          </div>
-        )}
-
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose} disabled={updateMutation.isPending}>
-            {isLocked ? "Close" : "Cancel"}
-          </Button>
-          {!isLocked && (
-            <Button disabled={updateMutation.isPending || !canSubmit} onClick={handleSubmit}>
-              {updateMutation.isPending && <Spinner />}
-              Save
-            </Button>
-          )}
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function FieldLabel({ children }: { children: string }) {
-  return <label className="text-xs font-medium">{children}</label>;
 }
 
 function formatAddress(address: Address): string {
@@ -513,15 +337,3 @@ function formatAddress(address: Address): string {
   return [address.address, address.provinceName, country].filter(Boolean).join(", ");
 }
 
-function Badge({ label, className }: { label: string; className: string }) {
-  return (
-    <span
-      className={cn(
-        "inline-flex rounded px-2 py-0.5 text-xs font-medium",
-        className,
-      )}
-    >
-      {label}
-    </span>
-  );
-}

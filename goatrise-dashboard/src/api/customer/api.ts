@@ -1,5 +1,5 @@
 import axiosInstance from "@/api/axios-instance.ts";
-import type { Address } from "@/core/types.ts";
+import type { Address, SalesChannel } from "@/core/types.ts";
 
 export async function findCustomers(params?: FindCustomersParams): Promise<Customer[]> {
   const res = await axiosInstance.get<Customer[]>("/api/customers", { params });
@@ -22,8 +22,6 @@ export async function deleteCustomer(customerId: string): Promise<void> {
 
 export type CustomerSocialMedia = "INSTAGRAM" | "FACEBOOK" | "ZALO" | "TIKTOK";
 
-export type CustomerSource = CustomerSocialMedia | "WEBSITE" | "ADMIN" | "OTHER";
-
 export type CustomerSocialMediaEntry = {
   platform: CustomerSocialMedia;
   info: string;
@@ -43,7 +41,7 @@ export type Customer = {
   totalSpent: number;
   loyaltyPoints: number;
   note: string | null;
-  source: CustomerSource;
+  source: SalesChannel;
   lastOrderAt: string | null;
   createdAt: string;
   updatedAt: string;
@@ -64,7 +62,7 @@ export type CreateCustomerRequest = {
   socialMedias?: CustomerSocialMediaEntry[];
   addresses?: Address[];
   note?: string;
-  source?: CustomerSource;
+  source?: SalesChannel;
 };
 
 // Mirror backend: module/customers/domain/validators.ts -> UpdateCustomerRequestSchema
@@ -74,5 +72,5 @@ export type UpdateCustomerRequest = {
   socialMedias?: CustomerSocialMediaEntry[];
   addresses?: Address[];
   note?: string;
-  source?: CustomerSource;
+  source?: SalesChannel;
 };

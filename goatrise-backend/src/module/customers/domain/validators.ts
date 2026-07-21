@@ -1,8 +1,9 @@
 import z from "zod";
-import type { CustomerSocialMedia, CustomerSource } from "../schema/customers.schema.js";
+import type { CustomerSocialMedia } from "../schema/customers.schema.js";
+import type { SalesChannel } from "../../../core/types.js";
 
 const socialMedias = ["INSTAGRAM", "FACEBOOK", "ZALO", "TIKTOK"] satisfies CustomerSocialMedia[];
-const sources = ["INSTAGRAM", "FACEBOOK", "ZALO", "TIKTOK", "WEBSITE", "ADMIN", "OTHER"] satisfies CustomerSource[];
+const sources = ["WEBSITE", "INSTAGRAM", "FACEBOOK", "TIKTOK", "ZALO", "SHOPEE", "REFERRAL", "OTHER"] satisfies SalesChannel[];
 
 const AddressSchema = z.object({
   countryCode: z.string(),

@@ -4,7 +4,7 @@ import { requiredRolesMiddleware } from "../../auth/middleware/required-roles.mi
 import type { ContextVariables } from "../../../core/types.js";
 import { db } from "../../../core/db.js";
 import { calculateOrder } from "../domain/order-calculation.service.js";
-import { createOrder, findOrders, placeOrder, updateOrder } from "../domain/orders.service.js";
+import { createOrder, findOrders, getOrderById, placeOrder, updateOrder } from "../domain/orders.service.js";
 import { zValidator } from "@hono/zod-validator";
 import { CalculateOrderRequestSchema, CreateOrderRequestSchema, FindOrdersQuerySchema, PlaceOrderRequestSchema, UpdateOrderRequestSchema } from "../domain/validators.js";
 
@@ -18,6 +18,16 @@ ordersRouter.get("/api/orders",
     const query = c.req.valid("query");
     const orders = await findOrders(db, query);
     return c.json(orders);
+  }
+);
+
+ordersRouter.get("/api/orders/:id",
+  authMiddleware,
+  requiredRolesMiddleware(["ADMIN", "STAFF"]),
+  async (c) => {
+    const orderId = c.req.param("id");
+    const order = await getOrderById(db, orderId);
+    return c.json(order);
   }
 );
 

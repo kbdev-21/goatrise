@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   calculateOrder,
   createOrder,
+  findOrderById,
   findOrders,
   updateOrder,
   type CalculateOrderRequest,
@@ -20,6 +21,14 @@ export function useOrders(params?: FindOrdersParams) {
   return useQuery({
     queryKey: orderKeys.list(params),
     queryFn: () => findOrders(params),
+  });
+}
+
+export function useOrder(orderId: string) {
+  return useQuery({
+    queryKey: orderKeys.detail(orderId),
+    queryFn: () => findOrderById(orderId),
+    enabled: !!orderId,
   });
 }
 

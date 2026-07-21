@@ -1,5 +1,5 @@
 import { bigint, index, integer, jsonb, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
-import type { Address } from "../../../core/types.js";
+import type { Address, SalesChannel } from "../../../core/types.js";
 
 export const customers = pgTable("customers", {
   id: uuid("id").primaryKey(),
@@ -16,7 +16,7 @@ export const customers = pgTable("customers", {
   loyaltyPoints: integer("loyalty_points").default(0).notNull(),
 
   note: text("note"),
-  source: text("source").$type<CustomerSource>().default("OTHER").notNull(),
+  source: text("source").$type<SalesChannel>().default("OTHER").notNull(),
   lastOrderAt: timestamp("last_order_at"),
   
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -26,4 +26,3 @@ export const customers = pgTable("customers", {
 ]);
 
 export type CustomerSocialMedia = "INSTAGRAM" | "FACEBOOK" | "ZALO" | "TIKTOK";
-export type CustomerSource = CustomerSocialMedia | "WEBSITE" | "ADMIN" | "OTHER";

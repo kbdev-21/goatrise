@@ -5,7 +5,7 @@ import type { OrderLineSnapItem } from "../schema/order-lines.schema.js";
 import { ITEM_RELATIONS, type Item } from "../../inventory/domain/types.js";
 import { getCouponByCode } from "../../promotion/domain/coupons.service.js";
 import { computeCouponDiscount } from "../../promotion/domain/coupon-calculation.service.js";
-import type { Coupon } from "../../promotion/domain/types.js";
+import { calculateComboDiscount, type AppliedCombo } from "../../promotion/domain/combo-calculation.service.js";
 
 export type CalculateOrderResult = {
   lines: {
@@ -22,6 +22,7 @@ export type CalculateOrderResult = {
   manualDiscount: number,
   couponDiscount: number,
   comboDiscount: number,
+  combos: AppliedCombo[],
 
   shipping: number,
   tax: number,
@@ -39,29 +40,46 @@ export async function calculateOrder(db: DbExec, req: CalculateOrderRequest): Pr
     with: ITEM_RELATIONS
   });
 
-  const coupon = req.couponCode ? await getCouponByCode(db, req.couponCode) : null;
+  const { lines, subtotal } = computeOrderLines(items, req.lines);
 
-  return computeOrderPrice(
-    items,
-    req.lines,
-    req.manualDiscountAmount ?? 0,
-    req.manualShippingFee ?? 0,
-    coupon,
-    req.customerPhoneNum ?? "",
-  );
+  const manualDiscount = req.manualDiscountAmount ?? 0;
+  const shipping = req.manualShippingFee ?? 0;
+
+  // coupon trả về đúng số tiền lẽ ra được giảm (không tự cap ở subtotal)
+  let couponDiscount = 0;
+  if (req.couponCode) {
+    const coupon = await getCouponByCode(db, req.couponCode);
+    const discount = computeCouponDiscount(coupon, subtotal, req.customerPhoneNum ?? "");
+    if (discount === false) {
+      throw new HTTPException(400, { message: "Coupon not applicable" });
+    }
+    couponDiscount = discount;
+  }
+
+  // combo cũng trả về đúng số tiền lẽ ra được giảm (không tự cap ở subtotal)
+  const combo = await calculateComboDiscount(db, subtotal, req.lines);
+
+  // cap ở đây: total không được âm
+  const total = Math.max(subtotal - manualDiscount - couponDiscount - combo.discount + shipping, 0);
+
+  return {
+    lines: lines,
+    subtotal: subtotal,
+    manualDiscount: manualDiscount,
+    couponDiscount: couponDiscount,
+    comboDiscount: combo.discount,
+    combos: combo.combos,
+    shipping: shipping,
+    tax: 0,
+    total: total
+  };
 }
 
-function computeOrderPrice(
-  itemsData: Item[],
-  orderLines: {itemId: string, quantity: number}[],
-  manualDiscountAmount: number,
-  manualShippingFee: number,
-  coupon: Coupon | null,
-  orderPhoneNum: string,
-): CalculateOrderResult {
+// pure: dựng snapshot từng line + subtotal + check tồn kho.
+function computeOrderLines(itemsData: Item[], orderLines: { itemId: string, quantity: number }[]): { lines: CalculateOrderResult["lines"], subtotal: number } {
   const itemsMap = new Map(itemsData.map((item) => [item.id, item]));
 
-  const resultLines = [];
+  const lines: CalculateOrderResult["lines"] = [];
   let subtotal = 0;
   for (const line of orderLines) {
     const item = itemsMap.get(line.itemId);
@@ -89,7 +107,7 @@ function computeOrderPrice(
       } : null
     };
 
-    resultLines.push({
+    lines.push({
       itemId: item.id,
       productId: item.product?.id ?? null,
       snapItem: snapItem,
@@ -99,28 +117,5 @@ function computeOrderPrice(
     });
   }
 
-  const manualDiscount = manualDiscountAmount;
-  const shipping = manualShippingFee;
-
-  let couponDiscount = 0;
-  if (coupon) {
-    const discount = computeCouponDiscount(coupon, subtotal, orderPhoneNum);
-    if (discount === false) {
-      throw new HTTPException(400, { message: "Coupon not applicable" });
-    }
-    couponDiscount = discount;
-  }
-
-  const total = Math.max(subtotal - manualDiscount - couponDiscount + shipping, 0);
-
-  return {
-    lines: resultLines,
-    subtotal: subtotal,
-    manualDiscount: manualDiscount,
-    couponDiscount: couponDiscount,
-    comboDiscount: 0,
-    shipping: shipping,
-    tax: 0,
-    total: total
-  };
+  return { lines: lines, subtotal: subtotal };
 }

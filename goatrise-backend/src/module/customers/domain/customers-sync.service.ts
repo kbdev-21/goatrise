@@ -2,9 +2,10 @@ import type { DbExec } from "../../../core/db.js";
 import { customers } from "../schema/customers.schema.js";
 import { eq } from "drizzle-orm";
 import { createCustomer } from "./customers.service.js";
+import type { SalesChannel } from "../../../core/types.js";
 import type { Customer } from "./types.js";
 
-export async function getOrCreateOrSyncCustomer(db: DbExec, name: string, email?: string, phoneNum?: string): Promise<Customer> {
+export async function getOrCreateOrSyncCustomer(db: DbExec, name: string, email?: string, phoneNum?: string, source?: SalesChannel): Promise<Customer> {
   // email là identity ưu tiên.
   let existing: Customer | undefined;
   if (email) {
@@ -30,7 +31,7 @@ export async function getOrCreateOrSyncCustomer(db: DbExec, name: string, email?
   // chưa có -> tạo mới (actorId null: luồng sync ko gắn với actor cụ thể).
   // 2 request cùng email chạy song song: INSERT sau vỡ unique(email) -> đọc lại bản kia vừa tạo.
   try {
-    return await createCustomer(db, null, { name: name, email: email, phoneNum: phoneNum });
+    return await createCustomer(db, null, { name: name, email: email, phoneNum: phoneNum, source: source });
   } catch (e) {
     if (!email || !isUniqueViolation(e)) {
       throw e;

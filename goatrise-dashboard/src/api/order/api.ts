@@ -1,10 +1,15 @@
 import axiosInstance from "@/api/axios-instance.ts";
 import type { ItemAttributeValues } from "@/api/item/api.ts";
 import type { Coupon } from "@/api/coupon/api.ts";
-import type { Address, LanguageString } from "@/core/types.ts";
+import type { Address, LanguageString, SalesChannel } from "@/core/types.ts";
 
 export async function findOrders(params?: FindOrdersParams): Promise<Order[]> {
   const res = await axiosInstance.get<Order[]>("/api/orders", { params });
+  return res.data;
+}
+
+export async function findOrderById(orderId: string): Promise<Order> {
+  const res = await axiosInstance.get<Order>(`/api/orders/${orderId}`);
   return res.data;
 }
 
@@ -23,13 +28,20 @@ export async function updateOrder(orderId: string, request: UpdateOrderRequest):
   return res.data;
 }
 
-export type OrderStatus = "PENDING" | "PROCESSING" | "SHIPPING" | "COMPLETED" | "CANCELLED";
+export type OrderStatus = "PENDING" | "SHIPPING" | "COMPLETED" | "CANCELLED";
 
 export type OrderPaymentStatus = "PENDING" | "PAID" | "FAILED" | "REFUNDED";
 
 export type OrderPaymentMethod = "COD" | "MANUAL_TRANSFER" | "MOMO" | "VNPAY" | "STRIPE";
 
-export type OrderChannel = "WEBSITE" | "INSTAGRAM" | "FACEBOOK" | "TIKTOK" | "SHOPEE" | "OTHER";
+
+// Mirror backend: module/orders/schema/orders.schema.ts -> OrderCombo
+// (structurally same as AppliedCombo from combo-calculation.service.ts)
+export type OrderCombo = {
+  id: string;
+  name: LanguageString;
+  discountAmount: number;
+};
 
 // Mirror backend: module/orders/schema/order-lines.schema.ts -> OrderLineSnapItem
 export type OrderLineSnapItem = {
@@ -70,6 +82,7 @@ export type Order = {
   customerPhoneNum: string;
   customerAddress: Address;
   couponId: string | null;
+  combos: OrderCombo[];
   subtotalAmount: number;
   manualDiscountAmount: number;
   couponDiscountAmount: number;
@@ -80,7 +93,7 @@ export type Order = {
   paymentMethod: OrderPaymentMethod;
   paymentStatus: OrderPaymentStatus;
   status: OrderStatus;
-  channel: OrderChannel;
+  channel: SalesChannel;
   referrerId: string | null;
   creatorId: string | null;
   note: string | null;
@@ -92,7 +105,7 @@ export type Order = {
 
 export type FindOrdersParams = {
   search?: string;
-  channel?: OrderChannel;
+  channel?: SalesChannel;
   status?: OrderStatus;
   sort?: string;
   offset?: number;
@@ -116,7 +129,7 @@ export type CreateOrderRequest = {
   paymentMethod: OrderPaymentMethod;
   paymentStatus?: OrderPaymentStatus;
   status?: OrderStatus;
-  channel: OrderChannel;
+  channel: SalesChannel;
   referrerId?: string;
   note?: string;
   lines: OrderLineRequest[];
@@ -154,6 +167,7 @@ export type OrderCalculationResult = {
   manualDiscount: number;
   couponDiscount: number;
   comboDiscount: number;
+  combos: OrderCombo[];
   shipping: number;
   tax: number;
   total: number;

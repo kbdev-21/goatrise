@@ -10,6 +10,7 @@ import { cors } from "hono/cors";
 import { ordersRouter } from "./module/orders/router/orders.router.js";
 import { customersRouter } from "./module/customers/router/customers.router.js";
 import { couponsRouter } from "./module/promotion/router/coupons.router.js";
+import { combosRouter } from "./module/promotion/router/combos.router.js";
 
 const app = new Hono();
 
@@ -32,6 +33,7 @@ app.route("/", collectionsRouter);
 app.route("/", ordersRouter);
 app.route("/", customersRouter);
 app.route("/", couponsRouter);
+app.route("/", combosRouter);
 
 serve({
   fetch: app.fetch,

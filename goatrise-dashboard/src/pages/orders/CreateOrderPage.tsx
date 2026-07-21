@@ -7,12 +7,12 @@ import { useCalculateOrder, useCreateOrder } from "@/api/order/query-hooks.ts";
 import type {
   CreateOrderRequest,
   OrderCalculationResult,
-  OrderChannel,
   OrderLineRequest,
   OrderPaymentMethod,
   OrderPaymentStatus,
   OrderStatus,
 } from "@/api/order/api.ts";
+import type { SalesChannel } from "@/core/types.ts";
 import { useItems } from "@/api/item/query-hooks.ts";
 import type { Item } from "@/api/item/api.ts";
 import { formatPriceVn, normalizeVietnameseString } from "@/core/utils.ts";
@@ -61,18 +61,19 @@ const PAYMENT_STATUS_OPTIONS: { label: string; value: OrderPaymentStatus }[] = [
 
 const STATUS_OPTIONS: { label: string; value: OrderStatus }[] = [
   { label: "Pending", value: "PENDING" },
-  { label: "Processing", value: "PROCESSING" },
   { label: "Shipping", value: "SHIPPING" },
   { label: "Completed", value: "COMPLETED" },
   { label: "Cancelled", value: "CANCELLED" },
 ];
 
-const CHANNEL_OPTIONS: { label: string; value: OrderChannel }[] = [
-  { label: "Website", value: "WEBSITE" },
+const CHANNEL_OPTIONS: { label: string; value: SalesChannel }[] = [
   { label: "Instagram", value: "INSTAGRAM" },
+  { label: "Website", value: "WEBSITE" },
   { label: "Facebook", value: "FACEBOOK" },
   { label: "TikTok", value: "TIKTOK" },
+  { label: "Zalo", value: "ZALO" },
   { label: "Shopee", value: "SHOPEE" },
+  { label: "Referral", value: "REFERRAL" },
   { label: "Other", value: "OTHER" },
 ];
 
@@ -131,7 +132,7 @@ export default function CreateOrderPage() {
   const [paymentMethod, setPaymentMethod] = useState<OrderPaymentMethod>("COD");
   const [paymentStatus, setPaymentStatus] = useState<OrderPaymentStatus>("PENDING");
   const [status, setStatus] = useState<OrderStatus>("PENDING");
-  const [channel, setChannel] = useState<OrderChannel>("WEBSITE");
+  const [channel, setChannel] = useState<SalesChannel>("INSTAGRAM");
   const [note, setNote] = useState("");
 
   const [calculation, setCalculation] = useState<OrderCalculationResult | null>(null);
@@ -466,9 +467,14 @@ export default function CreateOrderPage() {
                   {calculation.couponDiscount > 0 && (
                     <SummaryRow label="Coupon discount" value={-calculation.couponDiscount} tone="discount" />
                   )}
-                  {calculation.comboDiscount > 0 && (
-                    <SummaryRow label="Combo discount" value={-calculation.comboDiscount} tone="discount" />
-                  )}
+                  {calculation.combos.map((combo) => (
+                    <SummaryRow
+                      key={combo.id}
+                      label={`Combo · ${combo.name.vi}`}
+                      value={-combo.discountAmount}
+                      tone="discount"
+                    />
+                  ))}
                   <SummaryRow label="Shipping" value={calculation.shipping} />
                   <SummaryRow label="Tax" value={calculation.tax} />
                   <div className="mt-1.5 flex items-center justify-between border-t pt-1.5">
@@ -476,6 +482,17 @@ export default function CreateOrderPage() {
                     <span className="text-base font-semibold">
                       {formatPriceVn(calculation.total)} VND
                     </span>
+                  </div>
+
+                  <div className="mt-2 flex justify-end">
+                    <Button
+                      type="button"
+                      disabled={!canSave || createOrderMutation.isPending}
+                      onClick={handleSave}
+                    >
+                      {createOrderMutation.isPending ? <Spinner /> : <></>}
+                      Create order
+                    </Button>
                   </div>
                 </div>
               )}
@@ -543,7 +560,7 @@ export default function CreateOrderPage() {
 
           <div className="flex flex-col gap-1.5">
             <FieldLabel required>Channel</FieldLabel>
-            <Select value={channel} onValueChange={(v) => setChannel(v as OrderChannel)}>
+            <Select value={channel} onValueChange={(v) => setChannel(v as SalesChannel)}>
               <SelectTrigger className="w-full">
                 <SelectValue />
               </SelectTrigger>

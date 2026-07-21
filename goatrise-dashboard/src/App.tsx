@@ -17,7 +17,11 @@ import ProductDetailPage from "@/pages/products/ProductDetailPage.tsx"
 import CollectionsPage from "@/pages/collections/CollectionsPage.tsx"
 import OrdersPage from "@/pages/orders/OrdersPage.tsx"
 import CreateOrderPage from "@/pages/orders/CreateOrderPage.tsx"
+import OrderDetailPage from "@/pages/orders/OrderDetailPage.tsx"
 import CouponsPage from "@/pages/coupons/CouponsPage.tsx"
+import CombosPage from "@/pages/combos/CombosPage.tsx"
+import CustomersPage from "@/pages/customers/CustomersPage.tsx"
+import SuppliersPage from "@/pages/suppliers/SuppliersPage.tsx"
 
 export function App() {
   const init = useAuthStore((s) => s.init);
@@ -44,7 +48,11 @@ export function App() {
           <Route path="/items/:id" element={<ItemDetailPage />} />
           <Route path="/orders" element={<OrdersPage />} />
           <Route path="/orders/create" element={<CreateOrderPage />} />
+          <Route path="/orders/:id" element={<OrderDetailPage />} />
           <Route path="/coupons" element={<CouponsPage />} />
+          <Route path="/combos" element={<CombosPage />} />
+          <Route path="/customers" element={<CustomersPage />} />
+          <Route path="/suppliers" element={<SuppliersPage />} />
         </Route>
       </Routes>
       <Toaster />

@@ -22,8 +22,6 @@ export function computeCouponDiscount(coupon: Coupon, orderSubtotal: number, ord
     discount = Math.min(discount, coupon.maxDiscountAmount);
   }
 
-  // không discount orderPrice về dưới 0
-  discount = Math.min(discount, orderSubtotal);
-
+  // trả về đúng số tiền lẽ ra được giảm; cap để total không âm do calculateOrder lo
   return discount;
 }

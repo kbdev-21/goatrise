@@ -1,7 +1,7 @@
 import { bigint, index, jsonb, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { customers } from "../../customers/schema/customers.schema.js";
 import { coupons } from "../../promotion/schema/coupons.schema.js";
-import type { Address } from "../../../core/types.js";
+import type { Address, LanguageString, SalesChannel } from "../../../core/types.js";
 
 export const orders = pgTable("orders", {
   id: uuid("id").primaryKey(),
@@ -14,6 +14,7 @@ export const orders = pgTable("orders", {
   customerAddress: jsonb("customer_address").$type<Address>().notNull(),
 
   couponId: uuid("coupon_id").references(() => coupons.id),
+  combos: jsonb("combos").$type<OrderCombo[]>().notNull().default([]),
 
   subtotalAmount: bigint("subtotal_amount", { mode: "number" }).notNull(),
 
@@ -30,7 +31,7 @@ export const orders = pgTable("orders", {
   paymentStatus: text("payment_status").$type<OrderPaymentStatus>().default("PENDING").notNull(),
   status: text("status").$type<OrderStatus>().default("PENDING").notNull(),
 
-  channel: text("channel").$type<OrderChannel>().notNull(),
+  channel: text("channel").$type<SalesChannel>().notNull(),
   referrerId: uuid("referrer_id"),
   creatorId: uuid("creator_id"),
 
@@ -43,7 +44,12 @@ export const orders = pgTable("orders", {
   index().on(t.couponId)
 ]);
 
-export type OrderStatus = "PENDING" | "PROCESSING" | "SHIPPING" | "COMPLETED" | "CANCELLED";
+export type OrderCombo = {
+  id: string,
+  name: LanguageString,
+  discountAmount: number
+}
+
+export type OrderStatus = "PENDING" | "SHIPPING" | "COMPLETED" | "CANCELLED";
 export type OrderPaymentStatus = "PENDING" | "PAID" | "FAILED" | "REFUNDED";
 export type OrderPaymentMethod = "COD" | "MANUAL_TRANSFER" | "MOMO" | "VNPAY" | "STRIPE";
-export type OrderChannel = "WEBSITE" | "INSTAGRAM" | "FACEBOOK" | "TIKTOK" | "SHOPEE" | "OTHER";

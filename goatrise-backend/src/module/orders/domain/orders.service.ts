@@ -8,6 +8,7 @@ import { uuidv7 } from "uuidv7";
 import { recordAuditLog } from "../../audit/domain/audit-logs.service.js";
 import { calculateOrder } from "./order-calculation.service.js";
 import { applyCoupon, getCouponByCode } from "../../promotion/domain/coupons.service.js";
+import { incrementCombosUsage } from "../../promotion/domain/combos.service.js";
 import { soldItems } from "../../inventory/domain/inventory.service.js";
 import { getOrCreateOrSyncCustomer } from "../../customers/domain/customers-sync.service.js";
 import type { CreateOrderRequest, FindOrdersQuery, PlaceOrderRequest, UpdateOrderRequest } from "./validators.js";
@@ -72,7 +73,8 @@ export async function createOrder(db: DbExec, actorId: string | null, createReq:
     db,
     createReq.customerName,
     createReq.customerEmail,
-    createReq.customerPhoneNum
+    createReq.customerPhoneNum,
+    createReq.channel
   );
 
   return await db.transaction(async (tx) => {
@@ -100,6 +102,7 @@ export async function createOrder(db: DbExec, actorId: string | null, createReq:
       customerPhoneNum: createReq.customerPhoneNum,
       customerAddress: createReq.customerAddress,
       couponId: couponId,
+      combos: calculation.combos,
       subtotalAmount: calculation.subtotal,
       manualDiscountAmount: calculation.manualDiscount,
       couponDiscountAmount: calculation.couponDiscount,
@@ -220,6 +223,9 @@ async function onCompleteOrder(db: DbExec, order: Order): Promise<void> {
   if (order.couponId) {
     await applyCoupon(db, order.couponId, order.subtotalAmount, order.customerPhoneNum);
   }
+
+  // +1 usedCount cho từng combo đã áp vào đơn (chỉ khi đơn hoàn tất)
+  await incrementCombosUsage(db, order.combos.map((combo) => combo.id));
 
   // TODO: loyaltyPoints để dành cho feature riêng sau này
   await db.update(customers).set({

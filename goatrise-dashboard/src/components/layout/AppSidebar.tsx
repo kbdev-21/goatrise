@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
-  Boxes,
+  Combine,
   Contact,
   Globe,
   Home,
@@ -79,6 +79,7 @@ const navGroups: NavGroup[] = [
     items: [
       { title: "Orders", url: "/orders", icon: ShoppingCart },
       { title: "Coupons", url: "/coupons", icon: TicketPercent },
+      { title: "Combos", url: "/combos", icon: Combine },
       { title: "Customers", url: "/customers", icon: Contact },
     ],
   },

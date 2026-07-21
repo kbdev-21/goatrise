@@ -9,3 +9,14 @@ export type Address = {
   provinceName: string;
   address: string;
 };
+
+// Mirror backend: core/types.ts -> SalesChannel (dùng chung cho order.channel & customer.source)
+export type SalesChannel =
+  | "WEBSITE"
+  | "INSTAGRAM"
+  | "FACEBOOK"
+  | "TIKTOK"
+  | "ZALO"
+  | "SHOPEE"
+  | "REFERRAL"
+  | "OTHER";

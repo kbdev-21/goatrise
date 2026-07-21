@@ -1,8 +1,9 @@
 import z from "zod";
-import type { OrderChannel, OrderStatus, OrderPaymentStatus } from "../schema/orders.schema.js";
+import type { OrderStatus, OrderPaymentStatus } from "../schema/orders.schema.js";
+import type { SalesChannel } from "../../../core/types.js";
 
-const orderChannels = ["WEBSITE", "INSTAGRAM", "FACEBOOK", "TIKTOK", "SHOPEE", "OTHER"] satisfies OrderChannel[];
-const orderStatuses = ["PENDING", "PROCESSING", "SHIPPING", "COMPLETED", "CANCELLED"] satisfies OrderStatus[];
+const orderChannels = ["WEBSITE", "INSTAGRAM", "FACEBOOK", "TIKTOK", "ZALO", "SHOPEE", "REFERRAL", "OTHER"] satisfies SalesChannel[];
+const orderStatuses = ["PENDING", "SHIPPING", "COMPLETED", "CANCELLED"] satisfies OrderStatus[];
 const orderPaymentStatuses = ["PENDING", "PAID", "FAILED", "REFUNDED"] satisfies OrderPaymentStatus[];
 
 const OrderLineSchema = z.object({
@@ -45,10 +46,10 @@ export const CreateOrderRequestSchema = z.object({
   manualShippingFee: z.number().int().nonnegative().optional(),
 
   paymentMethod: z.enum(["COD", "MANUAL_TRANSFER", "MOMO", "VNPAY", "STRIPE"]),
-  paymentStatus: z.enum(["PENDING", "PAID", "FAILED", "REFUNDED"]).optional(),
-  status: z.enum(["PENDING", "PROCESSING", "SHIPPING", "COMPLETED", "CANCELLED"]).optional(),
+  paymentStatus: z.enum(orderPaymentStatuses).optional(),
+  status: z.enum(orderStatuses).optional(),
 
-  channel: z.enum(["WEBSITE", "INSTAGRAM", "FACEBOOK", "TIKTOK", "SHOPEE", "OTHER"]),
+  channel: z.enum(orderChannels),
   referrerId: z.uuid().optional(),
 
   note: z.string().trim().min(1).optional(),

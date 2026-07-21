@@ -1,5 +1,6 @@
 import z from "zod";
 import type { CouponDiscountType } from "../schema/coupons.schema.js";
+import type { ComboDiscountType } from "../schema/combos.schema.js";
 
 const discountTypes = ["FIXED", "PERCENTAGE"] satisfies CouponDiscountType[];
 
@@ -23,3 +24,34 @@ export const FindCouponsQuerySchema = z.object({
   limit: z.coerce.number().int().positive().default(20)
 });
 export type FindCouponsQuery = z.infer<typeof FindCouponsQuerySchema>;
+
+const comboDiscountTypes = ["FIXED", "PERCENTAGE"] satisfies ComboDiscountType[];
+
+const LanguageStringSchema = z.object({
+  vi: z.string().trim().min(1),
+  en: z.string().trim().min(1)
+});
+
+const ComboConditionSchema = z.object({
+  targetType: z.enum(["ITEM", "PRODUCT", "COLLECTION"]),
+  targetId: z.uuid(),
+  quantity: z.number().int().positive()
+});
+
+export const CreateComboRequestSchema = z.object({
+  name: LanguageStringSchema,
+  andConditions: z.array(ComboConditionSchema).min(1),
+  discountType: z.enum(comboDiscountTypes),
+  discountValue: z.number().int().positive(),
+  isActive: z.boolean().optional()
+});
+export type CreateComboRequest = z.infer<typeof CreateComboRequestSchema>;
+
+export const UpdateComboRequestSchema = z.object({
+  name: LanguageStringSchema.optional(),
+  andConditions: z.array(ComboConditionSchema).min(1).optional(),
+  discountType: z.enum(comboDiscountTypes).optional(),
+  discountValue: z.number().int().positive().optional(),
+  isActive: z.boolean().optional()
+});
+export type UpdateComboRequest = z.infer<typeof UpdateComboRequestSchema>;
