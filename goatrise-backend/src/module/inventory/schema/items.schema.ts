@@ -27,10 +27,6 @@ export const items = pgTable("items", {
 
 export type ItemAttribute = "COLOR" | "SIZE";
 export type ItemAttributeValues = {
-  COLOR?: {
-    hex: string, // key
-    enText: string,
-    viText: string 
-  },
+  COLOR?: string, // mã hex, cũng là key định danh biến thể
   SIZE?: string
 }

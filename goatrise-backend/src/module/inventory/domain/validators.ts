@@ -4,11 +4,7 @@ import type { ItemTransactionType } from "../schema/item-transactions.schema.js"
 const itemTransactionTypes = ["IMPORT", "ADJUST", "SOLD"] satisfies ItemTransactionType[];
 
 const ItemAttributeValuesSchema = z.object({
-  COLOR: z.object({
-    hex: z.string().trim().min(1),
-    enText: z.string().trim().min(1),
-    viText: z.string().trim().min(1)
-  }).optional(),
+  COLOR: z.string().trim().min(1).optional(),
   SIZE: z.string().trim().min(1).optional()
 });
 

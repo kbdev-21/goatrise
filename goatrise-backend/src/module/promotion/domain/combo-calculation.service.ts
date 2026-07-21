@@ -1,10 +1,9 @@
 import type { DbExec } from "../../../core/db.js";
-import type { LanguageString } from "../../../core/types.js";
 import type { Combo } from "./types.js";
 
 export type AppliedCombo = {
   id: string,
-  name: LanguageString,
+  code: string,
   discountAmount: number
 };
 
@@ -37,7 +36,7 @@ export async function calculateComboDiscount(
 
     // trả về đúng số tiền lẽ ra được giảm; cap để total không âm do calculateOrder lo
     const comboDiscount = computeComboDiscount(combo, subtotal);
-    applied.push({ id: combo.id, name: combo.name, discountAmount: comboDiscount });
+    applied.push({ id: combo.id, code: combo.code, discountAmount: comboDiscount });
     discount = discount + comboDiscount;
   }
 

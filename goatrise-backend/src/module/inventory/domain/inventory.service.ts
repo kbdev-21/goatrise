@@ -1,6 +1,7 @@
 import type { DbExec } from "../../../core/db.js";
 import { items } from "../schema/items.schema.js";
 import { itemTransactions } from "../schema/item-transactions.schema.js";
+import { products } from "../../catalog/schema/products.schema.js";
 import { HTTPException } from "hono/http-exception";
 import { eq, sql } from "drizzle-orm";
 import { uuidv7 } from "uuidv7";
@@ -110,6 +111,9 @@ export async function soldItems(db: DbExec, soldList: { itemId: string, quantity
   const itemsMap = new Map(foundItems.map((item) => [item.id, item]));
 
   await db.transaction(async (tx) => {
+    // nhiều item có thể cùng thuộc 1 product (khác size/màu) -> cộng dồn rồi update 1 lần
+    const soldByProduct = new Map<string, number>();
+
     for (const sold of soldList) {
       const item = itemsMap.get(sold.itemId);
       if (!item) {
@@ -135,6 +139,17 @@ export async function soldItems(db: DbExec, soldList: { itemId: string, quantity
         stock: sql`${items.stock} - ${sold.quantity}`,
         sold: sql`${items.sold} + ${sold.quantity}`
       }).where(eq(items.id, sold.itemId));
+
+      if (item.productId) {
+        soldByProduct.set(item.productId, (soldByProduct.get(item.productId) ?? 0) + sold.quantity);
+      }
+    }
+
+    // item lẻ (productId null) thì bỏ qua
+    for (const [productId, quantity] of soldByProduct) {
+      await tx.update(products).set({
+        sold: sql`${products.sold} + ${quantity}`
+      }).where(eq(products.id, productId));
     }
   });
 }

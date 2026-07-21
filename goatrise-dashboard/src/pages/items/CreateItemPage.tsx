@@ -25,11 +25,7 @@ export default function CreateItemPage() {
   function handleSave() {
     const attributeValues: ItemAttributeValues = {};
     if (value.colorEnabled) {
-      attributeValues.COLOR = {
-        hex: value.colorHex.trim(),
-        enText: value.colorEnText.trim(),
-        viText: value.colorViText.trim(),
-      };
+      attributeValues.COLOR = value.color.trim();
     }
     if (value.sizeEnabled) {
       attributeValues.SIZE = value.size.trim();

@@ -113,11 +113,7 @@ export default function ItemDetailPage() {
 
     const attributeValues: ItemAttributeValues = {};
     if (value.colorEnabled) {
-      attributeValues.COLOR = {
-        hex: value.colorHex.trim(),
-        enText: value.colorEnText.trim(),
-        viText: value.colorViText.trim(),
-      };
+      attributeValues.COLOR = value.color.trim();
     }
     if (value.sizeEnabled) {
       attributeValues.SIZE = value.size.trim();
@@ -408,9 +404,7 @@ function itemToFormValue(item: Item): ItemInfoFormValue {
     note: item.note ?? "",
     isActive: item.isActive,
     colorEnabled: !!item.attributeValues?.COLOR,
-    colorHex: item.attributeValues?.COLOR?.hex ?? "",
-    colorEnText: item.attributeValues?.COLOR?.enText ?? "",
-    colorViText: item.attributeValues?.COLOR?.viText ?? "",
+    color: item.attributeValues?.COLOR ?? "",
     sizeEnabled: item.attributeValues?.SIZE !== undefined,
     size: item.attributeValues?.SIZE ?? "",
   };

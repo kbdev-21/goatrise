@@ -27,11 +27,6 @@ export type FindCouponsQuery = z.infer<typeof FindCouponsQuerySchema>;
 
 const comboDiscountTypes = ["FIXED", "PERCENTAGE"] satisfies ComboDiscountType[];
 
-const LanguageStringSchema = z.object({
-  vi: z.string().trim().min(1),
-  en: z.string().trim().min(1)
-});
-
 const ComboConditionSchema = z.object({
   targetType: z.enum(["ITEM", "PRODUCT", "COLLECTION"]),
   targetId: z.uuid(),
@@ -39,7 +34,8 @@ const ComboConditionSchema = z.object({
 });
 
 export const CreateComboRequestSchema = z.object({
-  name: LanguageStringSchema,
+  code: z.string().trim().min(1).max(50),
+  description: z.string().trim().min(1).nullable().optional(),
   andConditions: z.array(ComboConditionSchema).min(1),
   discountType: z.enum(comboDiscountTypes),
   discountValue: z.number().int().positive(),
@@ -48,7 +44,8 @@ export const CreateComboRequestSchema = z.object({
 export type CreateComboRequest = z.infer<typeof CreateComboRequestSchema>;
 
 export const UpdateComboRequestSchema = z.object({
-  name: LanguageStringSchema.optional(),
+  code: z.string().trim().min(1).max(50).optional(),
+  description: z.string().trim().min(1).nullable().optional(),
   andConditions: z.array(ComboConditionSchema).min(1).optional(),
   discountType: z.enum(comboDiscountTypes).optional(),
   discountValue: z.number().int().positive().optional(),

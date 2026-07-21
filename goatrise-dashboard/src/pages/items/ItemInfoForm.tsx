@@ -22,9 +22,7 @@ export type ItemInfoFormValue = {
   note: string;
   isActive: boolean;
   colorEnabled: boolean;
-  colorHex: string;
-  colorEnText: string;
-  colorViText: string;
+  color: string;
   sizeEnabled: boolean;
   size: string;
 };
@@ -39,9 +37,7 @@ export const EMPTY_ITEM_INFO_FORM_VALUE: ItemInfoFormValue = {
   note: "",
   isActive: true,
   colorEnabled: true,
-  colorHex: "",
-  colorEnText: "",
-  colorViText: "",
+  color: "",
   sizeEnabled: true,
   size: "",
 };
@@ -159,24 +155,12 @@ export default function ItemInfoForm({
               />
               <span className="text-xs font-medium">Color</span>
             </label>
-            <div className="grid flex-1 grid-cols-3 gap-2">
+            <div className="flex-1">
               <Input
                 placeholder="Hex (#ffffff)"
-                value={value.colorHex}
+                value={value.color}
                 disabled={!value.colorEnabled}
-                onChange={(e) => set({ colorHex: e.target.value })}
-              />
-              <Input
-                placeholder="EN text"
-                value={value.colorEnText}
-                disabled={!value.colorEnabled}
-                onChange={(e) => set({ colorEnText: e.target.value })}
-              />
-              <Input
-                placeholder="VI text"
-                value={value.colorViText}
-                disabled={!value.colorEnabled}
-                onChange={(e) => set({ colorViText: e.target.value })}
+                onChange={(e) => set({ color: e.target.value })}
               />
             </div>
           </div>

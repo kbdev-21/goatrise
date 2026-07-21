@@ -1,5 +1,4 @@
 import axiosInstance from "@/api/axios-instance.ts";
-import type { LanguageString } from "@/core/types.ts";
 
 export async function findCombos(): Promise<Combo[]> {
   const res = await axiosInstance.get<Combo[]>("/api/combos");
@@ -40,7 +39,8 @@ export type ComboCondition = {
 // bigint columns serialized as number; timestamps serialized as ISO string
 export type Combo = {
   id: string;
-  name: LanguageString;
+  code: string;
+  description: string | null;
   andConditions: ComboCondition[];
   discountType: ComboDiscountType;
   discountValue: number;
@@ -52,7 +52,8 @@ export type Combo = {
 
 // Mirror backend: module/promotion/domain/validators.ts -> CreateComboRequestSchema
 export type CreateComboRequest = {
-  name: LanguageString;
+  code: string;
+  description?: string | null;
   andConditions: ComboCondition[];
   discountType: ComboDiscountType;
   discountValue: number;
@@ -61,7 +62,8 @@ export type CreateComboRequest = {
 
 // Mirror backend: module/promotion/domain/validators.ts -> UpdateComboRequestSchema
 export type UpdateComboRequest = {
-  name?: LanguageString;
+  code?: string;
+  description?: string | null;
   andConditions?: ComboCondition[];
   discountType?: ComboDiscountType;
   discountValue?: number;

@@ -23,6 +23,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
 import { Input } from "@/components/ui/input.tsx";
+import { Textarea } from "@/components/ui/textarea.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import {
   Dialog,
@@ -70,8 +71,8 @@ const TARGET_TYPE_OPTIONS: { label: string; value: ComboConditionTargetType }[] 
 const SORT_OPTIONS: { label: string; value: string }[] = [
   { label: "Newest", value: "createdAt:DESC" },
   { label: "Oldest", value: "createdAt:ASC" },
-  { label: "Name (A→Z)", value: "name:ASC" },
-  { label: "Name (Z→A)", value: "name:DESC" },
+  { label: "Code (A→Z)", value: "code:ASC" },
+  { label: "Code (Z→A)", value: "code:DESC" },
 ];
 
 export default function CombosPage() {
@@ -94,7 +95,7 @@ export default function CombosPage() {
     const keyword = normalizeVietnameseString(search);
     if (!keyword) return combos;
     return combos.filter((combo) =>
-      normalizeVietnameseString(`${combo.name.vi} ${combo.name.en}`).includes(keyword),
+      normalizeVietnameseString(combo.code).includes(keyword),
     );
   }, [combosQuery.data, search]);
 
@@ -104,8 +105,8 @@ export default function CombosPage() {
     return [...filteredCombos].sort((a, b) => {
       let cmp: number;
       switch (field) {
-        case "name":
-          cmp = a.name.vi.localeCompare(b.name.vi);
+        case "code":
+          cmp = a.code.localeCompare(b.code);
           break;
         default:
           cmp = a.createdAt.localeCompare(b.createdAt);
@@ -122,7 +123,7 @@ export default function CombosPage() {
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative max-w-xs flex-1">
           <Input
-            placeholder="Search name..."
+            placeholder="Search code..."
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             onKeyDown={(e) => {
@@ -171,7 +172,8 @@ export default function CombosPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
+                <TableHead>Code</TableHead>
+                <TableHead>Description</TableHead>
                 <TableHead>Conditions</TableHead>
                 <TableHead>Discount</TableHead>
                 <TableHead>Used</TableHead>
@@ -182,24 +184,24 @@ export default function CombosPage() {
             <TableBody>
               {combosQuery.isError ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-destructive text-center">
+                  <TableCell colSpan={7} className="text-destructive text-center">
                     Failed to load combos.
                   </TableCell>
                 </TableRow>
               ) : sortedCombos.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-muted-foreground text-center">
+                  <TableCell colSpan={7} className="text-muted-foreground text-center">
                     No combos found.
                   </TableCell>
                 </TableRow>
               ) : (
                 sortedCombos.map((combo) => (
                   <TableRow key={combo.id}>
+                    <TableCell className="font-mono text-xs">{combo.code}</TableCell>
                     <TableCell>
-                      <div className="flex flex-col gap-0.5">
-                        <span className="font-medium">{combo.name.vi}</span>
-                        <span className="text-muted-foreground text-xs">{combo.name.en}</span>
-                      </div>
+                      <span className="text-muted-foreground block max-w-96 truncate text-xs">
+                        {combo.description || "—"}
+                      </span>
                     </TableCell>
                     <TableCell>
                       {combo.andConditions.length}{" "}
@@ -264,8 +266,8 @@ function Badge({ label, className }: { label: string; className: string }) {
 }
 
 type ComboFormState = {
-  nameVi: string;
-  nameEn: string;
+  code: string;
+  description: string;
   discountType: ComboDiscountType;
   discountValue: string;
   isActive: boolean;
@@ -275,8 +277,8 @@ type ComboFormState = {
 const EMPTY_CONDITION: ComboCondition = { targetType: "ITEM", targetId: "", quantity: 1 };
 
 const EMPTY_FORM_STATE: ComboFormState = {
-  nameVi: "",
-  nameEn: "",
+  code: "",
+  description: "",
   discountType: "FIXED",
   discountValue: "",
   isActive: true,
@@ -336,8 +338,8 @@ function ComboFormDialog({
     setConfirmDeleteOpen(false);
     if (combo) {
       setForm({
-        nameVi: combo.name.vi,
-        nameEn: combo.name.en,
+        code: combo.code,
+        description: combo.description ?? "",
         discountType: combo.discountType,
         discountValue: String(combo.discountValue),
         isActive: combo.isActive,
@@ -362,8 +364,7 @@ function ComboFormDialog({
   const isPercentage = form.discountType === "PERCENTAGE";
   const discountValueNum = Number(form.discountValue);
   const canSubmit =
-    form.nameVi.trim().length > 0 &&
-    form.nameEn.trim().length > 0 &&
+    form.code.trim().length > 0 &&
     form.discountValue.trim().length > 0 &&
     Number.isFinite(discountValueNum) &&
     discountValueNum > 0 &&
@@ -372,7 +373,8 @@ function ComboFormDialog({
 
   function handleSubmit() {
     const request: CreateComboRequest = {
-      name: { vi: form.nameVi.trim(), en: form.nameEn.trim() },
+      code: form.code.trim(),
+      description: form.description.trim() || null,
       andConditions: form.conditions.map((cond) => ({
         targetType: cond.targetType,
         targetId: cond.targetId,
@@ -384,7 +386,7 @@ function ComboFormDialog({
     };
 
     const onDone = (saved: Combo) => {
-      toast.success(`${isEdit ? "Updated" : "Created"} combo ${saved.name.vi}`);
+      toast.success(`${isEdit ? "Updated" : "Created"} combo ${saved.code}`);
       onSuccess();
       onClose();
     };
@@ -407,7 +409,7 @@ function ComboFormDialog({
     if (!combo) return;
     deleteMutation.mutate(combo.id, {
       onSuccess: () => {
-        toast.success(`Deleted combo ${combo.name.vi}`);
+        toast.success(`Deleted combo ${combo.code}`);
         setConfirmDeleteOpen(false);
         onSuccess();
         onClose();
@@ -440,24 +442,24 @@ function ComboFormDialog({
         </DialogHeader>
 
         <div className="flex max-h-[70vh] flex-col gap-4 overflow-y-auto pr-1">
-          {/* name */}
-          <div className="grid grid-cols-2 gap-2">
-            <div className="flex flex-col gap-1.5">
-              <FieldLabel required>Name (VI)</FieldLabel>
-              <Input
-                placeholder="e.g. Combo mùa hè"
-                value={form.nameVi}
-                onChange={(e) => set({ nameVi: e.target.value })}
-              />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <FieldLabel required>Name (EN)</FieldLabel>
-              <Input
-                placeholder="e.g. Summer combo"
-                value={form.nameEn}
-                onChange={(e) => set({ nameEn: e.target.value })}
-              />
-            </div>
+          {/* code */}
+          <div className="flex flex-col gap-1.5">
+            <FieldLabel required>Code</FieldLabel>
+            <Input
+              placeholder="e.g. SUMMER_COMBO"
+              value={form.code}
+              onChange={(e) => set({ code: e.target.value })}
+            />
+          </div>
+
+          {/* description */}
+          <div className="flex flex-col gap-1.5">
+            <FieldLabel>Description</FieldLabel>
+            <Textarea
+              placeholder="Short description..."
+              value={form.description}
+              onChange={(e) => set({ description: e.target.value })}
+            />
           </div>
 
           {/* discount */}
@@ -564,7 +566,7 @@ function ComboFormDialog({
       {isEdit && (
         <ConfirmDeleteDialog
           open={confirmDeleteOpen}
-          comboName={combo?.name.vi ?? ""}
+          comboName={combo?.code ?? ""}
           isPending={deleteMutation.isPending}
           onCancel={() => setConfirmDeleteOpen(false)}
           onConfirm={handleDelete}

@@ -39,7 +39,7 @@ export type OrderPaymentMethod = "COD" | "MANUAL_TRANSFER" | "MOMO" | "VNPAY" | 
 // (structurally same as AppliedCombo from combo-calculation.service.ts)
 export type OrderCombo = {
   id: string;
-  name: LanguageString;
+  code: string;
   discountAmount: number;
 };
 

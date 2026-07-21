@@ -33,7 +33,8 @@ export async function createCombo(db: DbExec, actorId: string, createReq: Create
   return await db.transaction(async (tx) => {
     await tx.insert(combos).values({
       id: newComboId,
-      name: createReq.name,
+      code: createReq.code,
+      description: createReq.description ?? null,
       andConditions: createReq.andConditions,
       discountType: createReq.discountType,
       discountValue: createReq.discountValue,
@@ -61,7 +62,8 @@ export async function updateCombo(db: DbExec, actorId: string, comboId: string, 
     const comboBefore = await getComboById(tx, comboId);
 
     await tx.update(combos).set({
-      name: updateReq.name,
+      code: updateReq.code,
+      description: updateReq.description,
       andConditions: updateReq.andConditions,
       discountType: updateReq.discountType,
       discountValue: updateReq.discountValue,

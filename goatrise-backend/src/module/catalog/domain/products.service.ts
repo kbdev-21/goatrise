@@ -183,7 +183,7 @@ export function areAttributeValuesValidForRequired(attrValuesList: ItemAttribute
     }
 
     const identity = productRequiredAttributes
-      .map((a) => (a === "COLOR" ? `COLOR:${attrValues.COLOR?.hex}` : `SIZE:${attrValues.SIZE}`))
+      .map((a) => (a === "COLOR" ? `COLOR:${attrValues.COLOR}` : `SIZE:${attrValues.SIZE}`))
       .join("|");
     if (seen.has(identity)) return false;
     seen.add(identity);

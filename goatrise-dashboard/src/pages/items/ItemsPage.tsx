@@ -10,6 +10,7 @@ import { formatPriceVn, normalizeVietnameseString } from "@/core/utils.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
 import { ActiveBadge } from "@/components/shared/active-badge.tsx";
+import { ItemAttributeBadges } from "@/components/shared/item-attribute-badges.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import {
   Dialog,
@@ -204,26 +205,7 @@ export default function ItemsPage() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="flex flex-wrap items-center gap-1">
-                        {item.attributeValues?.COLOR && (
-                          <span className="bg-muted flex items-center gap-1 rounded px-1.5 py-0.5 text-xs">
-                            <span
-                              className="size-3 rounded-full border"
-                              style={{ backgroundColor: item.attributeValues.COLOR.hex }}
-                            />
-                            {item.attributeValues.COLOR.enText}
-                          </span>
-                        )}
-                        {item.attributeValues?.SIZE && (
-                          <span className="bg-muted rounded px-1.5 py-0.5 text-xs">
-                            Size {item.attributeValues.SIZE}
-                          </span>
-                        )}
-                        {!item.attributeValues?.COLOR &&
-                          !item.attributeValues?.SIZE && (
-                            <span className="text-muted-foreground">—</span>
-                          )}
-                      </div>
+                      <ItemAttributeBadges attributeValues={item.attributeValues} />
                     </TableCell>
                     <TableCell>{item.product ? item.product.title.vi : "—"}</TableCell>
                     <TableCell>{formatPriceVn(item.price)}</TableCell>

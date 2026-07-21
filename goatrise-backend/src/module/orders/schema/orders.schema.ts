@@ -1,7 +1,7 @@
 import { bigint, index, jsonb, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { customers } from "../../customers/schema/customers.schema.js";
 import { coupons } from "../../promotion/schema/coupons.schema.js";
-import type { Address, LanguageString, SalesChannel } from "../../../core/types.js";
+import type { Address, SalesChannel } from "../../../core/types.js";
 
 export const orders = pgTable("orders", {
   id: uuid("id").primaryKey(),
@@ -46,7 +46,7 @@ export const orders = pgTable("orders", {
 
 export type OrderCombo = {
   id: string,
-  name: LanguageString,
+  code: string,
   discountAmount: number
 }
 

@@ -1,9 +1,9 @@
 import { bigint, boolean, integer, jsonb, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
-import type { LanguageString } from "../../../core/types.js";
 
 export const combos = pgTable("combos", {
   id: uuid("id").primaryKey(),
-  name: jsonb("name").$type<LanguageString>().notNull(),
+  code: text("code").unique().notNull(),
+  description: text("description"),
 
   andConditions: jsonb("and_conditions").$type<ComboCondition[]>().notNull(),
 

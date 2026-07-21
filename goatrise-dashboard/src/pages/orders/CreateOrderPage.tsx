@@ -15,6 +15,7 @@ import type {
 import type { SalesChannel } from "@/core/types.ts";
 import { useItems } from "@/api/item/query-hooks.ts";
 import type { Item } from "@/api/item/api.ts";
+import { ItemAttributeBadges } from "@/components/shared/item-attribute-badges.tsx";
 import { formatPriceVn, normalizeVietnameseString } from "@/core/utils.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
@@ -372,7 +373,7 @@ export default function CreateOrderPage() {
                         <span className="text-muted-foreground text-xs">
                           {formatPriceVn(item?.price)} × {line.quantity}
                         </span>
-                        {item && <ItemAttributeBadges item={item} />}
+                        {item && <ItemAttributeBadges attributeValues={item.attributeValues} />}
                       </div>
 
                       <Input
@@ -470,7 +471,7 @@ export default function CreateOrderPage() {
                   {calculation.combos.map((combo) => (
                     <SummaryRow
                       key={combo.id}
-                      label={`Combo · ${combo.name.vi}`}
+                      label={`Combo · ${combo.code}`}
                       value={-combo.discountAmount}
                       tone="discount"
                     />
@@ -664,39 +665,13 @@ function AddItemDialog({
                     {formatPriceVn(item.price)} VND
                   </span>
                 </div>
-                <ItemAttributeBadges item={item} />
+                <ItemAttributeBadges attributeValues={item.attributeValues} />
               </button>
             ))
           )}
         </div>
       </DialogContent>
     </Dialog>
-  );
-}
-
-function ItemAttributeBadges({ item }: { item: Item }) {
-  const color = item.attributeValues?.COLOR;
-  const size = item.attributeValues?.SIZE;
-
-  if (!color && !size) {
-    return <span className="text-muted-foreground text-xs">—</span>;
-  }
-
-  return (
-    <div className="flex flex-wrap items-center gap-1">
-      {color && (
-        <span className="bg-muted flex items-center gap-1 rounded px-1.5 py-0.5 text-xs">
-          <span
-            className="size-3 rounded-full border"
-            style={{ backgroundColor: color.hex }}
-          />
-          {color.enText}
-        </span>
-      )}
-      {size && (
-        <span className="bg-muted rounded px-1.5 py-0.5 text-xs">Size {size}</span>
-      )}
-    </div>
   );
 }
 

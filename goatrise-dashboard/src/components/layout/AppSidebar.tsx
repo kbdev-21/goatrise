@@ -78,9 +78,9 @@ const navGroups: NavGroup[] = [
     label: "Business",
     items: [
       { title: "Orders", url: "/orders", icon: ShoppingCart },
+      { title: "Customers", url: "/customers", icon: Contact },
       { title: "Coupons", url: "/coupons", icon: TicketPercent },
       { title: "Combos", url: "/combos", icon: Combine },
-      { title: "Customers", url: "/customers", icon: Contact },
     ],
   },
 ];

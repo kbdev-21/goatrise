@@ -50,11 +50,7 @@ export type ItemTransactionType = "IMPORT" | "ADJUST" | "SOLD";
 export type ItemAttribute = "COLOR" | "SIZE";
 
 export type ItemAttributeValues = {
-  COLOR?: {
-    hex: string;
-    enText: string;
-    viText: string;
-  };
+  COLOR?: string; // mã hex, cũng là key định danh biến thể
   SIZE?: string;
 };
 

@@ -222,7 +222,7 @@ export default function OrderDetailPage() {
                 {order.combos.map((combo) => (
                   <SummaryRow
                     key={combo.id}
-                    label={`Combo · ${combo.name.vi}`}
+                    label={`Combo · ${combo.code}`}
                     value={-combo.discountAmount}
                     tone="discount"
                   />
