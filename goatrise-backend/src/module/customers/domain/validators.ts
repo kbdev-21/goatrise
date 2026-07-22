@@ -3,7 +3,7 @@ import type { CustomerSocialMedia } from "../schema/customers.schema.js";
 import type { SalesChannel } from "../../../core/types.js";
 
 const socialMedias = ["INSTAGRAM", "FACEBOOK", "ZALO", "TIKTOK"] satisfies CustomerSocialMedia[];
-const sources = ["WEBSITE", "INSTAGRAM", "FACEBOOK", "TIKTOK", "ZALO", "SHOPEE", "REFERRAL", "OTHER"] satisfies SalesChannel[];
+const sources = ["WEBSITE", "INSTAGRAM", "FACEBOOK", "TIKTOK", "SHOPEE", "REFERRAL", "OTHER"] satisfies SalesChannel[];
 
 const AddressSchema = z.object({
   countryCode: z.string(),

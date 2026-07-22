@@ -1,37 +1,13 @@
-import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
-import { ImageOff, ImagePlus, Pencil, Plus, Search, Trash2 } from "lucide-react";
-import { toast } from "sonner";
-import { isAxiosError } from "axios";
-import {
-  useCollections,
-  useCreateCollection,
-  useDeleteCollection,
-  useUpdateCollection,
-} from "@/api/collection/query-hooks.ts";
-import type {
-  Collection,
-  CollectionType,
-  CreateCollectionRequest,
-  UpdateCollectionRequest,
-} from "@/api/collection/api.ts";
-import { useProducts } from "@/api/product/query-hooks.ts";
+import { useMemo, useState } from "react";
+import { Eye, ImageOff, Plus, Search } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useCollections } from "@/api/collection/query-hooks.ts";
+import type { Collection, CollectionType } from "@/api/collection/api.ts";
 import { capitalize, normalizeVietnameseString } from "@/core/utils.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { Textarea } from "@/components/ui/textarea.tsx";
-import { Checkbox } from "@/components/ui/checkbox.tsx";
-import { Switch } from "@/components/ui/switch.tsx";
 import { ActiveBadge } from "@/components/shared/active-badge.tsx";
-import { ImageThumbnail } from "@/components/shared/image-thumbnail.tsx";
-import { NewImageDialog } from "@/components/shared/new-image-dialog.tsx";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog.tsx";
 import {
   Select,
   SelectContent,
@@ -64,31 +40,19 @@ const SORT_OPTIONS: { label: string; value: string }[] = [
 ];
 
 export default function CollectionsPage() {
+  const navigate = useNavigate();
+
   // ----- client-side query state -----
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [type, setType] = useState<CollectionType | typeof TYPE_ALL>(TYPE_ALL);
   const [sort, setSort] = useState<string>("createdAt:DESC");
 
-  const [isFormDialogOpen, setIsFormDialogOpen] = useState(false);
-  const [editingCollection, setEditingCollection] = useState<Collection | null>(null);
-  const [deletingCollection, setDeletingCollection] = useState<Collection | null>(null);
-
   // fetch toàn bộ 1 lần rồi filter phía client
   const collectionsQuery = useCollections();
 
   function commitSearch() {
     setSearch(searchInput.trim());
-  }
-
-  function openCreateDialog() {
-    setEditingCollection(null);
-    setIsFormDialogOpen(true);
-  }
-
-  function openEditDialog(collection: Collection) {
-    setEditingCollection(collection);
-    setIsFormDialogOpen(true);
   }
 
   const filteredCollections = useMemo(() => {
@@ -177,7 +141,11 @@ export default function CollectionsPage() {
           </SelectContent>
         </Select>
 
-        <Button type="button" className="ml-auto" onClick={openCreateDialog}>
+        <Button
+          type="button"
+          className="ml-auto"
+          onClick={() => navigate("/collections/create")}
+        >
           <Plus className="size-4" />
           New Collection
         </Button>
@@ -220,15 +188,23 @@ export default function CollectionsPage() {
                   <TableRow key={collection.id}>
                     <TableCell className="font-mono text-xs">{collection.slug}</TableCell>
                     <TableCell className="font-medium">
-                      <div className="flex items-center gap-2">
+                      <div
+                        className="flex w-fit cursor-pointer items-center gap-2"
+                        onClick={() => navigate(`/collections/${collection.id}`)}
+                      >
                         <CollectionImage collection={collection} />
-                        <span>{collection.title.en}</span>
+                        <span className="hover:underline">{collection.title.en}</span>
                       </div>
                     </TableCell>
                     <TableCell>{capitalize(collection.type)}</TableCell>
                     <TableCell>
-                      {collection.products.length} product
-                      {collection.products.length === 1 ? "" : "s"}
+                      <span
+                        className="cursor-pointer hover:underline"
+                        onClick={() => navigate(`/collections/${collection.id}`)}
+                      >
+                        {collection.products.length} product
+                        {collection.products.length === 1 ? "" : "s"}
+                      </span>
                     </TableCell>
                     <TableCell>{collection.priority}</TableCell>
                     <TableCell>
@@ -239,20 +215,11 @@ export default function CollectionsPage() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          aria-label="Edit collection"
-                          title="Edit collection"
-                          onClick={() => openEditDialog(collection)}
+                          aria-label="View details"
+                          title="View details"
+                          onClick={() => navigate(`/collections/${collection.id}`)}
                         >
-                          <Pencil className="size-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          aria-label="Delete collection"
-                          title="Delete collection"
-                          onClick={() => setDeletingCollection(collection)}
-                        >
-                          <Trash2 className="size-4" />
+                          <Eye className="size-4" />
                         </Button>
                       </div>
                     </TableCell>
@@ -270,411 +237,8 @@ export default function CollectionsPage() {
         {filteredCollections.length === 1 ? "" : "s"}
         {collectionsQuery.isFetching ? " · updating..." : ""}
       </span>
-
-      <CollectionFormDialog
-        open={isFormDialogOpen}
-        collection={editingCollection}
-        onClose={() => setIsFormDialogOpen(false)}
-      />
-
-      <DeleteCollectionDialog
-        collection={deletingCollection}
-        onClose={() => setDeletingCollection(null)}
-      />
     </div>
   );
-}
-
-type CollectionFormState = {
-  slug: string;
-  type: CollectionType;
-  titleVi: string;
-  titleEn: string;
-  shortDescriptionVi: string;
-  shortDescriptionEn: string;
-  imgUrl: string;
-  isActive: boolean;
-  priority: string;
-  productIds: string[];
-};
-
-const EMPTY_FORM_STATE: CollectionFormState = {
-  slug: "",
-  type: "COLLECTION",
-  titleVi: "",
-  titleEn: "",
-  shortDescriptionVi: "",
-  shortDescriptionEn: "",
-  imgUrl: "",
-  isActive: true,
-  priority: "0",
-  productIds: [],
-};
-
-function CollectionFormDialog({
-  open,
-  collection,
-  onClose,
-}: {
-  open: boolean;
-  collection: Collection | null;
-  onClose: () => void;
-}) {
-  const isEdit = collection !== null;
-  const createMutation = useCreateCollection();
-  const updateMutation = useUpdateCollection();
-  const isPending = createMutation.isPending || updateMutation.isPending;
-
-  const productsQuery = useProducts();
-  const products = productsQuery.data ?? [];
-
-  const [form, setForm] = useState<CollectionFormState>(EMPTY_FORM_STATE);
-  const [productSearch, setProductSearch] = useState("");
-  // Select portal ra ngoài dialog -> click đóng dropdown bị Dialog hiểu nhầm là
-  // click ngoài. Bỏ qua close oan bằng cách track select đang mở / vừa đóng.
-  const selectOpenRef = useRef(false);
-  const selectClosedAtRef = useRef(0);
-
-  const [imgDialogOpen, setImgDialogOpen] = useState(false);
-  const imgDialogClosedAtRef = useRef(0);
-
-  const set = (patch: Partial<CollectionFormState>) => setForm((prev) => ({ ...prev, ...patch }));
-
-  // reset form mỗi khi mở dialog (theo collection đang sửa hoặc rỗng khi tạo mới)
-  useEffect(() => {
-    if (!open) return;
-    setProductSearch("");
-    if (collection) {
-      setForm({
-        slug: collection.slug,
-        type: collection.type,
-        titleVi: collection.title.vi,
-        titleEn: collection.title.en,
-        shortDescriptionVi: collection.shortDescription.vi,
-        shortDescriptionEn: collection.shortDescription.en,
-        imgUrl: collection.imgUrl ?? "",
-        isActive: collection.isActive,
-        priority: String(collection.priority),
-        productIds: collection.products.map((product) => product.id),
-      });
-    } else {
-      setForm(EMPTY_FORM_STATE);
-    }
-  }, [open, collection]);
-
-  const canSubmit =
-    form.slug.trim().length > 0 &&
-    form.titleVi.trim().length > 0 &&
-    form.titleEn.trim().length > 0 &&
-    form.shortDescriptionVi.trim().length > 0 &&
-    form.shortDescriptionEn.trim().length > 0;
-
-  const toggleProduct = (productId: string) =>
-    set({
-      productIds: form.productIds.includes(productId)
-        ? form.productIds.filter((id) => id !== productId)
-        : [...form.productIds, productId],
-    });
-
-  const keyword = normalizeVietnameseString(productSearch.trim());
-  const filteredProducts = keyword
-    ? products.filter((product) =>
-        normalizeVietnameseString(
-          `${product.slug} ${product.title.en} ${product.title.vi}`,
-        ).includes(keyword),
-      )
-    : products;
-
-  function handleSubmit() {
-    const title = { vi: form.titleVi.trim(), en: form.titleEn.trim() };
-    const shortDescription = {
-      vi: form.shortDescriptionVi.trim(),
-      en: form.shortDescriptionEn.trim(),
-    };
-
-    if (isEdit) {
-      const request: UpdateCollectionRequest = {
-        slug: form.slug.trim(),
-        type: form.type,
-        title: title,
-        shortDescription: shortDescription,
-        imgUrl: form.imgUrl.trim() || null,
-        isActive: form.isActive,
-        priority: Number(form.priority) || 0,
-        productIds: form.productIds,
-      };
-      updateMutation.mutate(
-        { collectionId: collection.id, request },
-        {
-          onSuccess: (updated) => {
-            toast.success(`Updated collection ${updated.title.en}`);
-            onClose();
-          },
-          onError: (error) => toast.error(errorMessage(error, "Failed to update collection")),
-        },
-      );
-    } else {
-      const request: CreateCollectionRequest = {
-        slug: form.slug.trim(),
-        type: form.type,
-        title: title,
-        shortDescription: shortDescription,
-        imgUrl: form.imgUrl.trim() || undefined,
-        isActive: form.isActive,
-        priority: Number(form.priority) || 0,
-        productIds: form.productIds.length > 0 ? form.productIds : undefined,
-      };
-      createMutation.mutate(request, {
-        onSuccess: (created) => {
-          toast.success(`Created collection ${created.title.en}`);
-          onClose();
-        },
-        onError: (error) => toast.error(errorMessage(error, "Failed to create collection")),
-      });
-    }
-  }
-
-  return (
-    <Dialog
-      open={open}
-      onOpenChange={(next) => {
-        if (next) return;
-        if (selectOpenRef.current || Date.now() - selectClosedAtRef.current < 300) return;
-        // dialog ảnh lồng bên trong: đừng để việc đóng nó kéo theo đóng dialog collection
-        if (imgDialogOpen || Date.now() - imgDialogClosedAtRef.current < 300) return;
-        onClose();
-      }}
-    >
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit collection" : "New collection"}</DialogTitle>
-        </DialogHeader>
-
-        <div className="flex max-h-[70vh] flex-col gap-4 overflow-y-auto pr-1">
-          <div className="flex flex-col gap-1.5">
-            <FieldLabel required>Title</FieldLabel>
-            <div className="flex flex-col gap-2">
-              <Input
-                placeholder="VI"
-                value={form.titleVi}
-                onChange={(e) => set({ titleVi: e.target.value })}
-              />
-              <Input
-                placeholder="EN"
-                value={form.titleEn}
-                onChange={(e) => set({ titleEn: e.target.value })}
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2">
-            <div className="flex flex-col gap-1.5">
-              <FieldLabel required>Slug</FieldLabel>
-              <Input
-                placeholder="e.g. summer-sale"
-                value={form.slug}
-                onChange={(e) => set({ slug: e.target.value })}
-              />
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <FieldLabel required>Type</FieldLabel>
-              <Select
-                value={form.type}
-                onValueChange={(value) => set({ type: value as CollectionType })}
-                onOpenChange={(selectOpen) => {
-                  selectOpenRef.current = selectOpen;
-                  if (!selectOpen) selectClosedAtRef.current = Date.now();
-                }}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {TYPE_OPTIONS.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <FieldLabel required>Short description</FieldLabel>
-            <div className="flex flex-col gap-2">
-              <Textarea
-                placeholder="VI"
-                value={form.shortDescriptionVi}
-                onChange={(e) => set({ shortDescriptionVi: e.target.value })}
-              />
-              <Textarea
-                placeholder="EN"
-                value={form.shortDescriptionEn}
-                onChange={(e) => set({ shortDescriptionEn: e.target.value })}
-              />
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <FieldLabel>Image</FieldLabel>
-            <div className="flex flex-wrap items-center gap-2">
-              {form.imgUrl ? (
-                <ImageThumbnail url={form.imgUrl} onRemove={() => set({ imgUrl: "" })} />
-              ) : (
-                <button
-                  type="button"
-                  aria-label="Add image"
-                  className="text-muted-foreground hover:border-foreground/30 hover:text-foreground flex size-20 shrink-0 items-center justify-center rounded-md border border-dashed"
-                  onClick={() => setImgDialogOpen(true)}
-                >
-                  <ImagePlus className="size-5" />
-                </button>
-              )}
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <FieldLabel>Priority</FieldLabel>
-            <Input
-              type="number"
-              placeholder="0"
-              value={form.priority}
-              onChange={(e) => set({ priority: e.target.value })}
-            />
-          </div>
-
-          <div className="flex items-center justify-between rounded-md border p-3">
-            <div className="flex flex-col gap-0.5">
-              <span className="text-xs font-medium">Active</span>
-              <span className="text-muted-foreground text-xs">
-                Inactive collections are hidden from the storefront.
-              </span>
-            </div>
-            <Switch
-              checked={form.isActive}
-              onCheckedChange={(v) => set({ isActive: v })}
-            />
-          </div>
-
-          {/* ----- product multi-select (thay toàn bộ products của collection) ----- */}
-          <div className="flex flex-col gap-1.5">
-            <FieldLabel>Products ({form.productIds.length} selected)</FieldLabel>
-            <div className="relative">
-              <Input
-                placeholder="Search slug or name..."
-                value={productSearch}
-                onChange={(e) => setProductSearch(e.target.value)}
-                className="pr-9"
-              />
-              <Search className="text-muted-foreground absolute top-1/2 right-3 size-3.5 -translate-y-1/2" />
-            </div>
-            <div className="max-h-56 overflow-auto rounded-md border">
-              {productsQuery.isLoading ? (
-                <div className="flex items-center justify-center p-4">
-                  <Spinner className="text-muted-foreground" />
-                </div>
-              ) : filteredProducts.length === 0 ? (
-                <div className="text-muted-foreground p-3 text-center text-xs">
-                  No products found.
-                </div>
-              ) : (
-                filteredProducts.map((product) => (
-                  <label
-                    key={product.id}
-                    className="hover:bg-muted/50 flex w-full cursor-pointer items-center gap-2 border-b px-3 py-2 last:border-b-0"
-                  >
-                    <Checkbox
-                      checked={form.productIds.includes(product.id)}
-                      onCheckedChange={() => toggleProduct(product.id)}
-                    />
-                    <span className="truncate text-xs font-medium">{product.title.en}</span>
-                    <span className="text-muted-foreground ml-auto shrink-0 font-mono text-xs">
-                      {product.slug}
-                    </span>
-                  </label>
-                ))
-              )}
-            </div>
-          </div>
-        </div>
-
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose} disabled={isPending}>
-            Cancel
-          </Button>
-          <Button disabled={isPending || !canSubmit} onClick={handleSubmit}>
-            {isPending && <Spinner />}
-            {isEdit ? "Save" : "Create"}
-          </Button>
-        </DialogFooter>
-
-        <NewImageDialog
-          open={imgDialogOpen}
-          onOpenChange={(next) => {
-            if (!next) imgDialogClosedAtRef.current = Date.now();
-            setImgDialogOpen(next);
-          }}
-          onConfirm={(url) => set({ imgUrl: url })}
-        />
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function DeleteCollectionDialog({
-  collection,
-  onClose,
-}: {
-  collection: Collection | null;
-  onClose: () => void;
-}) {
-  const deleteMutation = useDeleteCollection();
-
-  return (
-    <Dialog open={collection !== null} onOpenChange={(next) => !next && onClose()}>
-      <DialogContent className="sm:max-w-sm">
-        <DialogHeader>
-          <DialogTitle>Delete collection</DialogTitle>
-        </DialogHeader>
-
-        <p className="text-muted-foreground text-sm">
-          Are you sure you want to delete{" "}
-          <span className="text-foreground font-medium">{collection?.title.en}</span>? This
-          only removes the collection and its product links, not the products themselves.
-        </p>
-
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose} disabled={deleteMutation.isPending}>
-            Cancel
-          </Button>
-          <Button
-            variant="destructive"
-            disabled={deleteMutation.isPending}
-            onClick={() => {
-              if (!collection) return;
-              deleteMutation.mutate(collection.id, {
-                onSuccess: () => {
-                  toast.success(`Deleted collection ${collection.title.en}`);
-                  onClose();
-                },
-                onError: (error) =>
-                  toast.error(errorMessage(error, "Failed to delete collection")),
-              });
-            }}
-          >
-            {deleteMutation.isPending && <Spinner />}
-            Delete
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function errorMessage(error: unknown, fallback: string): string {
-  return isAxiosError(error) ? error.response?.data || error.message : fallback;
 }
 
 function CollectionImage({ collection }: { collection: Collection }) {
@@ -691,18 +255,5 @@ function CollectionImage({ collection }: { collection: Collection }) {
     <div className="bg-muted text-muted-foreground flex size-8 shrink-0 items-center justify-center rounded">
       <ImageOff className="size-4" />
     </div>
-  );
-}
-
-function FieldLabel({ children, required }: { children: ReactNode; required?: boolean }) {
-  return (
-    <label className="text-xs font-medium">
-      {children}{" "}
-      {required ? (
-        <span className="text-destructive">*</span>
-      ) : (
-        <span className="text-muted-foreground text-xs font-normal">(optional)</span>
-      )}
-    </label>
   );
 }

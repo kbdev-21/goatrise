@@ -52,7 +52,6 @@ const CHANNEL_LABELS: Record<SalesChannel, string> = {
   INSTAGRAM: "Instagram",
   FACEBOOK: "Facebook",
   TIKTOK: "TikTok",
-  ZALO: "Zalo",
   SHOPEE: "Shopee",
   REFERRAL: "Referral",
   OTHER: "Other",

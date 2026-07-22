@@ -72,7 +72,6 @@ const CHANNEL_OPTIONS: { label: string; value: SalesChannel }[] = [
   { label: "Website", value: "WEBSITE" },
   { label: "Facebook", value: "FACEBOOK" },
   { label: "TikTok", value: "TIKTOK" },
-  { label: "Zalo", value: "ZALO" },
   { label: "Shopee", value: "SHOPEE" },
   { label: "Referral", value: "REFERRAL" },
   { label: "Other", value: "OTHER" },

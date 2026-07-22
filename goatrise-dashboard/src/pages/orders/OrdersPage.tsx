@@ -36,7 +36,6 @@ const CHANNEL_OPTIONS: { label: string; value: SalesChannel }[] = [
   { label: "Instagram", value: "INSTAGRAM" },
   { label: "Facebook", value: "FACEBOOK" },
   { label: "TikTok", value: "TIKTOK" },
-  { label: "Zalo", value: "ZALO" },
   { label: "Shopee", value: "SHOPEE" },
   { label: "Referral", value: "REFERRAL" },
   { label: "Other", value: "OTHER" },
@@ -57,17 +56,17 @@ const SORT_OPTIONS: { label: string; value: string }[] = [
 ];
 
 const ORDER_STATUS_CLASS: Record<OrderStatus, string> = {
-  PENDING: "bg-green-100 text-green-700",
-  SHIPPING: "bg-amber-100 text-amber-700",
-  COMPLETED: "bg-muted text-muted-foreground",
+  PENDING: "bg-amber-100 text-amber-700",
+  SHIPPING: "bg-blue-100 text-blue-700",
+  COMPLETED: "bg-green-100 text-green-700",
   CANCELLED: "bg-red-100 text-red-700",
 };
 
 const PAYMENT_STATUS_CLASS: Record<OrderPaymentStatus, string> = {
-  PENDING: "bg-green-100 text-green-700",
-  PAID: "bg-muted text-muted-foreground",
+  PENDING: "bg-amber-100 text-amber-700",
+  PAID: "bg-green-100 text-green-700",
   FAILED: "bg-red-100 text-red-700",
-  REFUNDED: "bg-orange-100 text-orange-700",
+  REFUNDED: "bg-muted text-muted-foreground",
 };
 
 export default function OrdersPage() {

@@ -16,7 +16,6 @@ export type SalesChannel =
   | "INSTAGRAM"
   | "FACEBOOK"
   | "TIKTOK"
-  | "ZALO"
   | "SHOPEE"
   | "REFERRAL"
   | "OTHER";

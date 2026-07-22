@@ -4,13 +4,12 @@ import type { SalesChannel } from "@/core/types.ts";
 
 // màu badge dùng chung cho order.channel & customer.source
 const SALES_CHANNEL_CLASS: Record<SalesChannel, string> = {
-  WEBSITE: "bg-blue-100 text-blue-700",
+  WEBSITE: "bg-cyan-100 text-cyan-700",
   INSTAGRAM: "bg-pink-100 text-pink-700",
-  FACEBOOK: "bg-indigo-100 text-indigo-700",
-  TIKTOK: "bg-neutral-200 text-neutral-700",
-  ZALO: "bg-sky-100 text-sky-700",
+  FACEBOOK: "bg-blue-100 text-blue-700",
+  TIKTOK: "bg-rose-100 text-rose-600",
   SHOPEE: "bg-orange-100 text-orange-700",
-  REFERRAL: "bg-teal-100 text-teal-700",
+  REFERRAL: "bg-violet-100 text-violet-700",
   OTHER: "bg-muted text-muted-foreground",
 };
 

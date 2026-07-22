@@ -60,6 +60,13 @@ const TRANSACTION_TYPE_ALL = "ALL";
 const TRANSACTION_TYPE_OPTIONS: ItemTransactionType[] = ["IMPORT", "ADJUST", "SOLD"];
 const TRANSACTION_PAGE_SIZE = 10;
 
+// tiền ra (nhập hàng) đỏ, tiền vào (bán) xanh lá; ADJUST không có giá nên để mặc định
+const TRANSACTION_PRICE_CLASS: Record<ItemTransactionType, string> = {
+  IMPORT: "text-red-600",
+  SOLD: "text-green-600",
+  ADJUST: "",
+};
+
 const SUPPLIER_NONE = "NONE";
 
 export default function ItemDetailPage() {
@@ -324,7 +331,7 @@ export default function ItemDetailPage() {
                         >
                           <TableCell>{capitalize(tx.type)}</TableCell>
                           <TableCell>{tx.quantity}</TableCell>
-                          <TableCell>
+                          <TableCell className={TRANSACTION_PRICE_CLASS[tx.type]}>
                             {formatPriceVn(tx.importUnitCost ?? tx.soldUnitPrice)}
                           </TableCell>
                           <TableCell>
