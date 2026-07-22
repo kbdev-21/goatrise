@@ -5,6 +5,8 @@ import type { QueryClient } from "@tanstack/react-query"
 import { useEffect } from "react"
 import "@/core/auth";
 import { useAuthStore } from "@/stores/auth.store";
+import { Header } from "@/components/layout/header";
+import { Footer } from "@/components/layout/footer";
 
 import appCss from "../styles.css?url"
 
@@ -52,7 +54,11 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body>
-        {children}
+        <div className="flex min-h-svh flex-col">
+          <Header />
+          <main className="flex-1">{children}</main>
+          <Footer />
+        </div>
         <TanStackDevtools
           config={{
             position: "bottom-right",
