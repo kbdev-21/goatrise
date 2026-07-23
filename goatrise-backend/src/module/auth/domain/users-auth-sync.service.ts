@@ -1,4 +1,5 @@
 import { uuidv7 } from "uuidv7";
+import { eq } from "drizzle-orm";
 import type { DbExec } from "../../../core/db.js";
 import { users } from "../schema/users.schema.js";
 import { getUserById } from "./users.service.js";
@@ -16,12 +17,25 @@ export async function syncUserWithGoogleAuthData(db: DbExec, email: string, full
     }
   });
 
+  const isAdmin = adminEmails.includes(email);
+
   if (existedUser) {
-    return existedUser;
+    const shouldPromoteToAdmin = isAdmin && existedUser.role !== "ADMIN";
+    const shouldFillAvtUrl = !existedUser.avtUrl && !!avtUrl;
+
+    if (!shouldPromoteToAdmin && !shouldFillAvtUrl) {
+      return existedUser;
+    }
+
+    await db.update(users).set({
+      role: shouldPromoteToAdmin ? "ADMIN" : undefined,
+      avtUrl: shouldFillAvtUrl ? avtUrl : undefined
+    }).where(eq(users.id, existedUser.id));
+
+    return await getUserById(db, existedUser.id);
   }
 
   const newUserId = uuidv7();
-  const isAdmin = adminEmails.includes(email);
   const role = isAdmin ? "ADMIN" : "CUSTOMER";
 
   return await db.transaction(async (tx) => {
