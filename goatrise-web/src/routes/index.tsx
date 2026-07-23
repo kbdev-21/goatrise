@@ -5,15 +5,19 @@ import heroImg from "@/assets/hero.jpg";
 import { productsQueryOptions } from "@/api/product/query-hooks";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/shared/product-card";
+import type { Product } from "@/api/product/api";
 
 export const Route = createFileRoute("/")({
-  loader: ({ context }) =>
-    context.queryClient.ensureQueryData(productsQueryOptions()),
+  loader: ({ context }) => {
+    //return context.queryClient.ensureQueryData(productsQueryOptions());
+    return [];
+  },
   component: App,
 });
 
 function App() {
-  const { data: products } = useSuspenseQuery(productsQueryOptions());
+  //const { data: products } = useSuspenseQuery(productsQueryOptions());
+  const products: Product[] = [];
 
   return (
     <>
