@@ -32,7 +32,7 @@ export default function LoginPage() {
     await auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: window.location.origin,
+        redirectTo: import.meta.env.VITE_DASHBOARD_URL,
       },
     });
   }
