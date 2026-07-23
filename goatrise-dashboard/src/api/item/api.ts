@@ -69,6 +69,7 @@ export type Item = {
   weight: number | null;
   stock: number;
   sold: number;
+  displayPriority: number;
   createdAt: string;
   updatedAt: string;
   product: {
@@ -117,6 +118,7 @@ export type CreateItemRequest = {
   weight?: number;
   productId?: string;
   price: number;
+  displayPriority?: number;
   isActive?: boolean;
   attributeValues: ItemAttributeValues;
 };
@@ -129,6 +131,7 @@ export type UpdateItemRequest = {
   weight?: number;
   productId?: string;
   price?: number;
+  displayPriority?: number;
   isActive?: boolean;
   attributeValues?: ItemAttributeValues;
 };

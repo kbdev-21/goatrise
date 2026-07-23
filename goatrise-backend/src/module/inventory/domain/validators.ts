@@ -16,6 +16,7 @@ export const CreateItemRequestSchema = z.object({
   weight: z.number().int().nonnegative().optional(),
   productId: z.uuid().optional(),
   price: z.number().int().nonnegative(),
+  displayPriority: z.number().int().optional(),
   isActive: z.boolean().optional(),
   attributeValues: ItemAttributeValuesSchema
 });
@@ -29,6 +30,7 @@ export const UpdateItemRequestSchema = z.object({
   weight: z.number().int().nonnegative().optional(),
   productId: z.uuid().optional(),
   price: z.number().int().nonnegative().optional(),
+  displayPriority: z.number().int().optional(),
   isActive: z.boolean().optional(),
   attributeValues: ItemAttributeValuesSchema.optional()
 });

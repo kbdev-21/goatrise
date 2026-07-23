@@ -49,6 +49,7 @@ export async function createItem(db: DbExec, actorId: string, createReq: CreateI
       imgUrl: createReq.imgUrl ?? null,
       weight: createReq.weight ?? null,
       price: createReq.price,
+      displayPriority: createReq.displayPriority,
       isActive: createReq.isActive,
       attributeValues: createReq.attributeValues
     });
@@ -86,6 +87,7 @@ export async function updateItemInfo(db: DbExec, actorId: string, itemId: string
       imgUrl: updateReq.imgUrl,
       weight: updateReq.weight,
       price: updateReq.price,
+      displayPriority: updateReq.displayPriority,
       isActive: updateReq.isActive,
       attributeValues: updateReq.attributeValues
     }).where(eq(items.id, itemId));

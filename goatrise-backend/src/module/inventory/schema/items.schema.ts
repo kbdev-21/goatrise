@@ -16,6 +16,7 @@ export const items = pgTable("items", {
 
   stock: integer("stock").default(0).notNull(),
   sold: integer("sold").default(0).notNull(),
+  displayPriority: integer("display_priority").notNull().default(1),
   isActive: boolean("is_active").notNull().default(true),
   note: text("note"),
 

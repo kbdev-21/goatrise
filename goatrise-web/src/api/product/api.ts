@@ -45,6 +45,7 @@ export type Product = {
     weight: number | null;
     stock: number;
     sold: number;
+    displayPriority: number;
     isActive: boolean;
     note: string | null;
     createdAt: string;
@@ -82,6 +83,7 @@ export type ProductDetail = {
     weight: number | null;
     stock: number;
     sold: number;
+    displayPriority: number;
     isActive: boolean;
     note: string | null;
     createdAt: string;

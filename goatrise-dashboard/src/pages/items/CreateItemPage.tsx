@@ -38,6 +38,7 @@ export default function CreateItemPage() {
       note: value.note.trim() || undefined,
       imgUrl: value.imgUrl.trim() || undefined,
       weight: value.weight ? Number(value.weight) : undefined,
+      displayPriority: value.displayPriority ? Number(value.displayPriority) : undefined,
       productId: value.productId ?? undefined,
       isActive: value.isActive,
       attributeValues: attributeValues,

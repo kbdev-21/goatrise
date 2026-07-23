@@ -9,8 +9,8 @@ export const orderLines = pgTable("order_lines", {
   id: uuid("id").primaryKey(),
   orderId: uuid("order_id").references(() => orders.id).notNull(),
 
-  itemId: uuid("item_id").references(() => items.id),
-  productId: uuid("product_id").references(() => products.id),
+  itemId: uuid("item_id").notNull(),
+  productId: uuid("product_id"),
   snapItem: jsonb("snap_item").$type<OrderLineSnapItem>().notNull(),
 
   quantity: integer("quantity").notNull(),

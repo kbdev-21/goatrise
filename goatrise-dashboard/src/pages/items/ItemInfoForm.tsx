@@ -22,6 +22,7 @@ export type ItemInfoFormValue = {
   productId: string | null; // display-only
   price: string;
   weight: string;
+  displayPriority: string;
   imgUrl: string;
   note: string;
   isActive: boolean;
@@ -37,6 +38,7 @@ export const EMPTY_ITEM_INFO_FORM_VALUE: ItemInfoFormValue = {
   productId: null,
   price: "",
   weight: "",
+  displayPriority: "1",
   imgUrl: "",
   note: "",
   isActive: true,
@@ -126,6 +128,16 @@ export default function ItemInfoForm({
           placeholder="Gram"
           value={value.weight}
           onChange={(e) => set({ weight: e.target.value })}
+        />
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <FieldLabel>Display priority</FieldLabel>
+        <Input
+          type="number"
+          placeholder="1"
+          value={value.displayPriority}
+          onChange={(e) => set({ displayPriority: e.target.value })}
         />
       </div>
 

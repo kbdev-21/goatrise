@@ -133,6 +133,7 @@ export default function ItemDetailPage() {
       note: value.note.trim() || undefined,
       imgUrl: value.imgUrl.trim() || undefined,
       weight: value.weight ? Number(value.weight) : undefined,
+      displayPriority: value.displayPriority ? Number(value.displayPriority) : undefined,
       productId: value.productId ?? undefined,
       isActive: value.isActive,
       attributeValues:
@@ -407,6 +408,7 @@ function itemToFormValue(item: Item): ItemInfoFormValue {
     productId: item.productId,
     price: String(item.price),
     weight: item.weight !== null ? String(item.weight) : "",
+    displayPriority: String(item.displayPriority),
     imgUrl: item.imgUrl ?? "",
     note: item.note ?? "",
     isActive: item.isActive,
