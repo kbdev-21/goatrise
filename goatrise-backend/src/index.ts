@@ -15,7 +15,7 @@ import { combosRouter } from "./module/promotion/router/combos.router.js";
 const app = new Hono();
 
 app.use("*", cors({
-  origin: ["http://localhost:3000", "http://localhost:5173"],
+  origin: ["http://localhost:3000", "http://localhost:5173", "https://goatrise.pages.dev"],
   allowMethods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
   allowHeaders: ["Content-Type", "Authorization"],
 }));
