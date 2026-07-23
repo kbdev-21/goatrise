@@ -40,7 +40,7 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-svh flex-col items-center justify-center gap-8 p-6">
       <h1 className="text-2xl font-semibold tracking-tight">
-        Welcome to GoatRise dashboard
+        Welcome to GoatRise dashboard {import.meta.env.VITE_DASHBOARD_URL}
       </h1>
       <Button
         variant="outline"
