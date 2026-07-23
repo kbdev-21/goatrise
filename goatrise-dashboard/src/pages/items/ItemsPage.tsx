@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowDownToLine, Eye, ImageOff, PackagePlus, Plus, RefreshCcw, Search, SlidersHorizontal } from "lucide-react";
+import { Eye, ImageOff, PackagePlus, Plus, RefreshCcw, Search } from "lucide-react";
 import { toast } from "sonner";
 import { isAxiosError } from "axios";
 import { useNavigate } from "react-router-dom";

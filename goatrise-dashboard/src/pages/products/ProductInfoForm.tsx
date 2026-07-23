@@ -408,7 +408,7 @@ function FieldLabel({
   children,
   required,
 }: {
-  children: string;
+  children: React.ReactNode;
   required?: boolean;
 }) {
   return (
