@@ -11,11 +11,16 @@ import { ordersRouter } from "./module/orders/router/orders.router.js";
 import { customersRouter } from "./module/customers/router/customers.router.js";
 import { couponsRouter } from "./module/promotion/router/coupons.router.js";
 import { combosRouter } from "./module/promotion/router/combos.router.js";
+import { DASHBOARD_URL, WEBSITE_URL } from "./core/env.js";
 
 const app = new Hono();
 
+const corsOrigins = [
+  DASHBOARD_URL,
+  WEBSITE_URL
+];
 app.use("*", cors({
-  origin: ["http://localhost:3000", "http://localhost:5173", "https://goatrise.pages.dev"],
+  origin: corsOrigins,
   allowMethods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
   allowHeaders: ["Content-Type", "Authorization"],
 }));

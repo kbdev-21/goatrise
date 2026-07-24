@@ -14,7 +14,8 @@ export function ProductCard({ product }: { product: Product }) {
     product.comparePrice !== null && price !== null && product.comparePrice > price;
   const colors = [
     ...new Set(
-      product.items
+      [...product.items]
+        .sort((a, b) => b.displayPriority - a.displayPriority)
         .map((item) => item.attributeValues.COLOR)
         .filter((color): color is string => Boolean(color))
     ),

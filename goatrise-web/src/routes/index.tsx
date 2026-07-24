@@ -5,19 +5,24 @@ import heroImg from "@/assets/hero.jpg";
 import { productsQueryOptions } from "@/api/product/query-hooks";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/shared/product-card";
-import type { Product } from "@/api/product/api";
+
+const BEST_SELLER_LIMIT = 5;
 
 export const Route = createFileRoute("/")({
   loader: ({ context }) => {
-    //return context.queryClient.ensureQueryData(productsQueryOptions());
-    return [];
+    return context.queryClient.ensureQueryData(productsQueryOptions());
   },
   component: App,
 });
 
 function App() {
-  //const { data: products } = useSuspenseQuery(productsQueryOptions());
-  const products: Product[] = [];
+  const { data: products } = useSuspenseQuery(productsQueryOptions());
+
+  // TODO: chuyển sang endpoint best-sellers khi backend hỗ trợ sort/filter
+  const bestSellers = products
+    .filter((product) => product.isActive)
+    .sort((a, b) => b.sold - a.sold)
+    .slice(0, BEST_SELLER_LIMIT);
 
   return (
     <>
@@ -54,17 +59,31 @@ function App() {
       </section>
 
       <section className="px-6 py-16 lg:px-10">
-        <h2 className="text-xl font-bold tracking-wide uppercase">
-          Sản phẩm ({products.length})
-        </h2>
+        <div className="flex items-end justify-between gap-6 border-b border-border pb-4">
+          <div>
+            <p className="text-xs font-semibold tracking-[0.25em] text-muted-foreground uppercase">
+              Được mua nhiều nhất
+            </p>
+            <h2 className="mt-2 text-2xl font-extrabold tracking-tight uppercase lg:text-3xl">
+              Best sellers
+            </h2>
+          </div>
 
-        {products.length === 0 ? (
+          <Link
+            to="/products"
+            className="shrink-0 pb-1 text-xs font-bold tracking-widest text-foreground/70 uppercase underline-offset-4 transition-colors hover:text-foreground hover:underline"
+          >
+            Xem tất cả
+          </Link>
+        </div>
+
+        {bestSellers.length === 0 ? (
           <p className="mt-6 font-serif text-sm text-muted-foreground">
             Chưa có sản phẩm nào.
           </p>
         ) : (
-          <div className="mt-8 grid grid-cols-2 gap-x-4 gap-y-10 md:grid-cols-3 lg:grid-cols-4">
-            {products.map((product) => (
+          <div className="mt-8 grid grid-cols-2 gap-x-4 gap-y-10 lg:grid-cols-4 xl:grid-cols-5">
+            {bestSellers.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
