@@ -70,6 +70,27 @@ export async function createItem(db: DbExec, actorId: string, createReq: CreateI
   });
 }
 
+export async function cloneItem(db: DbExec, actorId: string, itemId: string): Promise<Item> {
+  const item = await getItemById(db, itemId);
+
+  const cloneSku = await generateUniqueItemSku(db, `${item.sku}-clone`);
+
+  const cloneReq: CreateItemRequest = {
+    sku: cloneSku,
+    name: `${item.name} clone`,
+    note: item.note ?? undefined,
+    imgUrl: item.imgUrl ?? undefined,
+    weight: item.weight ?? undefined,
+    productId: undefined, // tách khỏi product để tránh trùng biến thể (409) trong cùng product
+    price: item.price,
+    displayPriority: item.displayPriority,
+    isActive: item.isActive,
+    attributeValues: item.attributeValues
+  };
+
+  return await createItem(db, actorId, cloneReq);
+}
+
 export async function updateItemInfo(db: DbExec, actorId: string, itemId: string, updateReq: UpdateItemRequest): Promise<Item> {
   return await db.transaction(async (tx) => {
     const itemBefore = await getItemById(tx, itemId);
@@ -142,4 +163,24 @@ async function validateProductIdWhenCreateOrUpdateItem(db: DbExec, productId: st
   if(!areAttributeValuesValidForRequired(itemsAttrValuesList, productRequiredAttrs)) {
     throw new HTTPException(409, { message: "Linked items do not satisfy product's required attributes" });
   }
+}
+
+async function generateUniqueItemSku(db: DbExec, baseSku: string): Promise<string> {
+  const baseExists = await db.query.items.findFirst({ where: { sku: baseSku } });
+  if (!baseExists) {
+    return baseSku;
+  }
+
+  // baseSku đã tồn tại → thêm cụm số random 4 chữ số, thử tối đa maxAttemps lần
+  const maxAttemps = 5;
+  for (let attempt = 0; attempt < maxAttemps; attempt++) {
+    const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+    const candidate = `${baseSku}-${randomSuffix}`;
+
+    const existing = await db.query.items.findFirst({ where: { sku: candidate } });
+    if (!existing) {
+      return candidate;
+    }
+  }
+  throw new HTTPException(500, { message: "Failed to generate unique item sku" });
 }

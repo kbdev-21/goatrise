@@ -1,6 +1,6 @@
 import { bigint, boolean, integer, jsonb, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 
-export const coupons = pgTable("coupons", {
+export const coupons = pgTable.withRLS("coupons", {
   id: uuid("id").primaryKey(),
   code: text("code").unique().notNull(),
 

@@ -1,6 +1,6 @@
 import { bigint, index, integer, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 
-export const itemTransactions = pgTable("item_transactions", {
+export const itemTransactions = pgTable.withRLS("item_transactions", {
   id: uuid("id").primaryKey(),
   itemId: uuid("item_id").notNull(),
   itemName: text("item_name").notNull(),

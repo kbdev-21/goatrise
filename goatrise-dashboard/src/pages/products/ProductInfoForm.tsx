@@ -29,6 +29,7 @@ export type ProductInfoFormValue = {
   imgUrls: string[];
   comparePrice: string;
   comparePriceEnabled: boolean;
+  displayPriority: string;
   isActive: boolean;
   colorRequired: boolean;
   sizeRequired: boolean;
@@ -46,6 +47,7 @@ export const EMPTY_PRODUCT_INFO_FORM_VALUE: ProductInfoFormValue = {
   imgUrls: [],
   comparePrice: "",
   comparePriceEnabled: false,
+  displayPriority: "1",
   isActive: true,
   colorRequired: false,
   sizeRequired: false,
@@ -204,6 +206,15 @@ export default function ProductInfoForm({
             />
           </div>
 
+          <div className="flex flex-col gap-1.5">
+            <FieldLabel>Display priority</FieldLabel>
+            <Input
+              type="number"
+              placeholder="1"
+              value={value.displayPriority}
+              onChange={(e) => set({ displayPriority: e.target.value })}
+            />
+          </div>
         </div>
       </div>
 

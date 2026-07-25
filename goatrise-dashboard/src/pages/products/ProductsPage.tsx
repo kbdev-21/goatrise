@@ -27,6 +27,10 @@ import {
 const SORT_OPTIONS: { label: string; value: string }[] = [
   { label: "Newest", value: "createdAt:DESC" },
   { label: "Oldest", value: "createdAt:ASC" },
+  { label: "Sold (high→low)", value: "sold:DESC" },
+  { label: "Sold (low→high)", value: "sold:ASC" },
+  { label: "Display priority (high→low)", value: "displayPriority:DESC" },
+  { label: "Display priority (low→high)", value: "displayPriority:ASC" },
 ];
 
 export default function ProductsPage() {
@@ -61,6 +65,12 @@ export default function ProductsPage() {
     return [...filteredProducts].sort((a, b) => {
       let cmp = 0;
       switch (field) {
+        case "sold":
+          cmp = a.sold - b.sold;
+          break;
+        case "displayPriority":
+          cmp = a.displayPriority - b.displayPriority;
+          break;
         default:
           cmp = a.createdAt.localeCompare(b.createdAt);
       }
@@ -130,7 +140,7 @@ export default function ProductsPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Slug</TableHead>
-                <TableHead>Name</TableHead>
+                <TableHead>Title</TableHead>
                 <TableHead>Display price</TableHead>
                 <TableHead>Attributes</TableHead>
                 <TableHead>Items</TableHead>
@@ -162,7 +172,7 @@ export default function ProductsPage() {
                         onClick={() => navigate(`/products/${product.id}`)}
                       >
                         <ProductImage product={product} />
-                        <span className="hover:underline">{product.title.en}</span>
+                        <span className="hover:underline">{product.title.vi}</span>
                       </div>
                     </TableCell>
                     <TableCell>
@@ -239,7 +249,7 @@ function ProductImage({ product }: { product: Product }) {
   return imgUrl && !error ? (
     <img
       src={imgUrl}
-      alt={product.title.en}
+      alt={product.title.vi}
       referrerPolicy="no-referrer"
       onError={() => setError(true)}
       className="size-8 shrink-0 rounded object-cover"

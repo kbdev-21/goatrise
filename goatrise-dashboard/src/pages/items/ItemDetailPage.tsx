@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, PackagePlus, RefreshCcw, Save, Trash2 } from "lucide-react";
+import { ArrowLeft, Copy, PackagePlus, RefreshCcw, Save, Trash2 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { isAxiosError } from "axios";
 import {
   useAdjustItemStock,
+  useCloneItem,
   useDeleteItem,
   useImportItem,
   useItem,
@@ -74,6 +75,7 @@ export default function ItemDetailPage() {
   const { id } = useParams<{ id: string }>();
   const itemQuery = useItem(id ?? "");
   const updateItemMutation = useUpdateItem();
+  const cloneItemMutation = useCloneItem();
   const productsQuery = useProducts();
 
   const [value, setValue] = useState<ItemInfoFormValue | null>(null);
@@ -114,6 +116,23 @@ export default function ItemDetailPage() {
     value.name.trim().length > 0 &&
     value.price.trim().length > 0 &&
     isDirty;
+
+  function handleDuplicate() {
+    if (!id) return;
+    cloneItemMutation.mutate(id, {
+      onSuccess: (cloned) => {
+        toast.success(`Duplicated item → ${cloned.name}`);
+        navigate(`/items/${cloned.id}`);
+      },
+      onError: (error) => {
+        toast.error(
+          isAxiosError(error) && typeof error.response?.data === "string"
+            ? error.response.data
+            : "Failed to duplicate item",
+        );
+      },
+    });
+  }
 
   function handleSave() {
     if (!id || !value) return;
@@ -179,6 +198,13 @@ export default function ItemDetailPage() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
+            <DropdownMenuItem
+              disabled={!itemQuery.data || cloneItemMutation.isPending}
+              onClick={handleDuplicate}
+            >
+              <Copy className="size-4" />
+              Duplicate
+            </DropdownMenuItem>
             <DropdownMenuItem
               variant="destructive"
               disabled={!itemQuery.data}

@@ -28,6 +28,7 @@ export type Product = {
   isActive: boolean;
   requiredAttributes: ("COLOR" | "SIZE")[];
   sold: number;
+  displayPriority: number;
   createdAt: string;
   updatedAt: string;
   items: {
@@ -66,6 +67,7 @@ export type ProductDetail = {
   isActive: boolean;
   requiredAttributes: ("COLOR" | "SIZE")[];
   sold: number;
+  displayPriority: number;
   createdAt: string;
   updatedAt: string;
   items: {
@@ -97,7 +99,7 @@ export type ProductDetail = {
     shortDescription: { vi: string; en: string };
     imgUrl: string | null;
     isActive: boolean;
-    priority: number;
+    displayPriority: number;
     createdAt: string;
     updatedAt: string;
   }[];

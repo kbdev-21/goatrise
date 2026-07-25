@@ -1,6 +1,6 @@
 import { boolean, index, jsonb, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 
-export const auditLogs = pgTable("audit_logs", {
+export const auditLogs = pgTable.withRLS("audit_logs", {
   id: uuid("id").primaryKey(),
   actorId: text("actor_id"),
   code: text("code").notNull(),

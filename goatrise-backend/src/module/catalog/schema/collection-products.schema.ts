@@ -2,7 +2,7 @@ import { boolean, index, pgTable, timestamp, uuid } from "drizzle-orm/pg-core";
 import { collections } from "./collections.schema.js";
 import { products } from "./products.schema.js";
 
-export const collectionProducts = pgTable("collection_products", {
+export const collectionProducts = pgTable.withRLS("collection_products", {
   id: uuid("id").primaryKey(),
   collectionId: uuid("collection_id").references(() => collections.id).notNull(),
   productId: uuid("product_id").references(() => products.id).notNull(),

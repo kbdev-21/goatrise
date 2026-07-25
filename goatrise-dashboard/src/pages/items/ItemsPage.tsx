@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Eye, ImageOff, PackagePlus, Plus, RefreshCcw, Search } from "lucide-react";
+import { Copy, Eye, ImageOff, PackagePlus, Plus, RefreshCcw, Search } from "lucide-react";
 import { toast } from "sonner";
 import { isAxiosError } from "axios";
 import { useNavigate } from "react-router-dom";
-import { useAdjustItemStock, useImportItem, useItems } from "@/api/item/query-hooks.ts";
+import { useAdjustItemStock, useCloneItem, useImportItem, useItems } from "@/api/item/query-hooks.ts";
 import type { AdjustItemStockRequest, ImportItemRequest, Item } from "@/api/item/api.ts";
 import { useSuppliers } from "@/api/supplier/query-hooks.ts";
 import { formatPriceVn, normalizeVietnameseString } from "@/core/utils.ts";
@@ -62,9 +62,25 @@ export default function ItemsPage() {
 
   // fetch toàn bộ 1 lần rồi filter phía client
   const itemsQuery = useItems();
+  const cloneItemMutation = useCloneItem();
 
   function commitSearch() {
     setSearch(searchInput.trim());
+  }
+
+  function handleDuplicate(item: Item) {
+    cloneItemMutation.mutate(item.id, {
+      onSuccess: (cloned) => {
+        toast.success(`Duplicated ${item.name} → ${cloned.name}`);
+      },
+      onError: (error) => {
+        toast.error(
+          isAxiosError(error)
+            ? error.response?.data || error.message
+            : "Failed to duplicate item",
+        );
+      },
+    });
   }
 
   const filteredItems = useMemo(() => {
@@ -233,6 +249,16 @@ export default function ItemsPage() {
                           onClick={() => setAdjustingItem(item)}
                         >
                           <RefreshCcw className="size-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          aria-label="Duplicate"
+                          title="Duplicate"
+                          disabled={cloneItemMutation.isPending}
+                          onClick={() => handleDuplicate(item)}
+                        >
+                          <Copy className="size-4" />
                         </Button>
                         <Button
                           variant="ghost"

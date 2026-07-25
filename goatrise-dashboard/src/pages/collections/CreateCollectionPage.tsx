@@ -43,7 +43,7 @@ export default function CreateCollectionPage() {
       },
       imgUrl: imgUrl || undefined,
       isActive: value.isActive,
-      priority: Number(value.priority) || 0,
+      displayPriority: Number(value.displayPriority) || 0,
       productIds: productIds.length > 0 ? productIds : undefined,
     };
 

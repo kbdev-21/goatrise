@@ -1,6 +1,6 @@
 import { pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 
-export const suppliers = pgTable("suppliers", {
+export const suppliers = pgTable.withRLS("suppliers", {
   id: uuid("id").primaryKey(),
   name: text("name").unique().notNull(),
   note: text("note"),

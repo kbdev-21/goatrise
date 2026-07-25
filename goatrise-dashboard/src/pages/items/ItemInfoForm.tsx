@@ -102,7 +102,7 @@ export default function ItemInfoForm({
             <SelectItem value={PRODUCT_NONE}>No product</SelectItem>
             {products.map((product) => (
               <SelectItem key={product.id} value={product.id}>
-                {product.title.en}
+                {product.title.vi}
               </SelectItem>
             ))}
           </SelectContent>

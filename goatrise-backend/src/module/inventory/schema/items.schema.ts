@@ -1,7 +1,7 @@
 import { boolean, integer, pgTable, text, timestamp, uuid, bigint, jsonb, index } from "drizzle-orm/pg-core";
 import { products } from "../../catalog/schema/products.schema.js";
 
-export const items = pgTable("items", {
+export const items = pgTable.withRLS("items", {
   id: uuid("id").primaryKey(),
   productId: uuid("product_id").references(() => products.id),
 

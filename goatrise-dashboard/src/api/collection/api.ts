@@ -59,7 +59,7 @@ export type Collection = {
   shortDescription: LanguageString;
   imgUrl: string | null;
   isActive: boolean;
-  priority: number;
+  displayPriority: number;
   createdAt: string;
   updatedAt: string;
   products: CollectionProduct[];
@@ -72,7 +72,7 @@ export type CreateCollectionRequest = {
   shortDescription: LanguageString;
   imgUrl?: string;
   isActive?: boolean;
-  priority?: number;
+  displayPriority?: number;
   productIds?: string[];
 };
 
@@ -83,6 +83,6 @@ export type UpdateCollectionRequest = {
   shortDescription?: LanguageString;
   imgUrl?: string | null;
   isActive?: boolean;
-  priority?: number;
+  displayPriority?: number;
   productIds?: string[];
 };

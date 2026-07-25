@@ -62,7 +62,7 @@ export async function createCollection(db: DbExec, actorId: string, createReq: C
       shortDescription: createReq.shortDescription,
       imgUrl: createReq.imgUrl ?? null,
       isActive: createReq.isActive,
-      priority: createReq.priority
+      displayPriority: createReq.displayPriority
     });
 
     if (createReq.productIds?.length) {
@@ -105,7 +105,7 @@ export async function updateCollection(db: DbExec, actorId: string, collectionId
       shortDescription: updateReq.shortDescription,
       imgUrl: updateReq.imgUrl,
       isActive: updateReq.isActive,
-      priority: updateReq.priority
+      displayPriority: updateReq.displayPriority
     }).where(eq(collections.id, collectionId));
 
     if (updateReq.productIds !== undefined) {

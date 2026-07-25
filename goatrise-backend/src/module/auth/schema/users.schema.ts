@@ -1,6 +1,6 @@
 import { boolean, index, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 
-export const users = pgTable("users", {
+export const users = pgTable.withRLS("users", {
   id: uuid("id").primaryKey(),
   role: text("role").$type<UserRole>().notNull(),
   fullName: text("full_name").notNull(),

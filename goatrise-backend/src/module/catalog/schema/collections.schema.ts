@@ -1,7 +1,7 @@
 import { bigint, boolean, index, integer, jsonb, numeric, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import type { LanguageString } from "../../../core/types.js";
 
-export const collections = pgTable("collections", {
+export const collections = pgTable.withRLS("collections", {
   id: uuid("id").primaryKey(),
   slug: text("slug").notNull().unique(), // should be english
 
@@ -11,7 +11,7 @@ export const collections = pgTable("collections", {
   imgUrl: text("img_url"),
 
   isActive: boolean("is_active").notNull().default(true),
-  priority: integer("priority").notNull().default(0),
+  displayPriority: integer("display_priority").notNull().default(0),
 
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().$onUpdateFn(() => new Date()).notNull(),

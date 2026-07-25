@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   adjustItemStock,
+  cloneItem,
   createItem,
   deleteItem,
   findItemById,
@@ -61,6 +62,16 @@ export function useUpdateItem() {
   return useMutation({
     mutationFn: ({ itemId, request }: { itemId: string; request: UpdateItemRequest }) =>
       updateItem(itemId, request),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: itemKeys.all });
+    },
+  });
+}
+
+export function useCloneItem() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (itemId: string) => cloneItem(itemId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: itemKeys.all });
     },

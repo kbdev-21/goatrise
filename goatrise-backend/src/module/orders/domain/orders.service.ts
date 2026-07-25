@@ -14,8 +14,6 @@ import { getOrCreateOrSyncCustomer } from "../../customers/domain/customers-sync
 import type { CreateOrderRequest, FindOrdersQuery, PlaceOrderRequest, UpdateOrderRequest } from "./validators.js";
 import { ORDER_RELATIONS, type Order } from "./types.js";
 
-const MAX_ATTEMPTS = 5;
-
 export async function getOrderById(db: DbExec, id: string): Promise<Order> {
   const order = await db.query.orders.findFirst({
     where: {
@@ -236,7 +234,8 @@ async function onCompleteOrder(db: DbExec, order: Order): Promise<void> {
 }
 
 async function generateUniqueOrderCode(db: DbExec): Promise<string> {
-  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+  const maxAttemps = 5;
+  for (let attempt = 0; attempt < maxAttemps; attempt++) {
     const now = new Date();
     const dd = String(now.getDate()).padStart(2, "0");
     const mm = String(now.getMonth() + 1).padStart(2, "0");

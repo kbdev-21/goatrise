@@ -3,7 +3,7 @@ import { authMiddleware } from "../../auth/middleware/auth.middleware.js";
 import { requiredRolesMiddleware } from "../../auth/middleware/required-roles.middleware.js";
 import type { ContextVariables } from "../../../core/types.js";
 import { db } from "../../../core/db.js";
-import { createItem, deleteItem, findAllItems, getItemById, updateItemInfo } from "../domain/items.service.js";
+import { cloneItem, createItem, deleteItem, findAllItems, getItemById, updateItemInfo } from "../domain/items.service.js";
 import { importItemStock, manualAdjustItemStock } from "../domain/inventory.service.js";
 import { findItemTransactions } from "../domain/item-transactions.service.js";
 import { zValidator } from "@hono/zod-validator";
@@ -43,6 +43,19 @@ itemsRouter.post("/api/items",
     const newItem = await createItem(db, currentUser.id, createReq);
 
     return c.json(newItem, 201);
+  }
+);
+
+itemsRouter.post("/api/items/:id/clone",
+  authMiddleware,
+  requiredRolesMiddleware(["ADMIN", "STAFF"]),
+  async (c) => {
+    const currentUser = c.get("currentUser");
+    const itemId = c.req.param("id");
+
+    const clonedItem = await cloneItem(db, currentUser.id, itemId);
+
+    return c.json(clonedItem, 201);
   }
 );
 

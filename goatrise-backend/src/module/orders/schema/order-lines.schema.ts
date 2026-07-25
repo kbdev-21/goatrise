@@ -5,7 +5,7 @@ import { products } from "../../catalog/schema/products.schema.js";
 import type { ItemAttributeValues } from "../../inventory/schema/items.schema.js";
 import type { LanguageString } from "../../../core/types.js";
 
-export const orderLines = pgTable("order_lines", {
+export const orderLines = pgTable.withRLS("order_lines", {
   id: uuid("id").primaryKey(),
   orderId: uuid("order_id").references(() => orders.id).notNull(),
 

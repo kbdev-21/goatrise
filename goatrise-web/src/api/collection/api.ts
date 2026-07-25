@@ -24,7 +24,7 @@ export type Collection = {
   shortDescription: { vi: string; en: string };
   imgUrl: string | null;
   isActive: boolean;
-  priority: number;
+  displayPriority: number;
   createdAt: string;
   updatedAt: string;
   products: {

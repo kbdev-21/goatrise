@@ -1,7 +1,7 @@
 import { bigint, index, integer, jsonb, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import type { Address, SalesChannel } from "../../../core/types.js";
 
-export const customers = pgTable("customers", {
+export const customers = pgTable.withRLS("customers", {
   id: uuid("id").primaryKey(),
   email: text("email").unique(),
   phoneNum: text("phone_num"),

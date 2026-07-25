@@ -60,6 +60,7 @@ export type Product = {
   isActive: boolean;
   requiredAttributes: ItemAttribute[];
   sold: number;
+  displayPriority: number;
   createdAt: string;
   updatedAt: string;
   items: Omit<Item, "product">[];
@@ -78,6 +79,7 @@ export type CreateProductRequest = {
   imgUrls?: string[];
   displayPrice?: number;
   comparePrice?: number;
+  displayPriority?: number;
   isActive?: boolean;
   requiredAttributes: ItemAttribute[];
   itemIds?: string[];
@@ -91,6 +93,7 @@ export type UpdateProductRequest = {
   imgUrls?: string[];
   displayPrice?: number;
   comparePrice?: number | null;
+  displayPriority?: number;
   isActive?: boolean;
   requiredAttributes?: ItemAttribute[];
   itemIds?: string[];

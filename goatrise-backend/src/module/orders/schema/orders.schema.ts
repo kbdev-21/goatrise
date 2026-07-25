@@ -3,7 +3,7 @@ import { customers } from "../../customers/schema/customers.schema.js";
 import { coupons } from "../../promotion/schema/coupons.schema.js";
 import type { Address, SalesChannel } from "../../../core/types.js";
 
-export const orders = pgTable("orders", {
+export const orders = pgTable.withRLS("orders", {
   id: uuid("id").primaryKey(),
   code: text("code").unique().notNull(),
 

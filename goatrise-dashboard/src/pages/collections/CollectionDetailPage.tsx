@@ -75,7 +75,7 @@ export default function CollectionDetailPage() {
       },
       imgUrl: imgUrl || null,
       isActive: value.isActive,
-      priority: Number(value.priority) || 0,
+      displayPriority: Number(value.displayPriority) || 0,
       productIds: value.productIds,
     };
 
@@ -83,7 +83,7 @@ export default function CollectionDetailPage() {
       { collectionId: id, request },
       {
         onSuccess: (collection) => {
-          toast.success(`Updated collection ${collection.title.en}`);
+          toast.success(`Updated collection ${collection.title.vi}`);
           navigate("/collections");
         },
         onError: (error) => {
@@ -188,7 +188,7 @@ function DeleteCollectionDialog({
 
         <p className="text-muted-foreground text-xs">
           This will permanently delete{" "}
-          <span className="text-foreground font-medium">{collection?.title.en}</span>. This
+          <span className="text-foreground font-medium">{collection?.title.vi}</span>. This
           only removes the collection and its product links, not the products themselves.
         </p>
 
@@ -207,7 +207,7 @@ function DeleteCollectionDialog({
               if (!collection) return;
               deleteCollectionMutation.mutate(collection.id, {
                 onSuccess: () => {
-                  toast.success(`Deleted collection ${collection.title.en}`);
+                  toast.success(`Deleted collection ${collection.title.vi}`);
                   navigate("/collections");
                 },
                 onError: (error) => {
@@ -238,7 +238,7 @@ function collectionToFormValue(collection: Collection): CollectionInfoFormValue 
     shortDescriptionEn: collection.shortDescription.en,
     shortDescriptionVi: collection.shortDescription.vi,
     imgUrl: collection.imgUrl ?? "",
-    priority: String(collection.priority),
+    displayPriority: String(collection.displayPriority),
     isActive: collection.isActive,
     productIds: collection.products.map((product) => product.id),
   };

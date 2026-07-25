@@ -39,7 +39,7 @@ export type CollectionInfoFormValue = {
   shortDescriptionEn: string;
   shortDescriptionVi: string;
   imgUrl: string;
-  priority: string;
+  displayPriority: string;
   isActive: boolean;
   productIds: string[];
 };
@@ -52,7 +52,7 @@ export const EMPTY_COLLECTION_INFO_FORM_VALUE: CollectionInfoFormValue = {
   shortDescriptionEn: "",
   shortDescriptionVi: "",
   imgUrl: "",
-  priority: "0",
+  displayPriority: "0",
   isActive: true,
   productIds: [],
 };
@@ -183,12 +183,12 @@ export default function CollectionInfoForm({
 
           <div className="grid grid-cols-2 gap-2">
             <div className="flex flex-col gap-1.5">
-              <FieldLabel>Priority</FieldLabel>
+              <FieldLabel>Display priority</FieldLabel>
               <Input
                 type="number"
                 placeholder="0"
-                value={value.priority}
-                onChange={(e) => set({ priority: e.target.value })}
+                value={value.displayPriority}
+                onChange={(e) => set({ displayPriority: e.target.value })}
               />
             </div>
           </div>
@@ -210,14 +210,14 @@ export default function CollectionInfoForm({
                     {product.imgUrls?.[0] && (
                       <ImageThumbnail
                         url={product.imgUrls[0]}
-                        alt={product.title.en}
+                        alt={product.title.vi}
                         className="size-10"
                       />
                     )}
                     <div className="flex min-w-0 flex-col gap-1">
                       <div className="flex items-center gap-2">
                         <span className="truncate text-xs font-medium">
-                          {product.title.en}
+                          {product.title.vi}
                         </span>
                         <ActiveBadge isActive={product.isActive} />
                       </div>
@@ -331,7 +331,7 @@ function AddProductDialog({
                 className="hover:bg-muted/50 flex w-full flex-col gap-1 border-b px-3 py-2 text-left last:border-b-0"
               >
                 <div className="flex items-center gap-2">
-                  <span className="truncate text-xs font-medium">{product.title.en}</span>
+                  <span className="truncate text-xs font-medium">{product.title.vi}</span>
                   <span className="text-muted-foreground shrink-0 font-mono text-xs">
                     {product.slug}
                   </span>

@@ -78,6 +78,7 @@ export async function createProduct(db: DbExec, actorId: string, createReq: Crea
       imgUrls: createReq.imgUrls ?? null,
       displayPrice: createReq.displayPrice ?? null,
       comparePrice: createReq.comparePrice ?? null,
+      displayPriority: createReq.displayPriority,
       isActive: createReq.isActive,
       requiredAttributes: createReq.requiredAttributes
     });
@@ -120,6 +121,7 @@ export async function updateProduct(db: DbExec, actorId: string, productId: stri
       imgUrls: updateReq.imgUrls,
       displayPrice: updateReq.displayPrice,
       comparePrice: updateReq.comparePrice,
+      displayPriority: updateReq.displayPriority,
       isActive: updateReq.isActive,
       requiredAttributes: updateReq.requiredAttributes
     }).where(eq(products.id, productId));

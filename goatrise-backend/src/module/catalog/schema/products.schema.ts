@@ -2,7 +2,7 @@ import { bigint, boolean, index, integer, jsonb, pgTable, text, timestamp, uuid 
 import type { LanguageString } from "../../../core/types.js";
 import type { ItemAttribute } from "../../inventory/schema/items.schema.js";
 
-export const products = pgTable("products", {
+export const products = pgTable.withRLS("products", {
   id: uuid("id").primaryKey(),
   slug: text("slug").notNull().unique(),
 
@@ -16,7 +16,8 @@ export const products = pgTable("products", {
   isActive: boolean("is_active").notNull().default(true),
   requiredAttributes: jsonb("required_attributes").$type<ItemAttribute[]>().notNull(),
 
-  sold: integer("sold").default(0).notNull(), 
+  sold: integer("sold").default(0).notNull(),
+  displayPriority: integer("display_priority").notNull().default(1),
 
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().$onUpdateFn(() => new Date()).notNull(),

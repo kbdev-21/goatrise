@@ -27,6 +27,11 @@ export async function deleteItem(itemId: string): Promise<void> {
   await axiosInstance.delete(`/api/items/${itemId}`);
 }
 
+export async function cloneItem(itemId: string): Promise<Item> {
+  const res = await axiosInstance.post<Item>(`/api/items/${itemId}/clone`);
+  return res.data;
+}
+
 export async function importItem(itemId: string, request: ImportItemRequest): Promise<Item> {
   const res = await axiosInstance.post<Item>(`/api/items/${itemId}/import`, request);
   return res.data;

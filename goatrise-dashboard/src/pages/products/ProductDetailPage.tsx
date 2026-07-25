@@ -79,6 +79,7 @@ export default function ProductDetailPage() {
       imgUrls: imgUrls.length > 0 ? imgUrls : undefined,
       displayPrice: undefined,
       comparePrice: value.comparePriceEnabled ? Number(value.comparePrice || "0") : null,
+      displayPriority: value.displayPriority ? Number(value.displayPriority) : undefined,
       isActive: value.isActive,
       requiredAttributes: requiredAttributes,
       itemIds: itemIds,
@@ -88,7 +89,7 @@ export default function ProductDetailPage() {
       { productId: id, request },
       {
         onSuccess: (product) => {
-          toast.success(`Updated product ${product.title.en}`);
+          toast.success(`Updated product ${product.title.vi}`);
           navigate("/products");
         },
         onError: (error) => {
@@ -187,7 +188,7 @@ function DeleteProductDialog({
 
         <p className="text-muted-foreground text-xs">
           This will permanently delete{" "}
-          <span className="text-foreground font-medium">{product?.title.en}</span>. This
+          <span className="text-foreground font-medium">{product?.title.vi}</span>. This
           action cannot be undone.
         </p>
 
@@ -206,7 +207,7 @@ function DeleteProductDialog({
               if (!product) return;
               deleteProductMutation.mutate(product.id, {
                 onSuccess: () => {
-                  toast.success(`Deleted product ${product.title.en}`);
+                  toast.success(`Deleted product ${product.title.vi}`);
                   navigate("/products");
                 },
                 onError: (error) => {
@@ -240,6 +241,7 @@ function productToFormValue(product: ProductDetail): ProductInfoFormValue {
     imgUrls: product.imgUrls ?? [],
     comparePrice: product.comparePrice?.toString() ?? "",
     comparePriceEnabled: product.comparePrice !== null,
+    displayPriority: String(product.displayPriority),
     isActive: product.isActive,
     colorRequired: product.requiredAttributes.includes("COLOR"),
     sizeRequired: product.requiredAttributes.includes("SIZE"),

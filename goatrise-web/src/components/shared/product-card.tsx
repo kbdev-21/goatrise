@@ -39,7 +39,7 @@ export function ProductCard({ product }: { product: Product }) {
       </div>
 
       <div className="mt-3 space-y-1">
-        <h3 className="text-sm font-bold tracking-wide uppercase">
+        <h3 className="text-sm font-bold tracking-wide">
           {product.title.vi}
         </h3>
         <p className="pt-1 text-sm font-medium">

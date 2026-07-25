@@ -35,8 +35,8 @@ const TYPE_ALL = "ALL";
 const SORT_OPTIONS: { label: string; value: string }[] = [
   { label: "Newest", value: "createdAt:DESC" },
   { label: "Oldest", value: "createdAt:ASC" },
-  { label: "Priority (high→low)", value: "priority:DESC" },
-  { label: "Priority (low→high)", value: "priority:ASC" },
+  { label: "Priority (high→low)", value: "displayPriority:DESC" },
+  { label: "Priority (low→high)", value: "displayPriority:ASC" },
 ];
 
 export default function CollectionsPage() {
@@ -73,8 +73,8 @@ export default function CollectionsPage() {
     return [...filteredCollections].sort((a, b) => {
       let cmp: number;
       switch (field) {
-        case "priority":
-          cmp = a.priority - b.priority;
+        case "displayPriority":
+          cmp = a.displayPriority - b.displayPriority;
           break;
         default:
           cmp = a.createdAt.localeCompare(b.createdAt);
@@ -193,7 +193,7 @@ export default function CollectionsPage() {
                         onClick={() => navigate(`/collections/${collection.id}`)}
                       >
                         <CollectionImage collection={collection} />
-                        <span className="hover:underline">{collection.title.en}</span>
+                        <span className="hover:underline">{collection.title.vi}</span>
                       </div>
                     </TableCell>
                     <TableCell>{capitalize(collection.type)}</TableCell>
@@ -206,7 +206,7 @@ export default function CollectionsPage() {
                         {collection.products.length === 1 ? "" : "s"}
                       </span>
                     </TableCell>
-                    <TableCell>{collection.priority}</TableCell>
+                    <TableCell>{collection.displayPriority}</TableCell>
                     <TableCell>
                       <ActiveBadge isActive={collection.isActive} />
                     </TableCell>
@@ -246,7 +246,7 @@ function CollectionImage({ collection }: { collection: Collection }) {
   return collection.imgUrl && !error ? (
     <img
       src={collection.imgUrl}
-      alt={collection.title.en}
+      alt={collection.title.vi}
       referrerPolicy="no-referrer"
       onError={() => setError(true)}
       className="size-8 shrink-0 rounded object-cover"
