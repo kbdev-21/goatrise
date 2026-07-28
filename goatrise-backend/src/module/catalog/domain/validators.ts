@@ -50,7 +50,9 @@ export const CreateCollectionRequestSchema = z.object({
   shortDescription: LanguageStringSchema,
   imgUrl: z.string().trim().min(1).optional(),
   isActive: z.boolean().optional(),
+  isFeatured: z.boolean().optional(),
   displayPriority: z.number().int().optional(),
+  parentId: z.uuid().nullable().optional(),
   productIds: ProductIdsSchema.optional()
 });
 export type CreateCollectionRequest = z.infer<typeof CreateCollectionRequestSchema>;
@@ -62,7 +64,9 @@ export const UpdateCollectionRequestSchema = z.object({
   shortDescription: LanguageStringSchema.optional(),
   imgUrl: z.string().trim().min(1).nullable().optional(),
   isActive: z.boolean().optional(),
+  isFeatured: z.boolean().optional(),
   displayPriority: z.number().int().optional(),
+  parentId: z.uuid().nullable().optional(),
   productIds: ProductIdsSchema.optional()
 });
 export type UpdateCollectionRequest = z.infer<typeof UpdateCollectionRequestSchema>;

@@ -3,7 +3,7 @@ import { authMiddleware } from "../../auth/middleware/auth.middleware.js";
 import { requiredRolesMiddleware } from "../../auth/middleware/required-roles.middleware.js";
 import type { ContextVariables } from "../../../core/types.js";
 import { db } from "../../../core/db.js";
-import { createCollection, deleteCollection, findAllCollections, getCollectionById, getCollectionBySlug, updateCollection } from "../domain/collections.service.js";
+import { createCollection, deleteCollection, findAllCollections, getCollectionDetailById, getCollectionDetailBySlug, updateCollection } from "../domain/collections.service.js";
 import { zValidator } from "@hono/zod-validator";
 import { CreateCollectionRequestSchema, UpdateCollectionRequestSchema } from "../domain/validators.js";
 
@@ -20,7 +20,7 @@ collectionsRouter.get("/api/collections/by-slug/:slug",
   async (c) => {
     const slug = c.req.param("slug");
 
-    const collection = await getCollectionBySlug(db, slug);
+    const collection = await getCollectionDetailBySlug(db, slug);
 
     return c.json(collection);
   }
@@ -30,7 +30,7 @@ collectionsRouter.get("/api/collections/:id",
   async (c) => {
     const collectionId = c.req.param("id");
 
-    const collection = await getCollectionById(db, collectionId);
+    const collection = await getCollectionDetailById(db, collectionId);
 
     return c.json(collection);
   }

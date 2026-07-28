@@ -3,7 +3,7 @@ import { ArrowLeft, Save } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { isAxiosError } from "axios";
-import { useCreateCollection } from "@/api/collection/query-hooks.ts";
+import { useCollections, useCreateCollection } from "@/api/collection/query-hooks.ts";
 import type { CreateCollectionRequest } from "@/api/collection/api.ts";
 import { useProducts } from "@/api/product/query-hooks.ts";
 import { Button } from "@/components/ui/button.tsx";
@@ -17,6 +17,7 @@ export default function CreateCollectionPage() {
   const navigate = useNavigate();
   const createCollectionMutation = useCreateCollection();
   const productsQuery = useProducts();
+  const collectionsQuery = useCollections();
 
   const [value, setValue] = useState<CollectionInfoFormValue>(
     EMPTY_COLLECTION_INFO_FORM_VALUE,
@@ -43,7 +44,9 @@ export default function CreateCollectionPage() {
       },
       imgUrl: imgUrl || undefined,
       isActive: value.isActive,
+      isFeatured: value.isFeatured,
       displayPriority: Number(value.displayPriority) || 0,
+      parentId: value.parentId || undefined,
       productIds: productIds.length > 0 ? productIds : undefined,
     };
 
@@ -95,6 +98,7 @@ export default function CreateCollectionPage() {
         value={value}
         onChange={setValue}
         products={productsQuery.data ?? []}
+        collections={collectionsQuery.data ?? []}
       />
     </div>
   );

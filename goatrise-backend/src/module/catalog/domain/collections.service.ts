@@ -7,7 +7,7 @@ import { and, eq, inArray, notInArray } from "drizzle-orm";
 import { uuidv7 } from "uuidv7";
 import { recordAuditLog } from "../../audit/domain/audit-logs.service.js";
 import type { CreateCollectionRequest, UpdateCollectionRequest } from "./validators.js";
-import { COLLECTION_RELATIONS, type Collection } from "./types.js";
+import { COLLECTION_DETAIL_RELATIONS, COLLECTION_RELATIONS, type Collection, type CollectionDetail } from "./types.js";
 
 export async function getCollectionById(db: DbExec, id: string): Promise<Collection> {
   const collection = await db.query.collections.findFirst({
@@ -24,12 +24,27 @@ export async function getCollectionById(db: DbExec, id: string): Promise<Collect
   return collection;
 }
 
-export async function getCollectionBySlug(db: DbExec, slug: string): Promise<Collection> {
+export async function getCollectionDetailById(db: DbExec, id: string): Promise<CollectionDetail> {
+  const collection = await db.query.collections.findFirst({
+    where: {
+      id: id
+    },
+    with: COLLECTION_DETAIL_RELATIONS
+  });
+
+  if (!collection) {
+    throw new HTTPException(404, { message: "Collection not found" });
+  }
+
+  return collection;
+}
+
+export async function getCollectionDetailBySlug(db: DbExec, slug: string): Promise<CollectionDetail> {
   const collection = await db.query.collections.findFirst({
     where: {
       slug: slug
     },
-    with: COLLECTION_RELATIONS
+    with: COLLECTION_DETAIL_RELATIONS
   });
 
   if (!collection) {
@@ -54,14 +69,20 @@ export async function createCollection(db: DbExec, actorId: string, createReq: C
       await validateProductIds(tx, createReq.productIds);
     }
 
+    if (createReq.parentId) {
+      await assertCollectionExists(tx, createReq.parentId);
+    }
+
     await tx.insert(collections).values({
       id: newCollectionId,
       slug: createReq.slug,
+      parentId: createReq.parentId ?? null,
       type: createReq.type,
       title: createReq.title,
       shortDescription: createReq.shortDescription,
       imgUrl: createReq.imgUrl ?? null,
       isActive: createReq.isActive,
+      isFeatured: createReq.isFeatured,
       displayPriority: createReq.displayPriority
     });
 
@@ -98,13 +119,23 @@ export async function updateCollection(db: DbExec, actorId: string, collectionId
       await validateProductIds(tx, updateReq.productIds);
     }
 
+    if (updateReq.parentId !== undefined && updateReq.parentId !== null) {
+      if (updateReq.parentId === collectionId) {
+        throw new HTTPException(409, { message: "A collection cannot be its own parent" });
+      }
+      await assertCollectionExists(tx, updateReq.parentId);
+      await assertNoCycle(tx, collectionId, updateReq.parentId);
+    }
+
     await tx.update(collections).set({
       slug: updateReq.slug,
+      parentId: updateReq.parentId,
       type: updateReq.type,
       title: updateReq.title,
       shortDescription: updateReq.shortDescription,
       imgUrl: updateReq.imgUrl,
       isActive: updateReq.isActive,
+      isFeatured: updateReq.isFeatured,
       displayPriority: updateReq.displayPriority
     }).where(eq(collections.id, collectionId));
 
@@ -133,6 +164,11 @@ export async function deleteCollection(db: DbExec, actorId: string, collectionId
   await db.transaction(async (tx) => {
     const collectionBefore = await getCollectionById(tx, collectionId);
 
+    const children = await tx.select({ id: collections.id }).from(collections).where(eq(collections.parentId, collectionId));
+    if (children.length > 0) {
+      throw new HTTPException(409, { message: "Collection has child collections" });
+    }
+
     await tx.delete(collectionProducts).where(eq(collectionProducts.collectionId, collectionId));
     await tx.delete(collections).where(eq(collections.id, collectionId));
 
@@ -146,6 +182,28 @@ export async function deleteCollection(db: DbExec, actorId: string, collectionId
       }
     });
   });
+}
+
+async function assertCollectionExists(db: DbExec, collectionId: string): Promise<void> {
+  const rows = await db.select({ id: collections.id }).from(collections).where(eq(collections.id, collectionId));
+
+  if (rows.length === 0) {
+    throw new HTTPException(409, { message: "Parent collection does not exist" });
+  }
+}
+
+// Walk ngược lên từ newParentId theo parentId; nếu gặp collectionId nghĩa là newParent là hậu duệ -> tạo cycle
+async function assertNoCycle(db: DbExec, collectionId: string, newParentId: string): Promise<void> {
+  let cursor: string | null = newParentId;
+
+  while (cursor) {
+    if (cursor === collectionId) {
+      throw new HTTPException(409, { message: "A collection cannot be a parent of its own ancestor" });
+    }
+
+    const rows: { parentId: string | null }[] = await db.select({ parentId: collections.parentId }).from(collections).where(eq(collections.id, cursor));
+    cursor = rows[0]?.parentId ?? null;
+  }
 }
 
 async function validateProductIds(db: DbExec, productIds: string[]): Promise<void> {

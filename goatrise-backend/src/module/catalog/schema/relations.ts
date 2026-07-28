@@ -20,6 +20,17 @@ export const productsRelations = defineRelationsPart({ products, collectionProdu
     products: r.many.products({
       from: r.collections.id.through(r.collectionProducts.collectionId),
       to: r.products.id.through(r.collectionProducts.productId)
+    }),
+    parent: r.one.collections({
+      from: r.collections.parentId,
+      to: r.collections.id,
+      optional: true,
+      alias: "collectionHierarchy"
+    }),
+    children: r.many.collections({
+      from: r.collections.id,
+      to: r.collections.parentId,
+      alias: "collectionHierarchy"
     })
   }
 }));

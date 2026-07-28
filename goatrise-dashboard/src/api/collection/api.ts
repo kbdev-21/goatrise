@@ -1,19 +1,20 @@
 import axiosInstance from "@/api/axios-instance.ts";
 import type { LanguageString } from "@/core/types.ts";
 import type { ItemAttribute } from "@/api/item/api.ts";
+import type { Product } from "@/api/product/api.ts";
 
 export async function findCollections(): Promise<Collection[]> {
   const res = await axiosInstance.get<Collection[]>("/api/collections");
   return res.data;
 }
 
-export async function findCollectionById(collectionId: string): Promise<Collection> {
-  const res = await axiosInstance.get<Collection>(`/api/collections/${collectionId}`);
+export async function findCollectionById(collectionId: string): Promise<CollectionDetail> {
+  const res = await axiosInstance.get<CollectionDetail>(`/api/collections/${collectionId}`);
   return res.data;
 }
 
-export async function findCollectionBySlug(slug: string): Promise<Collection> {
-  const res = await axiosInstance.get<Collection>(`/api/collections/by-slug/${slug}`);
+export async function findCollectionBySlug(slug: string): Promise<CollectionDetail> {
+  const res = await axiosInstance.get<CollectionDetail>(`/api/collections/by-slug/${slug}`);
   return res.data;
 }
 
@@ -50,19 +51,35 @@ export type CollectionProduct = {
   updatedAt: string;
 };
 
-// Mirror backend: module/catalog/domain/types.ts -> Collection (COLLECTION_RELATIONS)
-export type Collection = {
+// Cột gốc của một collection, không kèm relation (dùng cho parent/children không lồng sâu hơn)
+export type CollectionSummary = {
   id: string;
   slug: string;
+  parentId: string | null;
   type: CollectionType;
   title: LanguageString;
   shortDescription: LanguageString;
   imgUrl: string | null;
   isActive: boolean;
+  isFeatured: boolean;
   displayPriority: number;
   createdAt: string;
   updatedAt: string;
+};
+
+// Mirror backend: module/catalog/domain/types.ts -> Collection (COLLECTION_RELATIONS)
+export type Collection = CollectionSummary & {
+  parent: CollectionSummary | null;
+  children: CollectionSummary[];
   products: CollectionProduct[];
+};
+
+// Mirror backend: module/catalog/domain/types.ts -> CollectionDetail (COLLECTION_DETAIL_RELATIONS)
+// products = light Product (PRODUCT_LIGHT_RELATIONS: product + items)
+export type CollectionDetail = CollectionSummary & {
+  parent: CollectionSummary | null;
+  children: CollectionSummary[];
+  products: Product[];
 };
 
 export type CreateCollectionRequest = {
@@ -72,7 +89,9 @@ export type CreateCollectionRequest = {
   shortDescription: LanguageString;
   imgUrl?: string;
   isActive?: boolean;
+  isFeatured?: boolean;
   displayPriority?: number;
+  parentId?: string | null;
   productIds?: string[];
 };
 
@@ -83,6 +102,8 @@ export type UpdateCollectionRequest = {
   shortDescription?: LanguageString;
   imgUrl?: string | null;
   isActive?: boolean;
+  isFeatured?: boolean;
   displayPriority?: number;
+  parentId?: string | null;
   productIds?: string[];
 };

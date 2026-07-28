@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/select.tsx";
 import { cn } from "@/lib/utils";
 import { normalizeVietnameseString } from "@/core/utils.ts";
-import type { CollectionType } from "@/api/collection/api.ts";
+import type { Collection, CollectionType } from "@/api/collection/api.ts";
 import type { Product } from "@/api/product/api.ts";
 import { Switch } from "@/components/ui/switch.tsx";
 import { ActiveBadge } from "@/components/shared/active-badge.tsx";
@@ -31,9 +31,13 @@ const TYPE_OPTIONS: { label: string; value: CollectionType }[] = [
   { label: "Event", value: "EVENT" },
 ];
 
+// Sentinel cho option "None" (Radix Select không nhận value rỗng)
+const NO_PARENT_VALUE = "__NONE__";
+
 export type CollectionInfoFormValue = {
   slug: string;
   type: CollectionType;
+  parentId: string;
   titleEn: string;
   titleVi: string;
   shortDescriptionEn: string;
@@ -41,12 +45,14 @@ export type CollectionInfoFormValue = {
   imgUrl: string;
   displayPriority: string;
   isActive: boolean;
+  isFeatured: boolean;
   productIds: string[];
 };
 
 export const EMPTY_COLLECTION_INFO_FORM_VALUE: CollectionInfoFormValue = {
   slug: "",
   type: "COLLECTION",
+  parentId: "",
   titleEn: "",
   titleVi: "",
   shortDescriptionEn: "",
@@ -54,17 +60,22 @@ export const EMPTY_COLLECTION_INFO_FORM_VALUE: CollectionInfoFormValue = {
   imgUrl: "",
   displayPriority: "0",
   isActive: true,
+  isFeatured: false,
   productIds: [],
 };
 
 export default function CollectionInfoForm({
   value,
   onChange,
-  products,
+  products = [],
+  collections = [],
+  currentCollectionId,
 }: {
   value: CollectionInfoFormValue;
   onChange: (value: CollectionInfoFormValue) => void;
   products: Product[];
+  collections: Collection[];
+  currentCollectionId?: string;
 }) {
   const set = (patch: Partial<CollectionInfoFormValue>) => onChange({ ...value, ...patch });
 
@@ -81,6 +92,10 @@ export default function CollectionInfoForm({
     .map((id) => products.find((p) => p.id === id))
     .filter((p): p is Product => !!p);
 
+  // Ứng viên làm cha: loại chính nó + toàn bộ hậu duệ (tránh cycle)
+  const excludedIds = collectDescendantIds(collections, currentCollectionId);
+  const parentOptions = collections.filter((c) => !excludedIds.has(c.id));
+
   return (
     <>
       <div className="flex items-start gap-4">
@@ -88,12 +103,21 @@ export default function CollectionInfoForm({
         <div className="bg-card flex flex-1 flex-col gap-4 rounded-md border p-6">
           <div className="flex items-center justify-between">
             <h2 className="text-base font-medium">Info</h2>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-medium">Active</span>
-              <Switch
-                checked={value.isActive}
-                onCheckedChange={(v) => set({ isActive: v })}
-              />
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-medium">Featured</span>
+                <Switch
+                  checked={value.isFeatured}
+                  onCheckedChange={(v) => set({ isFeatured: v })}
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-medium">Active</span>
+                <Switch
+                  checked={value.isActive}
+                  onCheckedChange={(v) => set({ isActive: v })}
+                />
+              </div>
             </div>
           </div>
 
@@ -141,6 +165,28 @@ export default function CollectionInfoForm({
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <FieldLabel>Parent collection</FieldLabel>
+            <Select
+              value={value.parentId || NO_PARENT_VALUE}
+              onValueChange={(v) =>
+                set({ parentId: v === NO_PARENT_VALUE ? "" : v })
+              }
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={NO_PARENT_VALUE}>None</SelectItem>
+                {parentOptions.map((collection) => (
+                  <SelectItem key={collection.id} value={collection.id}>
+                    {collection.title.vi || collection.slug}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="flex flex-col gap-1.5">
@@ -346,6 +392,29 @@ function AddProductDialog({
       </DialogContent>
     </Dialog>
   );
+}
+
+// Tập id cần loại khỏi lựa chọn cha: chính nó + toàn bộ hậu duệ (BFS theo parentId trên danh sách phẳng)
+function collectDescendantIds(
+  collections: Collection[],
+  rootId: string | undefined,
+): Set<string> {
+  const excluded = new Set<string>();
+  if (!rootId) return excluded;
+
+  excluded.add(rootId);
+  const queue = [rootId];
+  while (queue.length > 0) {
+    const currentId = queue.shift()!;
+    for (const collection of collections) {
+      if (collection.parentId === currentId && !excluded.has(collection.id)) {
+        excluded.add(collection.id);
+        queue.push(collection.id);
+      }
+    }
+  }
+
+  return excluded;
 }
 
 function LangToggle({

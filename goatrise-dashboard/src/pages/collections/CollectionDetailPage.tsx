@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { isAxiosError } from "axios";
 import {
   useCollection,
+  useCollections,
   useDeleteCollection,
   useUpdateCollection,
 } from "@/api/collection/query-hooks.ts";
@@ -35,6 +36,7 @@ export default function CollectionDetailPage() {
   const collectionQuery = useCollection(id ?? "");
   const updateCollectionMutation = useUpdateCollection();
   const productsQuery = useProducts();
+  const collectionsQuery = useCollections();
 
   const [value, setValue] = useState<CollectionInfoFormValue | null>(null);
   const [deletingCollection, setDeletingCollection] = useState<Collection | null>(null);
@@ -75,7 +77,9 @@ export default function CollectionDetailPage() {
       },
       imgUrl: imgUrl || null,
       isActive: value.isActive,
+      isFeatured: value.isFeatured,
       displayPriority: Number(value.displayPriority) || 0,
+      parentId: value.parentId || null,
       productIds: value.productIds,
     };
 
@@ -158,6 +162,8 @@ export default function CollectionDetailPage() {
           value={value}
           onChange={setValue}
           products={productsQuery.data ?? []}
+          collections={collectionsQuery.data ?? []}
+          currentCollectionId={id}
         />
       )}
 
@@ -233,6 +239,7 @@ function collectionToFormValue(collection: Collection): CollectionInfoFormValue 
   return {
     slug: collection.slug,
     type: collection.type,
+    parentId: collection.parentId ?? "",
     titleEn: collection.title.en,
     titleVi: collection.title.vi,
     shortDescriptionEn: collection.shortDescription.en,
@@ -240,6 +247,7 @@ function collectionToFormValue(collection: Collection): CollectionInfoFormValue 
     imgUrl: collection.imgUrl ?? "",
     displayPriority: String(collection.displayPriority),
     isActive: collection.isActive,
+    isFeatured: collection.isFeatured,
     productIds: collection.products.map((product) => product.id),
   };
 }
