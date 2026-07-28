@@ -38,13 +38,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content: "width=device-width, initial-scale=1",
       },
       {
-        title: "TanStack Start Starter",
+        title: "GOAT RISE - Vietnam, Activewear & Classic For Life",
       },
     ],
     links: [
       {
         rel: "stylesheet",
         href: appCss,
+      },
+      {
+        rel: "icon",
+        href: "/goatrise-bg-logo.png",
+        type: "image/png",
       },
     ],
   }),
