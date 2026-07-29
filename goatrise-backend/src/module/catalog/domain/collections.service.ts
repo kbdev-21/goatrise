@@ -7,7 +7,7 @@ import { and, eq, inArray, notInArray } from "drizzle-orm";
 import { uuidv7 } from "uuidv7";
 import { recordAuditLog } from "../../audit/domain/audit-logs.service.js";
 import type { CreateCollectionRequest, UpdateCollectionRequest } from "./validators.js";
-import { COLLECTION_DETAIL_RELATIONS, COLLECTION_RELATIONS, type Collection, type CollectionDetail } from "./types.js";
+import { COLLECTION_FULL_RELATIONS, COLLECTION_RELATIONS, type Collection, type CollectionFull } from "./types.js";
 
 export async function getCollectionById(db: DbExec, id: string): Promise<Collection> {
   const collection = await db.query.collections.findFirst({
@@ -24,12 +24,12 @@ export async function getCollectionById(db: DbExec, id: string): Promise<Collect
   return collection;
 }
 
-export async function getCollectionDetailById(db: DbExec, id: string): Promise<CollectionDetail> {
+export async function getCollectionDetailById(db: DbExec, id: string): Promise<CollectionFull> {
   const collection = await db.query.collections.findFirst({
     where: {
       id: id
     },
-    with: COLLECTION_DETAIL_RELATIONS
+    with: COLLECTION_FULL_RELATIONS
   });
 
   if (!collection) {
@@ -39,12 +39,12 @@ export async function getCollectionDetailById(db: DbExec, id: string): Promise<C
   return collection;
 }
 
-export async function getCollectionDetailBySlug(db: DbExec, slug: string): Promise<CollectionDetail> {
+export async function getCollectionDetailBySlug(db: DbExec, slug: string): Promise<CollectionFull> {
   const collection = await db.query.collections.findFirst({
     where: {
       slug: slug
     },
-    with: COLLECTION_DETAIL_RELATIONS
+    with: COLLECTION_FULL_RELATIONS
   });
 
   if (!collection) {

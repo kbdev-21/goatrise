@@ -1,7 +1,6 @@
 import axiosInstance from "@/api/axios-instance.ts";
 import type { LanguageString } from "@/core/types.ts";
-import type { ItemAttribute } from "@/api/item/api.ts";
-import type { Product } from "@/api/product/api.ts";
+import type { Product, ProductBase } from "@/api/product/api.ts";
 
 export async function findCollections(): Promise<Collection[]> {
   const res = await axiosInstance.get<Collection[]>("/api/collections");
@@ -34,25 +33,8 @@ export async function deleteCollection(collectionId: string): Promise<void> {
 
 export type CollectionType = "COLLECTION" | "CATEGORY" | "EVENT";
 
-// Product nhúng trong Collection (mirror COLLECTION_RELATIONS -> products: true, base columns)
-export type CollectionProduct = {
-  id: string;
-  slug: string;
-  title: LanguageString;
-  shortDescription: LanguageString;
-  markdownDescription: LanguageString | null;
-  imgUrls: string[] | null;
-  displayPrice: number | null;
-  comparePrice: number | null;
-  isActive: boolean;
-  requiredAttributes: ItemAttribute[];
-  sold: number;
-  createdAt: string;
-  updatedAt: string;
-};
-
-// Cột gốc của một collection, không kèm relation (dùng cho parent/children không lồng sâu hơn)
-export type CollectionSummary = {
+// Base: cột gốc của collection (mirror CollectionBase backend; dùng cho parent/children không lồng sâu hơn)
+export type CollectionBase = {
   id: string;
   slug: string;
   parentId: string | null;
@@ -67,18 +49,17 @@ export type CollectionSummary = {
   updatedAt: string;
 };
 
-// Mirror backend: module/catalog/domain/types.ts -> Collection (COLLECTION_RELATIONS)
-export type Collection = CollectionSummary & {
-  parent: CollectionSummary | null;
-  children: CollectionSummary[];
-  products: CollectionProduct[];
+// Collection + relations (COLLECTION_RELATIONS); products = ProductBase (không kèm items)
+export type Collection = CollectionBase & {
+  parent: CollectionBase | null;
+  children: CollectionBase[];
+  products: ProductBase[];
 };
 
-// Mirror backend: module/catalog/domain/types.ts -> CollectionDetail (COLLECTION_DETAIL_RELATIONS)
-// products = light Product (PRODUCT_LIGHT_RELATIONS: product + items)
-export type CollectionDetail = CollectionSummary & {
-  parent: CollectionSummary | null;
-  children: CollectionSummary[];
+// CollectionDetail + relations (COLLECTION_FULL_RELATIONS); products = Product (kèm items)
+export type CollectionDetail = CollectionBase & {
+  parent: CollectionBase | null;
+  children: CollectionBase[];
   products: Product[];
 };
 

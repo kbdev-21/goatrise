@@ -27,9 +27,9 @@ export type CustomerSocialMediaEntry = {
   info: string;
 };
 
-// Mirror backend: module/customers/schema/customers.schema.ts
+// Base: cột gốc của customer (mirror CustomerBase backend)
 // bigint columns serialized as number; timestamps serialized as ISO string
-export type Customer = {
+export type CustomerBase = {
   id: string;
   email: string | null;
   phoneNum: string | null;
@@ -46,6 +46,8 @@ export type Customer = {
   createdAt: string;
   updatedAt: string;
 };
+
+export type Customer = CustomerBase;
 
 export type FindCustomersParams = {
   search?: string;

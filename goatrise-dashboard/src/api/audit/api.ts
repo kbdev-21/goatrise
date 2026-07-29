@@ -5,8 +5,8 @@ export async function findAuditLogs(params?: FindAuditLogsParams): Promise<Audit
   return res.data;
 }
 
-// Mirror backend: module/audit/schema/audit-logs.schema.ts (createdAt serialized as ISO string)
-export type AuditLog = {
+// Base: cột gốc của audit-log (mirror AuditLogBase backend)
+export type AuditLogBase = {
   id: string;
   actorId: string | null;
   code: string;
@@ -15,6 +15,8 @@ export type AuditLog = {
   metadata: unknown;
   createdAt: string;
 };
+
+export type AuditLog = AuditLogBase;
 
 export type FindAuditLogsParams = {
   search?: string;

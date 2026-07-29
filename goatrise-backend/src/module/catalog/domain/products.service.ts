@@ -7,14 +7,14 @@ import { uuidv7 } from "uuidv7";
 import { recordAuditLog } from "../../audit/domain/audit-logs.service.js";
 import type { ItemAttribute, ItemAttributeValues } from "../../inventory/schema/items.schema.js";
 import type { CreateProductRequest, UpdateProductRequest } from "./validators.js";
-import { PRODUCT_LIGHT_RELATIONS, PRODUCT_RELATIONS, type Product, type ProductDetail } from "./types.js";
+import { PRODUCT_RELATIONS, PRODUCT_FULL_RELATIONS, type Product, type ProductFull } from "./types.js";
 
 export async function getProductById(db: DbExec, id: string): Promise<Product> {
   const product = await db.query.products.findFirst({
     where: {
       id: id
     },
-    with: PRODUCT_LIGHT_RELATIONS
+    with: PRODUCT_RELATIONS
   });
 
   if (!product) {
@@ -24,12 +24,12 @@ export async function getProductById(db: DbExec, id: string): Promise<Product> {
   return product;
 }
 
-export async function getProductDetailById(db: DbExec, id: string): Promise<ProductDetail> {
+export async function getProductDetailById(db: DbExec, id: string): Promise<ProductFull> {
   const product = await db.query.products.findFirst({
     where: {
       id: id
     },
-    with: PRODUCT_RELATIONS
+    with: PRODUCT_FULL_RELATIONS
   });
 
   if (!product) {
@@ -39,12 +39,12 @@ export async function getProductDetailById(db: DbExec, id: string): Promise<Prod
   return product;
 }
 
-export async function getProductDetailBySlug(db: DbExec, slug: string): Promise<ProductDetail> {
+export async function getProductDetailBySlug(db: DbExec, slug: string): Promise<ProductFull> {
   const product = await db.query.products.findFirst({
     where: {
       slug: slug
     },
-    with: PRODUCT_RELATIONS
+    with: PRODUCT_FULL_RELATIONS
   });
 
   if (!product) {
@@ -57,7 +57,7 @@ export async function getProductDetailBySlug(db: DbExec, slug: string): Promise<
 export async function findAllProducts(db: DbExec): Promise<Product[]> {
   return await db.query.products.findMany({
     orderBy: { createdAt: "desc" },
-    with: PRODUCT_LIGHT_RELATIONS
+    with: PRODUCT_RELATIONS
   });
 }
 

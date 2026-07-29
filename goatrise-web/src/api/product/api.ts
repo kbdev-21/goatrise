@@ -1,4 +1,5 @@
 import axiosInstance from "@/api/axios-instance";
+import type { CollectionBase } from "@/api/collection/api";
 
 export async function findAllProducts(): Promise<Product[]> {
   const res = await axiosInstance.get<Product[]>("/api/products");
@@ -15,8 +16,8 @@ export async function getProductById(id: string): Promise<ProductDetail> {
   return res.data;
 }
 
-// Shape trả về bởi GET /api/products (findAllProducts, PRODUCT_LIGHT_RELATIONS)
-export type Product = {
+// Base: cột gốc của product (mirror ProductBase backend)
+export type ProductBase = {
   id: string;
   slug: string;
   title: { vi: string; en: string };
@@ -31,76 +32,37 @@ export type Product = {
   displayPriority: number;
   createdAt: string;
   updatedAt: string;
-  items: {
-    id: string;
-    productId: string | null;
-    sku: string;
-    name: string;
-    normalizedName: string;
-    imgUrl: string | null;
-    attributeValues: {
-      COLOR?: string; // mã hex, cũng là key định danh biến thể
-      SIZE?: string;
-    };
-    price: number;
-    weight: number | null;
-    stock: number;
-    sold: number;
-    displayPriority: number;
-    isActive: boolean;
-    note: string | null;
-    createdAt: string;
-    updatedAt: string;
-  }[];
 };
 
-// Shape trả về bởi GET /api/products/:id và /api/products/by-slug/:slug (getProductDetail*, PRODUCT_RELATIONS)
-export type ProductDetail = {
+// Base: cột gốc của item (mirror ItemBase backend; web chỉ dùng item nhúng trong product)
+export type ItemBase = {
   id: string;
-  slug: string;
-  title: { vi: string; en: string };
-  shortDescription: { vi: string; en: string };
-  markdownDescription: { vi: string; en: string } | null;
-  imgUrls: string[] | null;
-  displayPrice: number | null;
-  comparePrice: number | null;
-  isActive: boolean;
-  requiredAttributes: ("COLOR" | "SIZE")[];
+  productId: string | null;
+  sku: string;
+  name: string;
+  normalizedName: string;
+  imgUrl: string | null;
+  attributeValues: {
+    COLOR?: string; // mã hex, cũng là key định danh biến thể
+    SIZE?: string;
+  };
+  price: number;
+  weight: number | null;
+  stock: number;
   sold: number;
   displayPriority: number;
+  isActive: boolean;
+  note: string | null;
   createdAt: string;
   updatedAt: string;
-  items: {
-    id: string;
-    productId: string | null;
-    sku: string;
-    name: string;
-    normalizedName: string;
-    imgUrl: string | null;
-    attributeValues: {
-      COLOR?: string; // mã hex, cũng là key định danh biến thể
-      SIZE?: string;
-    };
-    price: number;
-    weight: number | null;
-    stock: number;
-    sold: number;
-    displayPriority: number;
-    isActive: boolean;
-    note: string | null;
-    createdAt: string;
-    updatedAt: string;
-  }[];
-  collections: {
-    id: string;
-    slug: string;
-    type: "COLLECTION" | "CATEGORY" | "EVENT";
-    title: { vi: string; en: string };
-    shortDescription: { vi: string; en: string };
-    imgUrl: string | null;
-    isActive: boolean;
-    displayPriority: number;
-    createdAt: string;
-    updatedAt: string;
-  }[];
+};
+
+// GET /api/products (findAllProducts, PRODUCT_RELATIONS: items)
+export type Product = ProductBase & {
+  items: ItemBase[];
+};
+
+// GET /api/products/:id, /api/products/by-slug/:slug (PRODUCT_FULL_RELATIONS: items + collections)
+export type ProductDetail = Product & {
+  collections: CollectionBase[];
 };

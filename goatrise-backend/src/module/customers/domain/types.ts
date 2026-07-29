@@ -1,5 +1,5 @@
-import { db } from "../../../core/db.js";
+import { customers } from "../schema/customers.schema.js";
 
-export const baseCustomerRelations = {};
-const baseCustomerQuery = db.query.customers.findFirst();
-export type Customer = NonNullable<Awaited<typeof baseCustomerQuery>>;
+export type CustomerBase = typeof customers.$inferSelect;
+
+export type Customer = CustomerBase;

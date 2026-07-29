@@ -1,7 +1,7 @@
 import axiosInstance from "@/api/axios-instance.ts";
 import type { User } from "@/api/user/api.ts";
 import type { Supplier } from "@/api/supplier/api.ts";
-import type { LanguageString } from "@/core/types.ts";
+import type { ProductBase } from "@/api/product/api.ts";
 
 export async function findItems(): Promise<Item[]> {
   const res = await axiosInstance.get<Item[]>("/api/items");
@@ -59,8 +59,8 @@ export type ItemAttributeValues = {
   SIZE?: string;
 };
 
-// Mirror backend: module/inventory/schema/items.schema.ts (timestamps serialized as ISO string)
-export type Item = {
+// Base: cột gốc của item (mirror ItemBase backend, timestamps serialized as ISO string)
+export type ItemBase = {
   id: string;
   productId: string | null;
   sku: string;
@@ -77,26 +77,15 @@ export type Item = {
   displayPriority: number;
   createdAt: string;
   updatedAt: string;
-  product: {
-    id: string;
-    slug: string;
-    title: LanguageString;
-    shortDescription: LanguageString;
-    markdownDescription: LanguageString | null;
-    imgUrls: string[] | null;
-    displayPrice: number | null;
-    comparePrice: number | null;
-    isActive: boolean;
-    requiredAttributes: ItemAttribute[];
-    sold: number;
-    createdAt: string;
-    updatedAt: string;
-  } | null;
 };
 
-// Mirror backend: module/inventory/schema/item-transactions.schema.ts + ITEM_TRANSACTIONS_RELATIONS
-// bigint columns are serialized as number
-export type ItemTransaction = {
+// Item + product (ITEM_RELATIONS)
+export type Item = ItemBase & {
+  product: ProductBase | null;
+};
+
+// Base: cột gốc của item-transaction (mirror ItemTransactionBase backend, bigint serialized as number)
+export type ItemTransactionBase = {
   id: string;
   itemId: string;
   itemName: string;
@@ -110,6 +99,10 @@ export type ItemTransaction = {
   importUnitCost: number | null;
   soldUnitPrice: number | null;
   createdAt: string;
+};
+
+// ItemTransaction + relations
+export type ItemTransaction = ItemTransactionBase & {
   item: Item;
   actor: User | null;
   supplier: Supplier | null;

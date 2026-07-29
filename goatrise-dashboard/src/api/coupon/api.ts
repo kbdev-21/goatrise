@@ -17,9 +17,9 @@ export async function createCoupon(request: CreateCouponRequest): Promise<Coupon
 
 export type CouponDiscountType = "FIXED" | "PERCENTAGE";
 
-// Mirror backend: module/promotion/schema/coupons.schema.ts
+// Base: cột gốc của coupon (mirror CouponBase backend)
 // bigint columns serialized as number; timestamps serialized as ISO string
-export type Coupon = {
+export type CouponBase = {
   id: string;
   code: string;
   discountType: CouponDiscountType;
@@ -36,6 +36,8 @@ export type Coupon = {
   createdAt: string;
   updatedAt: string;
 };
+
+export type Coupon = CouponBase;
 
 export type FindCouponsParams = {
   search?: string;

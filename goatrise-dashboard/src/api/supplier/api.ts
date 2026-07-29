@@ -19,14 +19,16 @@ export async function deleteSupplier(supplierId: string): Promise<void> {
   await axiosInstance.delete(`/api/suppliers/${supplierId}`);
 }
 
-// Mirror backend: module/inventory/schema/suppliers.schema.ts (timestamps serialized as ISO string)
-export type Supplier = {
+// Base: cột gốc của supplier (mirror SupplierBase backend)
+export type SupplierBase = {
   id: string;
   name: string;
   note: string | null;
   createdAt: string;
   updatedAt: string;
 };
+
+export type Supplier = SupplierBase;
 
 export type CreateSupplierRequest = {
   name: string;

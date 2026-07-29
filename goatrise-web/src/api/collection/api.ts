@@ -1,5 +1,5 @@
 import axiosInstance from "@/api/axios-instance";
-import type { Product } from "@/api/product/api";
+import type { Product, ProductBase } from "@/api/product/api";
 
 export async function findAllCollections(): Promise<Collection[]> {
   const res = await axiosInstance.get<Collection[]>("/api/collections");
@@ -16,8 +16,8 @@ export async function getCollectionById(id: string): Promise<CollectionDetail> {
   return res.data;
 }
 
-// Cột gốc của một collection, không kèm relation (dùng cho parent/children không lồng sâu hơn)
-export type CollectionSummary = {
+// Base: cột gốc của collection (mirror CollectionBase backend; dùng cho parent/children không lồng sâu hơn)
+export type CollectionBase = {
   id: string;
   slug: string;
   parentId: string | null;
@@ -32,34 +32,16 @@ export type CollectionSummary = {
   updatedAt: string;
 };
 
-// Product nhúng trong collection (base, không kèm items) - COLLECTION_RELATIONS
-export type CollectionProduct = {
-  id: string;
-  slug: string;
-  title: { vi: string; en: string };
-  shortDescription: { vi: string; en: string };
-  markdownDescription: { vi: string; en: string } | null;
-  imgUrls: string[] | null;
-  displayPrice: number | null;
-  comparePrice: number | null;
-  isActive: boolean;
-  requiredAttributes: ("COLOR" | "SIZE")[];
-  sold: number;
-  createdAt: string;
-  updatedAt: string;
+// GET /api/collections (findAllCollections, COLLECTION_RELATIONS); products = ProductBase (không kèm items)
+export type Collection = CollectionBase & {
+  parent: CollectionBase | null;
+  children: CollectionBase[];
+  products: ProductBase[];
 };
 
-// Shape trả về bởi GET /api/collections (findAllCollections, COLLECTION_RELATIONS)
-export type Collection = CollectionSummary & {
-  parent: CollectionSummary | null;
-  children: CollectionSummary[];
-  products: CollectionProduct[];
-};
-
-// Shape trả về bởi GET /api/collections/:id, /api/collections/by-slug/:slug (COLLECTION_DETAIL_RELATIONS)
-// products = light Product (PRODUCT_LIGHT_RELATIONS: product + items)
-export type CollectionDetail = CollectionSummary & {
-  parent: CollectionSummary | null;
-  children: CollectionSummary[];
+// GET /api/collections/:id, /api/collections/by-slug/:slug (COLLECTION_FULL_RELATIONS); products = Product (kèm items)
+export type CollectionDetail = CollectionBase & {
+  parent: CollectionBase | null;
+  children: CollectionBase[];
   products: Product[];
 };

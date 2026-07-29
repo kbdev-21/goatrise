@@ -1,5 +1,5 @@
-import { db } from "../../../core/db.js";
+import { auditLogs } from "../schema/audit-logs.schema.js";
 
-const baseAuditLogQuery = db.query.auditLogs.findFirst();
+export type AuditLogBase = typeof auditLogs.$inferSelect;
 
-export type AuditLog = NonNullable<Awaited<typeof baseAuditLogQuery>>;
+export type AuditLog = AuditLogBase;

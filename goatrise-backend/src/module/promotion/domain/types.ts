@@ -1,7 +1,9 @@
-import { db } from "../../../core/db.js";
+import { coupons } from "../schema/coupons.schema.js";
+import { combos } from "../schema/combos.schema.js";
 
-const baseCouponQuery = db.query.coupons.findFirst();
-export type Coupon = NonNullable<Awaited<typeof baseCouponQuery>>;
+export type CouponBase = typeof coupons.$inferSelect;
+export type ComboBase = typeof combos.$inferSelect;
 
-const baseComboQuery = db.query.combos.findFirst();
-export type Combo = NonNullable<Awaited<typeof baseComboQuery>>;
+export type Coupon = CouponBase;
+
+export type Combo = ComboBase;

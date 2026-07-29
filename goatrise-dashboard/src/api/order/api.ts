@@ -57,8 +57,8 @@ export type OrderLineSnapItem = {
   } | null;
 };
 
-// Mirror backend: module/orders/schema/order-lines.schema.ts (bigint serialized as number)
-export type OrderLine = {
+// Base: cột gốc của order-line (mirror OrderLineBase backend, bigint serialized as number)
+export type OrderLineBase = {
   id: string;
   orderId: string;
   itemId: string | null;
@@ -71,9 +71,9 @@ export type OrderLine = {
   updatedAt: string;
 };
 
-// Mirror backend: module/orders/domain/types.ts -> Order (ORDER_RELATIONS)
+// Base: cột gốc của order (mirror OrderBase backend)
 // bigint columns serialized as number; timestamps serialized as ISO string
-export type Order = {
+export type OrderBase = {
   id: string;
   code: string;
   customerId: string;
@@ -99,7 +99,11 @@ export type Order = {
   note: string | null;
   createdAt: string;
   updatedAt: string;
-  lines: OrderLine[];
+};
+
+// Order + relations (ORDER_RELATIONS)
+export type Order = OrderBase & {
+  lines: OrderLineBase[];
   coupon: Coupon | null;
 };
 

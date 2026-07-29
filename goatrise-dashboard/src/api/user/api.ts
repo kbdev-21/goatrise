@@ -27,8 +27,8 @@ export async function updateUserRole(userId: string, role: UserRole): Promise<Us
 
 export type UserRole = "CUSTOMER" | "STAFF" | "ADMIN";
 
-// Mirror backend: module/users/schema/users.schema.ts (timestamps serialized as ISO string)
-export type User = {
+// Base: cột gốc của user (mirror UserBase backend)
+export type UserBase = {
   id: string;
   role: UserRole;
   fullName: string;
@@ -39,6 +39,8 @@ export type User = {
   createdAt: string;
   updatedAt: string;
 };
+
+export type User = UserBase;
 
 export type FindUsersParams = {
   search?: string;

@@ -35,9 +35,9 @@ export type ComboCondition = {
   quantity: number;
 };
 
-// Mirror backend: module/promotion/schema/combos.schema.ts
+// Base: cột gốc của combo (mirror ComboBase backend)
 // bigint columns serialized as number; timestamps serialized as ISO string
-export type Combo = {
+export type ComboBase = {
   id: string;
   code: string;
   description: string | null;
@@ -49,6 +49,8 @@ export type Combo = {
   createdAt: string;
   updatedAt: string;
 };
+
+export type Combo = ComboBase;
 
 // Mirror backend: module/promotion/domain/validators.ts -> CreateComboRequestSchema
 export type CreateComboRequest = {

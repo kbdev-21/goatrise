@@ -1,5 +1,6 @@
 import axiosInstance from "@/api/axios-instance.ts";
-import type { Item, ItemAttribute } from "@/api/item/api.ts";
+import type { ItemBase, ItemAttribute } from "@/api/item/api.ts";
+import type { CollectionBase } from "@/api/collection/api.ts";
 import type { LanguageString } from "@/core/types.ts";
 
 export async function findProducts(): Promise<Product[]> {
@@ -31,24 +32,9 @@ export async function deleteProduct(productId: string): Promise<void> {
   await axiosInstance.delete(`/api/products/${productId}`);
 }
 
-export type CollectionType = "COLLECTION" | "CATEGORY" | "EVENT";
-
-// Collection nhúng trong ProductDetail (mirror module/catalog/schema/collections.schema.ts)
-export type ProductCollection = {
-  id: string;
-  slug: string;
-  type: CollectionType;
-  title: LanguageString;
-  shortDescription: LanguageString;
-  imgUrl: string | null;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-};
-
-// Mirror backend: module/catalog/domain/types.ts -> Product (PRODUCT_LIGHT_RELATIONS)
-// bigint columns serialized as number; items nhúng không kèm field `product`
-export type Product = {
+// Base: cột gốc của product (mirror ProductBase backend)
+// bigint columns serialized as number
+export type ProductBase = {
   id: string;
   slug: string;
   title: LanguageString;
@@ -63,12 +49,16 @@ export type Product = {
   displayPriority: number;
   createdAt: string;
   updatedAt: string;
-  items: Omit<Item, "product">[];
 };
 
-// Mirror backend: module/catalog/domain/types.ts -> ProductDetail (PRODUCT_RELATIONS)
+// Product + items (PRODUCT_RELATIONS); items nhúng không kèm field `product`
+export type Product = ProductBase & {
+  items: ItemBase[];
+};
+
+// ProductDetail + collections (PRODUCT_FULL_RELATIONS)
 export type ProductDetail = Product & {
-  collections: ProductCollection[];
+  collections: CollectionBase[];
 };
 
 export type CreateProductRequest = {
