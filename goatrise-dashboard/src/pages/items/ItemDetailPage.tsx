@@ -164,7 +164,8 @@ export default function ItemDetailPage() {
       {
         onSuccess: (item) => {
           toast.success(`Updated item ${item.name}`);
-          navigate("/items");
+          // ở lại trang detail, data mới tự refetch qua invalidate ở useUpdateItem
+          // và useEffect reseed form
         },
         onError: (error) => {
           toast.error(
