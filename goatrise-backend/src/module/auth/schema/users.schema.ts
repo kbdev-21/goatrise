@@ -7,13 +7,11 @@ export const users = pgTable.withRLS("users", {
   normalizedFullName: text("normalized_full_name").notNull(),
   email: text("email").unique().notNull(),
   phoneNum: text("phone_num").unique(),
-  avtUrl: text("avt_code"),
+  avtUrl: text("avt_url"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().$onUpdateFn(() => new Date()).notNull(),
 }, (t) => [
   index().on(t.role),
-  index().on(t.email),
-  index().on(t.phoneNum),
 ]);
 
 export type UserRole = "CUSTOMER" | "STAFF" | "ADMIN";

@@ -1,4 +1,4 @@
-import { boolean, index, pgTable, timestamp, uuid } from "drizzle-orm/pg-core";
+import { boolean, index, pgTable, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 import { collections } from "./collections.schema.js";
 import { products } from "./products.schema.js";
 
@@ -12,6 +12,6 @@ export const collectionProducts = pgTable.withRLS("collection_products", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().$onUpdateFn(() => new Date()).notNull(),
 }, (t) => [
-  index().on(t.collectionId),
+  uniqueIndex().on(t.collectionId, t.productId),
   index().on(t.productId),
 ]);
