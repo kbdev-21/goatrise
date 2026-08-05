@@ -143,7 +143,6 @@ export default function OrderInfoForm({
   summary,
   summaryState,
   orderCode,
-  updatedAt,
   locked = false,
 }: {
   mode: "create" | "edit";
