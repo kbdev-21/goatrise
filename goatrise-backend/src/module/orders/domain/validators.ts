@@ -54,6 +54,8 @@ export const CreateOrderRequestSchema = z.object({
 
   note: z.string().trim().min(1).optional(),
 
+  createdAt: z.coerce.date().optional(),
+
   lines: z
     .array(OrderLineSchema)
     .min(1)
@@ -70,7 +72,8 @@ export const PlaceOrderRequestSchema = CreateOrderRequestSchema.omit({
   paymentStatus: true,
   status: true,
   channel: true,
-  referrerId: true
+  referrerId: true,
+  createdAt: true
 });
 export type PlaceOrderRequest = z.infer<typeof PlaceOrderRequestSchema>;
 
@@ -87,6 +90,7 @@ export type FindOrdersQuery = z.infer<typeof FindOrdersQuerySchema>;
 export const UpdateOrderRequestSchema = z.object({
   paymentStatus: z.enum(orderPaymentStatuses).optional(),
   status: z.enum(orderStatuses).optional(),
-  note: z.string().trim().min(1).optional()
+  note: z.string().trim().min(1).optional(),
+  createdAt: z.coerce.date().optional()
 });
 export type UpdateOrderRequest = z.infer<typeof UpdateOrderRequestSchema>;

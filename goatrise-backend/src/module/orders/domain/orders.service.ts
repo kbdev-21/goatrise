@@ -114,7 +114,8 @@ export async function createOrder(db: DbExec, actorId: string | null, createReq:
       channel: createReq.channel,
       referrerId: createReq.referrerId ?? null,
       creatorId: actorId,
-      note: createReq.note ?? null
+      note: createReq.note ?? null,
+      createdAt: createReq.createdAt
     });
 
     const lineValues = calculation.lines.map((line) => ({
@@ -166,12 +167,13 @@ export async function updateOrder(db: DbExec, actorId: string, orderId: string, 
     await tx.select({ id: orders.id }).from(orders).where(eq(orders.id, orderId)).for("update");
     const orderBefore = await getOrderById(tx, orderId);
 
-    // rule: đơn đã COMPLETED thì không được đổi status lẫn paymentStatus nữa
+    // rule: đơn đã COMPLETED thì không được đổi status, paymentStatus lẫn createdAt nữa
     if (orderBefore.status === "COMPLETED") {
       const changingStatus = updateReq.status !== undefined && updateReq.status !== orderBefore.status;
       const changingPayment = updateReq.paymentStatus !== undefined && updateReq.paymentStatus !== orderBefore.paymentStatus;
-      if (changingStatus || changingPayment) {
-        throw new HTTPException(409, { message: "Cannot change status or payment status of a completed order" });
+      const changingCreatedAt = updateReq.createdAt !== undefined && updateReq.createdAt.getTime() !== orderBefore.createdAt.getTime();
+      if (changingStatus || changingPayment || changingCreatedAt) {
+        throw new HTTPException(409, { message: "Cannot change status, payment status or created date of a completed order" });
       }
     }
 
@@ -184,7 +186,8 @@ export async function updateOrder(db: DbExec, actorId: string, orderId: string, 
     await tx.update(orders).set({
       paymentStatus: updateReq.paymentStatus,
       status: updateReq.status,
-      note: updateReq.note
+      note: updateReq.note,
+      createdAt: updateReq.createdAt
     }).where(eq(orders.id, orderId));
 
     // chuyển sang COMPLETED (từ trạng thái khác) -> trừ stock + áp coupon + cập nhật stats customer

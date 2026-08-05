@@ -136,6 +136,7 @@ export type CreateOrderRequest = {
   channel: SalesChannel;
   referrerId?: string;
   note?: string;
+  createdAt?: string;
   lines: OrderLineRequest[];
 };
 
@@ -155,6 +156,7 @@ export type UpdateOrderRequest = {
   paymentStatus?: OrderPaymentStatus;
   status?: OrderStatus;
   note?: string;
+  createdAt?: string;
 };
 
 // Mirror backend: module/orders/domain/order-calculation.service.ts -> CalculateOrderResult
