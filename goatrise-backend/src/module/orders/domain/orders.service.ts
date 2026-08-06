@@ -97,8 +97,8 @@ export async function createOrder(db: DbExec, actorId: string | null, createReq:
       customerId: customer.id,
       customerName: createReq.customerName,
       customerEmail: createReq.customerEmail ?? null,
-      customerPhoneNum: createReq.customerPhoneNum,
-      customerAddress: createReq.customerAddress,
+      customerPhoneNum: createReq.customerPhoneNum ?? null,
+      customerAddress: createReq.customerAddress ?? null,
       couponId: couponId,
       combos: calculation.combos,
       subtotalAmount: calculation.subtotal,
@@ -222,7 +222,7 @@ async function onCompleteOrder(db: DbExec, order: Order): Promise<void> {
 
   // đánh dấu coupon đã dùng (chỉ khi đơn hoàn tất)
   if (order.couponId) {
-    await applyCoupon(db, order.couponId, order.subtotalAmount, order.customerPhoneNum);
+    await applyCoupon(db, order.couponId, order.subtotalAmount, order.customerPhoneNum ?? "");
   }
 
   // +1 usedCount cho từng combo đã áp vào đơn (chỉ khi đơn hoàn tất)

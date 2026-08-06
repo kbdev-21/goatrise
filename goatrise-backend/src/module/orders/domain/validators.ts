@@ -37,8 +37,8 @@ export type CalculateOrderRequest = z.infer<typeof CalculateOrderRequestSchema>;
 export const CreateOrderRequestSchema = z.object({
   customerName: z.string().trim().min(1).max(100),
   customerEmail: z.email().optional(),
-  customerPhoneNum: z.string().trim().min(1).max(20),
-  customerAddress: AddressSchema,
+  customerPhoneNum: z.string().trim().min(1).max(20).optional(),
+  customerAddress: AddressSchema.optional(),
 
   couponCode: z.string().trim().min(1).optional(),
 
@@ -74,6 +74,10 @@ export const PlaceOrderRequestSchema = CreateOrderRequestSchema.omit({
   channel: true,
   referrerId: true,
   createdAt: true
+}).extend({
+  // khách tự đặt vẫn bắt buộc có SĐT + địa chỉ (để giao hàng); admin thì được để trống
+  customerPhoneNum: z.string().trim().min(1).max(20),
+  customerAddress: AddressSchema
 });
 export type PlaceOrderRequest = z.infer<typeof PlaceOrderRequestSchema>;
 

@@ -79,8 +79,8 @@ export type OrderBase = {
   customerId: string;
   customerName: string;
   customerEmail: string | null;
-  customerPhoneNum: string;
-  customerAddress: Address;
+  customerPhoneNum: string | null;
+  customerAddress: Address | null;
   couponId: string | null;
   combos: OrderCombo[];
   subtotalAmount: number;
@@ -125,8 +125,8 @@ export type OrderLineRequest = {
 export type CreateOrderRequest = {
   customerName: string;
   customerEmail?: string;
-  customerPhoneNum: string;
-  customerAddress: Address;
+  customerPhoneNum?: string;
+  customerAddress?: Address;
   couponCode?: string;
   manualDiscountAmount?: number;
   manualShippingFee?: number;

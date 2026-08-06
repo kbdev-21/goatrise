@@ -235,7 +235,7 @@ export default function OrderInfoForm({
                 />
               </div>
               <div className="flex flex-col gap-1.5">
-                <FieldLabel required={!readOnly}>Phone</FieldLabel>
+                <FieldLabel optional={!readOnly}>Phone</FieldLabel>
                 <Input
                   placeholder="0xxxxxxxxx"
                   value={value.customerPhoneNum}
@@ -257,7 +257,7 @@ export default function OrderInfoForm({
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <FieldLabel required={!readOnly}>Address</FieldLabel>
+              <FieldLabel optional={!readOnly}>Address</FieldLabel>
               <Input
                 placeholder="Street, ward, district..."
                 value={value.address}
@@ -268,7 +268,7 @@ export default function OrderInfoForm({
 
             <div className="grid grid-cols-2 gap-3">
               <div className="flex flex-col gap-1.5">
-                <FieldLabel required={!readOnly}>Country</FieldLabel>
+                <FieldLabel optional={!readOnly}>Country</FieldLabel>
                 {readOnly ? (
                   <Input
                     disabled
@@ -282,7 +282,7 @@ export default function OrderInfoForm({
                 )}
               </div>
               <div className="flex flex-col gap-1.5">
-                <FieldLabel required={!readOnly && !!provinces}>Province</FieldLabel>
+                <FieldLabel optional={!readOnly}>Province</FieldLabel>
                 {readOnly ? (
                   <Input disabled value={value.provinceName || "—"} />
                 ) : provinces ? (

@@ -10,8 +10,8 @@ export const orders = pgTable.withRLS("orders", {
   customerId: uuid("customer_id").references(() => customers.id).notNull(),
   customerName: text("customer_name").notNull(),
   customerEmail: text("customer_email"),
-  customerPhoneNum: text("customer_phone_num").notNull(),
-  customerAddress: jsonb("customer_address").$type<Address>().notNull(),
+  customerPhoneNum: text("customer_phone_num"),
+  customerAddress: jsonb("customer_address").$type<Address>(),
 
   couponId: uuid("coupon_id").references(() => coupons.id),
   combos: jsonb("combos").$type<OrderCombo[]>().notNull().default([]),

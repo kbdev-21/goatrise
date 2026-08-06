@@ -131,12 +131,12 @@ export default function OrderDetailPage() {
 function orderToFormValue(order: Order): OrderInfoFormValue {
   return {
     customerName: order.customerName,
-    customerPhoneNum: order.customerPhoneNum,
+    customerPhoneNum: order.customerPhoneNum ?? "",
     customerEmail: order.customerEmail ?? "",
-    address: order.customerAddress.address,
-    countryCode: order.customerAddress.countryCode,
-    provinceCode: order.customerAddress.provinceCode,
-    provinceName: order.customerAddress.provinceName,
+    address: order.customerAddress?.address ?? "",
+    countryCode: order.customerAddress?.countryCode ?? "VN",
+    provinceCode: order.customerAddress?.provinceCode ?? null,
+    provinceName: order.customerAddress?.provinceName ?? "",
     lines: order.lines.map((line) => ({
       itemId: line.itemId ?? "",
       quantity: line.quantity,

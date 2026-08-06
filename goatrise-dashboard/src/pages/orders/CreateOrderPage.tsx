@@ -10,7 +10,6 @@ import type {
   OrderLineRequest,
 } from "@/api/order/api.ts";
 import { useItems } from "@/api/item/query-hooks.ts";
-import { COUNTRIES } from "@/constant/countries.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
 import OrderInfoForm, {
@@ -56,18 +55,9 @@ export default function CreateOrderPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [linesKey, value.couponCode, value.manualDiscount, value.manualShipping]);
 
-  const provinces = (
-    COUNTRIES[value.countryCode as keyof typeof COUNTRIES] as {
-      provinces?: Record<string, string>;
-    }
-  ).provinces;
-
+  // admin: Phone/Address được phép để trống -> chỉ cần tên khách + ít nhất 1 item
   const canSave =
     value.customerName.trim().length > 0 &&
-    value.customerPhoneNum.trim().length > 0 &&
-    value.address.trim().length > 0 &&
-    value.countryCode.length > 0 &&
-    (provinces ? value.provinceCode !== null : true) &&
     value.lines.length > 0;
 
   const summary: OrderSummary | null = calculation
@@ -95,13 +85,15 @@ export default function CreateOrderPage() {
     const request: CreateOrderRequest = {
       customerName: value.customerName.trim(),
       customerEmail: value.customerEmail.trim() || undefined,
-      customerPhoneNum: value.customerPhoneNum.trim(),
-      customerAddress: {
-        countryCode: value.countryCode,
-        provinceCode: value.provinceCode,
-        provinceName: value.provinceName.trim(),
-        address: value.address.trim(),
-      },
+      customerPhoneNum: value.customerPhoneNum.trim() || undefined,
+      customerAddress: value.address.trim()
+        ? {
+            countryCode: value.countryCode,
+            provinceCode: value.provinceCode,
+            provinceName: value.provinceName.trim(),
+            address: value.address.trim(),
+          }
+        : undefined,
       couponCode: value.couponCode.trim() || undefined,
       manualDiscountAmount: value.manualDiscount ? Number(value.manualDiscount) : undefined,
       manualShippingFee: value.manualShipping ? Number(value.manualShipping) : undefined,

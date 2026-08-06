@@ -350,7 +350,8 @@ export default function OrdersPage() {
   );
 }
 
-function formatAddress(address: Address): string {
+function formatAddress(address: Address | null): string {
+  if (!address) return "—";
   const country =
     COUNTRIES[address.countryCode as keyof typeof COUNTRIES]?.viName ?? address.countryCode;
   return [address.address, address.provinceName, country].filter(Boolean).join(", ");
