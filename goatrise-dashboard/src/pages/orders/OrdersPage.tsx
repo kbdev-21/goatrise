@@ -216,6 +216,7 @@ export default function OrdersPage() {
                 <TableHead>Total</TableHead>
                 <TableHead>Channel</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Note</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
@@ -223,13 +224,13 @@ export default function OrdersPage() {
             <TableBody>
               {ordersQuery.isError ? (
                 <TableRow>
-                  <TableCell colSpan={9} className="text-destructive text-center">
+                  <TableCell colSpan={10} className="text-destructive text-center">
                     Failed to load orders.
                   </TableCell>
                 </TableRow>
               ) : !ordersQuery.data || ordersQuery.data.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={9} className="text-muted-foreground text-center">
+                  <TableCell colSpan={10} className="text-muted-foreground text-center">
                     No orders found.
                   </TableCell>
                 </TableRow>
@@ -298,6 +299,14 @@ export default function OrdersPage() {
                           />
                         </div>
                       </div>
+                    </TableCell>
+                    <TableCell>
+                      <span
+                        className="block max-w-24 truncate text-xs"
+                        title={order.note ?? undefined}
+                      >
+                        {order.note || "—"}
+                      </span>
                     </TableCell>
                     <TableCell>
                       {new Date(order.createdAt).toLocaleString("en-GB")}
