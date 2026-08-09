@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/sonner.tsx"
 import PageLayout from "@/components/layout/PageLayout.tsx"
 import LoginPage from "@/pages/login/LoginPage.tsx"
 import HomePage from "@/pages/home/HomePage.tsx"
+import AnalyticsPage from "@/pages/analytics/AnalyticsPage.tsx"
 import UsersPage from "@/pages/users/UsersPage.tsx"
 import AuditLogsPage from "@/pages/audit-logs/AuditLogsPage.tsx"
 import ItemsPage from "@/pages/items/ItemsPage.tsx"
@@ -39,6 +40,7 @@ export function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route element={<PageLayout />}>
           <Route path="/" element={<HomePage />} />
+          <Route path="/analytics" element={<AnalyticsPage />} />
           <Route path="/users" element={<UsersPage />} />
           <Route path="/audit-logs" element={<AuditLogsPage />} />
           <Route path="/products" element={<ProductsPage />} />

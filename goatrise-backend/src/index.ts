@@ -11,19 +11,13 @@ import { ordersRouter } from "./module/orders/router/orders.router.js";
 import { customersRouter } from "./module/customers/router/customers.router.js";
 import { couponsRouter } from "./module/promotion/router/coupons.router.js";
 import { combosRouter } from "./module/promotion/router/combos.router.js";
-import { DASHBOARD_URL, WEBSITE_URL } from "./core/env.js";
+import { logger } from "hono/logger";
+import { analyticsRouter } from "./module/analytics/router/analytics.router.js";
 
 const app = new Hono();
 
-const corsOrigins = [
-  DASHBOARD_URL,
-  WEBSITE_URL
-];
-app.use("*", cors({
-  origin: corsOrigins,
-  allowMethods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
-  allowHeaders: ["Content-Type", "Authorization"],
-}));
+app.use("*", cors());
+app.use(logger());
 
 app.get("/hello", (c) => {
   return c.text("Hello world");
@@ -39,6 +33,7 @@ app.route("/", ordersRouter);
 app.route("/", customersRouter);
 app.route("/", couponsRouter);
 app.route("/", combosRouter);
+app.route("/", analyticsRouter);
 
 serve({
   fetch: app.fetch,

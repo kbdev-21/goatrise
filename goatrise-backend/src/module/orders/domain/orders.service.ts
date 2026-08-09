@@ -126,7 +126,8 @@ export async function createOrder(db: DbExec, actorId: string | null, createReq:
       snapItem: line.snapItem,
       quantity: line.quantity,
       unitPrice: line.unitPrice,
-      subtotalAmount: line.subtotal
+      subtotalAmount: line.subtotal,
+      createdAt: createReq.createdAt
     }));
 
     await tx.insert(orderLines).values(lineValues);
@@ -189,6 +190,13 @@ export async function updateOrder(db: DbExec, actorId: string, orderId: string, 
       note: updateReq.note,
       createdAt: updateReq.createdAt
     }).where(eq(orders.id, orderId));
+
+    // đồng bộ createdAt của các orderLines theo createdAt của order (nếu có cập nhật)
+    if (updateReq.createdAt !== undefined) {
+      await tx.update(orderLines).set({
+        createdAt: updateReq.createdAt
+      }).where(eq(orderLines.orderId, orderId));
+    }
 
     // chuyển sang COMPLETED (từ trạng thái khác) -> trừ stock + áp coupon + cập nhật stats customer
     if (updateReq.status === "COMPLETED" && orderBefore.status !== "COMPLETED") {
