@@ -48,7 +48,7 @@ type NavGroup = {
   items: NavItem[];
 };
 
-const WEBSITE_URL = "https://goatrise.com";
+const WEBSITE_URL = "https://goatrise.vn";
 
 const navGroups: NavGroup[] = [
   {
