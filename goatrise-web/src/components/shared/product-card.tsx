@@ -22,7 +22,11 @@ export function ProductCard({ product }: { product: Product }) {
   ];
 
   return (
-    <Link to="/products" className="group block">
+    <Link
+      to="/products/$slug"
+      params={{ slug: product.slug }}
+      className="group block"
+    >
       <div className="aspect-square w-full overflow-hidden bg-muted">
         {product.imgUrls?.[0] ? (
           <img

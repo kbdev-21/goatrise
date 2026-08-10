@@ -19,9 +19,15 @@ function App() {
   const { data: products } = useSuspenseQuery(productsQueryOptions());
 
   // TODO: chuyển sang endpoint best-sellers khi backend hỗ trợ sort/filter
+  // const bestSellers = products
+  //   .filter((product) => product.isActive)
+  //   .sort((a, b) => b.sold - a.sold)
+  //   .slice(0, BEST_SELLER_LIMIT);
+
+  // TODO: chuyển sang endpoint best-sellers khi backend hỗ trợ sort/filter
   const bestSellers = products
     .filter((product) => product.isActive)
-    .sort((a, b) => b.sold - a.sold)
+    .sort((a, b) => b.displayPriority - a.displayPriority)
     .slice(0, BEST_SELLER_LIMIT);
 
   return (
