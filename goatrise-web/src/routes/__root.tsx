@@ -22,7 +22,11 @@ const isPublic = import.meta.env.VITE_IS_PUBLIC !== "false";
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   beforeLoad: ({ location }) => {
-    if (isPublic || location.pathname === COMING_SOON_PATH) {
+    // guard SSR: localStorage chỉ tồn tại phía client
+    const hasPreviewAccess =
+      typeof window !== "undefined" && localStorage.getItem("isPublic") === "true";
+
+    if (isPublic || hasPreviewAccess || location.pathname === COMING_SOON_PATH) {
       return;
     }
 
