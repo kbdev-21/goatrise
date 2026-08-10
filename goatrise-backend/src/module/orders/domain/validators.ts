@@ -91,9 +91,35 @@ export const FindOrdersQuerySchema = z.object({
 });
 export type FindOrdersQuery = z.infer<typeof FindOrdersQuerySchema>;
 
+// update đơn chưa COMPLETED: cho sửa gần như mọi field như lúc create.
+// quy ước: field vắng mặt (undefined) = giữ nguyên; field nullable gửi null = xóa về null.
 export const UpdateOrderRequestSchema = z.object({
+  // customer info: chỉ ghi đè snapshot trên order, KHÔNG re-resolve customerId
+  // (đổi tên/email/phone ở đây không hồi tố bảng customers).
+  customerName: z.string().trim().min(1).max(100).optional(),
+  customerEmail: z.email().nullable().optional(),
+  customerPhoneNum: z.string().trim().min(1).max(20).nullable().optional(),
+  customerAddress: AddressSchema.nullable().optional(),
+
+  // money inputs: có mặt bất kỳ field nào -> tính lại nguyên khối qua calculateOrder
+  couponCode: z.string().trim().min(1).nullable().optional(),
+  manualDiscountAmount: z.number().int().nonnegative().optional(),
+  manualShippingFee: z.number().int().nonnegative().optional(),
+  lines: z
+    .array(OrderLineSchema)
+    .min(1)
+    .refine((arr) => new Set(arr.map((l) => l.itemId)).size === arr.length, {
+      message: "lines must not contain duplicate itemIds"
+    })
+    .optional(),
+
+  paymentMethod: z.enum(["COD", "MANUAL_TRANSFER", "MOMO", "VNPAY", "STRIPE"]).optional(),
   paymentStatus: z.enum(orderPaymentStatuses).optional(),
   status: z.enum(orderStatuses).optional(),
+
+  channel: z.enum(orderChannels).optional(),
+  referrerId: z.uuid().nullable().optional(),
+
   note: z.string().trim().min(1).optional(),
   createdAt: z.coerce.date().optional()
 });

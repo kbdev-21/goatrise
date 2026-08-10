@@ -157,7 +157,8 @@ export default function OrderInfoForm({
   locked?: boolean;
 }) {
   const set = (patch: Partial<OrderInfoFormValue>) => onChange({ ...value, ...patch });
-  const readOnly = mode === "edit";
+  // đơn chưa COMPLETED được sửa full như lúc create; completed (locked) mới khóa hết.
+  const readOnly = locked;
 
   const [itemDialogOpen, setItemDialogOpen] = useState(false);
 

@@ -152,9 +152,21 @@ export type CalculateOrderRequest = {
 };
 
 // Mirror backend: module/orders/domain/validators.ts -> UpdateOrderRequestSchema
+// Quy ước: field vắng mặt (undefined) = giữ nguyên; field nullable gửi null = xóa về null.
 export type UpdateOrderRequest = {
+  customerName?: string;
+  customerEmail?: string | null;
+  customerPhoneNum?: string | null;
+  customerAddress?: Address | null;
+  couponCode?: string | null;
+  manualDiscountAmount?: number;
+  manualShippingFee?: number;
+  lines?: OrderLineRequest[];
+  paymentMethod?: OrderPaymentMethod;
   paymentStatus?: OrderPaymentStatus;
   status?: OrderStatus;
+  channel?: SalesChannel;
+  referrerId?: string | null;
   note?: string;
   createdAt?: string;
 };
