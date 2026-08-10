@@ -18,6 +18,7 @@ export async function countOrders(
     .from(orders)
     .where(
       and(
+        eq(orders.status, "COMPLETED"),
         from ? gte(orders.createdAt, from) : undefined,
         to ? lte(orders.createdAt, to) : undefined,
       ),
@@ -54,6 +55,7 @@ export async function calculateRevenue(
     .from(orders)
     .where(
       and(
+        eq(orders.status, "COMPLETED"),
         from ? gte(orders.createdAt, from) : undefined,
         to ? lte(orders.createdAt, to) : undefined,
       ),
@@ -77,6 +79,7 @@ export async function calculateDailyRevenue(
     .from(orders)
     .where(
       and(
+        eq(orders.status, "COMPLETED"),
         gte(orders.createdAt, from),
         lte(orders.createdAt, to),
       ),
@@ -105,6 +108,7 @@ export async function calculateDailyOrders(
     .from(orders)
     .where(
       and(
+        eq(orders.status, "COMPLETED"),
         gte(orders.createdAt, from),
         lte(orders.createdAt, to),
       ),
@@ -133,6 +137,7 @@ export async function calculateMonthlyRevenue(
     .from(orders)
     .where(
       and(
+        eq(orders.status, "COMPLETED"),
         gte(orders.createdAt, from),
         lte(orders.createdAt, to),
       ),
@@ -161,6 +166,7 @@ export async function calculateMonthlyOrders(
     .from(orders)
     .where(
       and(
+        eq(orders.status, "COMPLETED"),
         gte(orders.createdAt, from),
         lte(orders.createdAt, to),
       ),
@@ -188,8 +194,10 @@ export async function calculateProductSales(
       totalQuantity: sum(orderLines.quantity).as("totalQuantity"),
     })
     .from(orderLines)
+    .innerJoin(orders, eq(orderLines.orderId, orders.id))
     .where(
       and(
+        eq(orders.status, "COMPLETED"),
         from ? gte(orderLines.createdAt, from) : undefined,
         to ? lte(orderLines.createdAt, to) : undefined,
       ),
@@ -230,8 +238,10 @@ export async function calculateItemSales(
       totalQuantity: sum(orderLines.quantity).as("totalQuantity"),
     })
     .from(orderLines)
+    .innerJoin(orders, eq(orderLines.orderId, orders.id))
     .where(
       and(
+        eq(orders.status, "COMPLETED"),
         from ? gte(orderLines.createdAt, from) : undefined,
         to ? lte(orderLines.createdAt, to) : undefined,
       ),
