@@ -10,6 +10,7 @@ import type { SalesChannel } from "@/core/types.ts";
 import { COUNTRIES } from "@/constant/countries.ts";
 import { formatPriceVn, normalizeVietnameseString } from "@/core/utils.ts";
 import { ItemAttributeBadges } from "@/components/shared/item-attribute-badges.tsx";
+import { ImageThumbnail } from "@/components/shared/image-thumbnail.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
 import { Input } from "@/components/ui/input.tsx";
@@ -78,6 +79,7 @@ export type OrderLineFormValue = {
   quantity: number;
   name: string;
   sku: string;
+  imgUrl: string | null;
   unitPrice: number;
   attributeValues: ItemAttributeValues;
 };
@@ -192,6 +194,7 @@ export default function OrderInfoForm({
           quantity: 1,
           name: item.name,
           sku: item.sku,
+          imgUrl: item.imgUrl,
           unitPrice: item.price,
           attributeValues: item.attributeValues,
         },
@@ -331,6 +334,11 @@ export default function OrderInfoForm({
                     key={line.itemId}
                     className="flex items-center gap-3 rounded-md border p-3"
                   >
+                    <ImageThumbnail
+                      url={line.imgUrl ?? ""}
+                      alt={line.name}
+                      className="size-10"
+                    />
                     <div className="flex min-w-0 flex-1 flex-col gap-1">
                       <div className="flex items-center gap-2">
                         <span className="truncate text-sm font-medium">{line.name}</span>

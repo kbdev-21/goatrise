@@ -1,5 +1,5 @@
 import { type ReactNode, useState } from "react";
-import { ImagePlus, Plus, Search, X } from "lucide-react";
+import { Plus, Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -22,7 +22,7 @@ import type { Collection, CollectionType } from "@/api/collection/api.ts";
 import type { Product } from "@/api/product/api.ts";
 import { Switch } from "@/components/ui/switch.tsx";
 import { ActiveBadge } from "@/components/shared/active-badge.tsx";
-import { NewImageDialog } from "@/components/shared/new-image-dialog.tsx";
+import { ImageUploadButton } from "@/components/shared/image-upload-button.tsx";
 import { ImageThumbnail } from "@/components/shared/image-thumbnail.tsx";
 
 const TYPE_OPTIONS: { label: string; value: CollectionType }[] = [
@@ -80,7 +80,6 @@ export default function CollectionInfoForm({
   const set = (patch: Partial<CollectionInfoFormValue>) => onChange({ ...value, ...patch });
 
   const [productDialogOpen, setProductDialogOpen] = useState(false);
-  const [imgDialogOpen, setImgDialogOpen] = useState(false);
   const [shortDescLang, setShortDescLang] = useState<"en" | "vi">("vi");
 
   const addProductId = (productId: string) =>
@@ -215,14 +214,7 @@ export default function CollectionInfoForm({
               {value.imgUrl ? (
                 <ImageThumbnail url={value.imgUrl} onRemove={() => set({ imgUrl: "" })} />
               ) : (
-                <button
-                  type="button"
-                  aria-label="Add image"
-                  className="text-muted-foreground hover:border-foreground/30 hover:text-foreground flex size-20 shrink-0 items-center justify-center rounded-md border border-dashed"
-                  onClick={() => setImgDialogOpen(true)}
-                >
-                  <ImagePlus className="size-5" />
-                </button>
+                <ImageUploadButton onUpload={(url) => set({ imgUrl: url })} />
               )}
             </div>
           </div>
@@ -304,12 +296,6 @@ export default function CollectionInfoForm({
         products={products}
         selectedIds={value.productIds}
         onAdd={addProductId}
-      />
-
-      <NewImageDialog
-        open={imgDialogOpen}
-        onOpenChange={setImgDialogOpen}
-        onConfirm={(url) => set({ imgUrl: url })}
       />
     </>
   );

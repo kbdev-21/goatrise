@@ -1,9 +1,7 @@
-import { useState } from "react";
-import { ImagePlus } from "lucide-react";
 import { Input } from "@/components/ui/input.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
-import { NewImageDialog } from "@/components/shared/new-image-dialog.tsx";
+import { ImageUploadButton } from "@/components/shared/image-upload-button.tsx";
 import { ImageThumbnail } from "@/components/shared/image-thumbnail.tsx";
 import {
   Select,
@@ -58,8 +56,6 @@ export default function ItemInfoForm({
   products: Product[];
 }) {
   const set = (patch: Partial<ItemInfoFormValue>) => onChange({ ...value, ...patch });
-
-  const [imgDialogOpen, setImgDialogOpen] = useState(false);
 
   return (
     <div className="bg-card flex flex-col gap-4 rounded-md border p-6">
@@ -147,14 +143,7 @@ export default function ItemInfoForm({
           {value.imgUrl ? (
             <ImageThumbnail url={value.imgUrl} onRemove={() => set({ imgUrl: "" })} />
           ) : (
-            <button
-              type="button"
-              aria-label="Add image"
-              className="text-muted-foreground hover:border-foreground/30 hover:text-foreground flex size-20 shrink-0 items-center justify-center rounded-md border border-dashed"
-              onClick={() => setImgDialogOpen(true)}
-            >
-              <ImagePlus className="size-5" />
-            </button>
+            <ImageUploadButton onUpload={(url) => set({ imgUrl: url })} />
           )}
         </div>
       </div>
@@ -211,12 +200,6 @@ export default function ItemInfoForm({
           </div>
         </div>
       </div>
-
-      <NewImageDialog
-        open={imgDialogOpen}
-        onOpenChange={setImgDialogOpen}
-        onConfirm={(url) => set({ imgUrl: url })}
-      />
     </div>
   );
 }

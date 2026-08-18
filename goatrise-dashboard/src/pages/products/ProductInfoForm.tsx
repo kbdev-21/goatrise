@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ImagePlus, Plus, Search, X } from "lucide-react";
+import { Plus, Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -15,7 +15,7 @@ import { formatPriceVn, normalizeVietnameseString } from "@/core/utils.ts";
 import type { Item } from "@/api/item/api.ts";
 import { Switch } from "@/components/ui/switch.tsx";
 import { ItemAttributeBadges } from "@/components/shared/item-attribute-badges.tsx";
-import { NewImageDialog } from "@/components/shared/new-image-dialog.tsx";
+import { ImageUploadButton } from "@/components/shared/image-upload-button.tsx";
 import { ImageThumbnail } from "@/components/shared/image-thumbnail.tsx";
 
 export type ProductInfoFormValue = {
@@ -66,7 +66,6 @@ export default function ProductInfoForm({
   const set = (patch: Partial<ProductInfoFormValue>) => onChange({ ...value, ...patch });
 
   const [itemDialogOpen, setItemDialogOpen] = useState(false);
-  const [imgDialogOpen, setImgDialogOpen] = useState(false);
   const [shortDescLang, setShortDescLang] = useState<"en" | "vi">("vi");
   const [markdownDescLang, setMarkdownDescLang] = useState<"en" | "vi">("vi");
 
@@ -176,14 +175,7 @@ export default function ProductInfoForm({
                 onRemove={() => removeImgUrl(index)}
               />
             ))}
-            <button
-              type="button"
-              aria-label="Add image"
-              className="text-muted-foreground hover:border-foreground/30 hover:text-foreground flex size-20 shrink-0 items-center justify-center rounded-md border border-dashed"
-              onClick={() => setImgDialogOpen(true)}
-            >
-              <ImagePlus className="size-5" />
-            </button>
+            <ImageUploadButton onUpload={addImgUrl} />
           </div>
         </div>
 
@@ -250,17 +242,24 @@ export default function ProductInfoForm({
                 key={item.id}
                 className="flex items-start justify-between gap-2 rounded-md border p-3"
               >
-                <div className="flex min-w-0 flex-col gap-1">
-                  <div className="flex items-center gap-2">
-                    <span className="truncate text-xs font-medium">{item.name}</span>
-                    <span className="text-muted-foreground shrink-0 font-mono text-xs">
-                      {item.sku}
+                <div className="flex min-w-0 items-start gap-3">
+                  <ImageThumbnail
+                    url={item.imgUrl ?? ""}
+                    alt={item.name}
+                    className="size-10"
+                  />
+                  <div className="flex min-w-0 flex-col gap-1">
+                    <div className="flex items-center gap-2">
+                      <span className="truncate text-xs font-medium">{item.name}</span>
+                      <span className="text-muted-foreground shrink-0 font-mono text-xs">
+                        {item.sku}
+                      </span>
+                    </div>
+                    <span className="text-muted-foreground text-xs">
+                      {formatPriceVn(item.price)} VND
                     </span>
+                    <ItemAttributeBadges attributeValues={item.attributeValues} />
                   </div>
-                  <span className="text-muted-foreground text-xs">
-                    {formatPriceVn(item.price)} VND
-                  </span>
-                  <ItemAttributeBadges attributeValues={item.attributeValues} />
                 </div>
                 <Button
                   type="button"
@@ -294,12 +293,6 @@ export default function ProductInfoForm({
         items={items}
         selectedIds={value.itemIds}
         onAdd={addItemId}
-      />
-
-      <NewImageDialog
-        open={imgDialogOpen}
-        onOpenChange={setImgDialogOpen}
-        onConfirm={addImgUrl}
       />
     </>
   );

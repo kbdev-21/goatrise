@@ -249,6 +249,7 @@ function orderToFormValue(order: Order): OrderInfoFormValue {
       quantity: line.quantity,
       name: line.snapItem.name,
       sku: line.snapItem.sku,
+      imgUrl: line.snapItem.imgUrl,
       unitPrice: line.unitPrice,
       attributeValues: line.snapItem.attributeValues,
     })),
