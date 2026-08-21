@@ -72,6 +72,12 @@ export default function ProductInfoForm({
   const addImgUrl = (url: string) => set({ imgUrls: [...value.imgUrls, url] });
   const removeImgUrl = (index: number) =>
     set({ imgUrls: value.imgUrls.filter((_, i) => i !== index) });
+  const moveImgUrl = (index: number, target: number) => {
+    if (target < 0 || target >= value.imgUrls.length) return;
+    const next = [...value.imgUrls];
+    [next[index], next[target]] = [next[target], next[index]];
+    set({ imgUrls: next });
+  };
 
   const addItemId = (itemId: string) => {
     const imgUrl = items.find((it) => it.id === itemId)?.imgUrl;
@@ -173,6 +179,14 @@ export default function ProductInfoForm({
                 key={index}
                 url={url}
                 onRemove={() => removeImgUrl(index)}
+                onMoveLeft={
+                  index > 0 ? () => moveImgUrl(index, index - 1) : undefined
+                }
+                onMoveRight={
+                  index < value.imgUrls.length - 1
+                    ? () => moveImgUrl(index, index + 1)
+                    : undefined
+                }
               />
             ))}
             <ImageUploadButton onUpload={addImgUrl} />
