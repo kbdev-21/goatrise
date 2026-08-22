@@ -22,7 +22,7 @@ export function Hero() {
           <h1 className="text-xl leading-[1.05] font-semibold tracking-tight whitespace-pre-line uppercase sm:text-2xl lg:text-3xl">
             {hero.title}
           </h1>
-          <p className="mt-2 max-w-sm font-serif text-xs leading-relaxed text-white/85">
+          <p className="mt-2 max-w-sm font-serif text-sm leading-relaxed text-white/85">
             {hero.description}
           </p>
 

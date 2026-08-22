@@ -10,7 +10,7 @@ export function BrandIntro() {
       <div className="mx-auto grid max-w-[1500px] grid-cols-1 gap-6 px-6 lg:grid-cols-2 lg:gap-8">
         {/* Cột trái: giới thiệu brand */}
         <div className="flex flex-col items-center justify-center py-16 text-center lg:py-0">
-          <p className="text-[0.65rem] font-medium tracking-[0.3em] text-muted-foreground uppercase">
+          <p className="text-xs font-medium tracking-[0.3em] text-muted-foreground uppercase">
             Goat Rise · Est. 2026
           </p>
 

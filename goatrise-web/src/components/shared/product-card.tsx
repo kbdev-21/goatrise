@@ -71,10 +71,10 @@ export function ProductCard({
       </div>
 
       <div className="mt-3 space-y-1.5">
-        <h3 className="text-[0.8rem] font-medium tracking-wide uppercase">
+        <h3 className="text-sm font-medium tracking-wide uppercase">
           {product.title.vi}
         </h3>
-        <p className="text-[0.8rem] text-muted-foreground">
+        <p className="text-sm text-muted-foreground">
           {price === null ? "Liên hệ" : priceFormatter.format(price)}
         </p>
         {colors.length > 0 ? (

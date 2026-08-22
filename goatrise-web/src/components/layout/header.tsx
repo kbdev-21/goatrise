@@ -35,7 +35,7 @@ export function Header() {
         transparent ? "bg-transparent" : "bg-background"
       )}
     >
-      <div className="grid h-16 grid-cols-[1fr_auto_1fr] items-center gap-4 px-6 lg:px-10">
+      <div className="grid h-18 grid-cols-[1fr_auto_1fr] items-center gap-4 px-6 lg:px-10">
         <div className="flex items-center gap-8">
           {/* Mobile: chỉ hiện nút Menu */}
           <MobileMenu
@@ -54,7 +54,7 @@ export function Header() {
                 to={item.to}
                 activeOptions={{ exact: true }}
                 className={cn(
-                  "text-[0.8rem] font-medium tracking-wide",
+                  "text-sm font-medium tracking-wide",
                   underlineClass,
                   transitionClass,
                   textClass
@@ -69,7 +69,7 @@ export function Header() {
         <Link
           to="/"
           className={cn(
-            "justify-self-center text-2xl font-extrabold tracking-tight uppercase",
+            "justify-self-center text-2xl sm:text-3xl font-extrabold tracking-tight uppercase",
             transitionClass,
             textClass
           )}
