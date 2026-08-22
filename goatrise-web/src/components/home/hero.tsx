@@ -5,7 +5,7 @@ import { hero } from "./placeholder-data";
 
 export function Hero() {
   return (
-    <section className="relative -mt-18 h-svh min-h-[520px] w-full overflow-hidden bg-black">
+    <section className="relative -mt-18 aspect-[4/5] w-full overflow-hidden bg-black md:aspect-[2/1]">
       <img
         src={hero.image}
         alt=""
