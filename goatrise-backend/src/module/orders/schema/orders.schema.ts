@@ -50,6 +50,6 @@ export type OrderCombo = {
   discountAmount: number
 }
 
-export type OrderStatus = "PENDING" | "SHIPPING" | "COMPLETED" | "CANCELLED";
+export type OrderStatus = "PENDING" | "SHIPPING" | "DELIVERED" | "COMPLETED" | "CANCELLED";
 export type OrderPaymentStatus = "PENDING" | "PAID" | "FAILED" | "REFUNDED";
 export type OrderPaymentMethod = "COD" | "MANUAL_TRANSFER" | "MOMO" | "VNPAY" | "STRIPE";

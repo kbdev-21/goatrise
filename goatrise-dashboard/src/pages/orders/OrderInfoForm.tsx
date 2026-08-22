@@ -56,6 +56,7 @@ const PAYMENT_STATUS_OPTIONS: { label: string; value: OrderPaymentStatus }[] = [
 const STATUS_OPTIONS: { label: string; value: OrderStatus }[] = [
   { label: "Pending", value: "PENDING" },
   { label: "Shipping", value: "SHIPPING" },
+  { label: "Delivered", value: "DELIVERED" },
   { label: "Completed", value: "COMPLETED" },
   { label: "Cancelled", value: "CANCELLED" },
 ];

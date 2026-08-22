@@ -1,4 +1,4 @@
-import { and, count, eq, getColumns, gte, lte, sql, sum } from "drizzle-orm";
+import { and, count, eq, getColumns, gte, lte, notInArray, sql, sum } from "drizzle-orm";
 import type { DbExec } from "../../../core/db.js";
 import { orders } from "../../orders/schema/orders.schema.js";
 import { customers } from "../../customers/schema/customers.schema.js";
@@ -18,7 +18,7 @@ export async function countOrders(
     .from(orders)
     .where(
       and(
-        eq(orders.status, "COMPLETED"),
+        notInArray(orders.status, ["PENDING", "CANCELLED"]),
         from ? gte(orders.createdAt, from) : undefined,
         to ? lte(orders.createdAt, to) : undefined,
       ),
@@ -55,7 +55,7 @@ export async function calculateRevenue(
     .from(orders)
     .where(
       and(
-        eq(orders.status, "COMPLETED"),
+        notInArray(orders.status, ["PENDING", "CANCELLED"]),
         from ? gte(orders.createdAt, from) : undefined,
         to ? lte(orders.createdAt, to) : undefined,
       ),
@@ -79,7 +79,7 @@ export async function calculateDailyRevenue(
     .from(orders)
     .where(
       and(
-        eq(orders.status, "COMPLETED"),
+        notInArray(orders.status, ["PENDING", "CANCELLED"]),
         gte(orders.createdAt, from),
         lte(orders.createdAt, to),
       ),
@@ -108,7 +108,7 @@ export async function calculateDailyOrders(
     .from(orders)
     .where(
       and(
-        eq(orders.status, "COMPLETED"),
+        notInArray(orders.status, ["PENDING", "CANCELLED"]),
         gte(orders.createdAt, from),
         lte(orders.createdAt, to),
       ),
@@ -137,7 +137,7 @@ export async function calculateMonthlyRevenue(
     .from(orders)
     .where(
       and(
-        eq(orders.status, "COMPLETED"),
+        notInArray(orders.status, ["PENDING", "CANCELLED"]),
         gte(orders.createdAt, from),
         lte(orders.createdAt, to),
       ),
@@ -166,7 +166,7 @@ export async function calculateMonthlyOrders(
     .from(orders)
     .where(
       and(
-        eq(orders.status, "COMPLETED"),
+        notInArray(orders.status, ["PENDING", "CANCELLED"]),
         gte(orders.createdAt, from),
         lte(orders.createdAt, to),
       ),
@@ -197,7 +197,7 @@ export async function calculateProductSales(
     .innerJoin(orders, eq(orderLines.orderId, orders.id))
     .where(
       and(
-        eq(orders.status, "COMPLETED"),
+        notInArray(orders.status, ["PENDING", "CANCELLED"]),
         from ? gte(orderLines.createdAt, from) : undefined,
         to ? lte(orderLines.createdAt, to) : undefined,
       ),
@@ -241,7 +241,7 @@ export async function calculateItemSales(
     .innerJoin(orders, eq(orderLines.orderId, orders.id))
     .where(
       and(
-        eq(orders.status, "COMPLETED"),
+        notInArray(orders.status, ["PENDING", "CANCELLED"]),
         from ? gte(orderLines.createdAt, from) : undefined,
         to ? lte(orderLines.createdAt, to) : undefined,
       ),

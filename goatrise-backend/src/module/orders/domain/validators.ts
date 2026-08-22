@@ -3,7 +3,7 @@ import type { OrderStatus, OrderPaymentStatus } from "../schema/orders.schema.js
 import type { SalesChannel } from "../../../core/types.js";
 
 const orderChannels = ["WEBSITE", "INSTAGRAM", "FACEBOOK", "TIKTOK", "SHOPEE", "REFERRAL", "OTHER"] satisfies SalesChannel[];
-const orderStatuses = ["PENDING", "SHIPPING", "COMPLETED", "CANCELLED"] satisfies OrderStatus[];
+const orderStatuses = ["PENDING", "SHIPPING", "DELIVERED", "COMPLETED", "CANCELLED"] satisfies OrderStatus[];
 const orderPaymentStatuses = ["PENDING", "PAID", "FAILED", "REFUNDED"] satisfies OrderPaymentStatus[];
 
 const OrderLineSchema = z.object({

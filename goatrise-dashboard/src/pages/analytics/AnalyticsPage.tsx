@@ -50,13 +50,14 @@ import {
 
 // ----- range presets -> from/to ISO cho backend (?from&to) -----
 // mốc tính theo đầu kỳ: hôm nay / tuần này (T2) / tháng này / năm nay
-type RangeKey = "today" | "week" | "month" | "year";
+type RangeKey = "today" | "week" | "month" | "year" | "all";
 
 const RANGE_OPTIONS: { label: string; value: RangeKey }[] = [
   { label: "Today", value: "today" },
   { label: "This week", value: "week" },
   { label: "This month", value: "month" },
   { label: "This year", value: "year" },
+  { label: "All time", value: "all" },
 ];
 
 function resolveRange(key: RangeKey): AnalyticsRangeParams {
@@ -77,6 +78,9 @@ function resolveRange(key: RangeKey): AnalyticsRangeParams {
     }
     case "month":
       return { from: new Date(now.getFullYear(), now.getMonth(), 1).toISOString(), to };
+    case "all":
+      // toàn bộ dữ liệu: bỏ trống from/to -> backend không giới hạn khoảng
+      return {};
     case "year":
     default:
       return { from: new Date(now.getFullYear(), 0, 1).toISOString(), to };

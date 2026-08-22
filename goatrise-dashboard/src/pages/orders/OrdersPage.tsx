@@ -2,10 +2,10 @@ import { useMemo, useState } from "react";
 import { Eye, Plus, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useOrders } from "@/api/order/query-hooks.ts";
-import type { OrderPaymentStatus, OrderStatus } from "@/api/order/api.ts";
+import type { OrderStatus } from "@/api/order/api.ts";
 import type { Address, SalesChannel } from "@/core/types.ts";
 import { COUNTRIES } from "@/constant/countries.ts";
-import { capitalize, formatPriceVn } from "@/core/utils.ts";
+import { formatPriceVn } from "@/core/utils.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
 import { Input } from "@/components/ui/input.tsx";
@@ -24,8 +24,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table.tsx";
-import { Badge } from "@/components/shared/badge.tsx";
 import { SalesChannelBadge } from "@/components/shared/sales-channel-badge.tsx";
+import { OrderStatusBadge } from "@/components/shared/order-status-badge.tsx";
+import { OrderPaymentStatusBadge } from "@/components/shared/order-payment-status-badge.tsx";
 
 const PAGE_SIZE = 20;
 const CHANNEL_ALL = "ALL";
@@ -44,6 +45,7 @@ const CHANNEL_OPTIONS: { label: string; value: SalesChannel }[] = [
 const STATUS_OPTIONS: { label: string; value: OrderStatus }[] = [
   { label: "Pending", value: "PENDING" },
   { label: "Shipping", value: "SHIPPING" },
+  { label: "Delivered", value: "DELIVERED" },
   { label: "Completed", value: "COMPLETED" },
   { label: "Cancelled", value: "CANCELLED" },
 ];
@@ -54,20 +56,6 @@ const SORT_OPTIONS: { label: string; value: string }[] = [
   { label: "Total (high→low)", value: "totalAmount:DESC" },
   { label: "Total (low→high)", value: "totalAmount:ASC" },
 ];
-
-const ORDER_STATUS_CLASS: Record<OrderStatus, string> = {
-  PENDING: "bg-amber-100 text-amber-700",
-  SHIPPING: "bg-blue-100 text-blue-700",
-  COMPLETED: "bg-green-100 text-green-700",
-  CANCELLED: "bg-red-100 text-red-700",
-};
-
-const PAYMENT_STATUS_CLASS: Record<OrderPaymentStatus, string> = {
-  PENDING: "bg-amber-100 text-amber-700",
-  PAID: "bg-green-100 text-green-700",
-  FAILED: "bg-red-100 text-red-700",
-  REFUNDED: "bg-muted text-muted-foreground",
-};
 
 export default function OrdersPage() {
   // ----- query states (mirror backend /api/orders filters) -----
@@ -286,17 +274,11 @@ export default function OrdersPage() {
                       <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-2">
                           <span className="text-muted-foreground text-xs">Payment:</span>
-                          <Badge
-                            label={capitalize(order.paymentStatus)}
-                            className={PAYMENT_STATUS_CLASS[order.paymentStatus]}
-                          />
+                          <OrderPaymentStatusBadge status={order.paymentStatus} />
                         </div>
                         <div className="flex items-center gap-2">
                           <span className="text-muted-foreground text-xs">Status:</span>
-                          <Badge
-                            label={capitalize(order.status)}
-                            className={ORDER_STATUS_CLASS[order.status]}
-                          />
+                          <OrderStatusBadge status={order.status} />
                         </div>
                       </div>
                     </TableCell>

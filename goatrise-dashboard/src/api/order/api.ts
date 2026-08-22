@@ -28,7 +28,7 @@ export async function updateOrder(orderId: string, request: UpdateOrderRequest):
   return res.data;
 }
 
-export type OrderStatus = "PENDING" | "SHIPPING" | "COMPLETED" | "CANCELLED";
+export type OrderStatus = "PENDING" | "SHIPPING" | "DELIVERED" | "COMPLETED" | "CANCELLED";
 
 export type OrderPaymentStatus = "PENDING" | "PAID" | "FAILED" | "REFUNDED";
 
