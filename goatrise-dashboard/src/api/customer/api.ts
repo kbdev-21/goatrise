@@ -70,6 +70,7 @@ export type CreateCustomerRequest = {
 // Mirror backend: module/customers/domain/validators.ts -> UpdateCustomerRequestSchema
 export type UpdateCustomerRequest = {
   name?: string;
+  email?: string;
   phoneNum?: string;
   socialMedias?: CustomerSocialMediaEntry[];
   addresses?: Address[];

@@ -30,6 +30,7 @@ export type CreateCustomerRequest = z.infer<typeof CreateCustomerRequestSchema>;
 
 export const UpdateCustomerRequestSchema = z.object({
   name: z.string().trim().min(1).max(100).optional(),
+  email: z.email().trim().optional(),
   phoneNum: z.string().trim().min(1).max(20).optional(),
   socialMedias: z.array(SocialMediaSchema).optional(),
   addresses: z.array(AddressSchema).optional(),

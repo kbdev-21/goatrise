@@ -82,6 +82,7 @@ export async function updateCustomer(db: DbExec, actorId: string, customerId: st
     await tx.update(customers).set({
       name: updateReq.name,
       normalizedName: updateReq.name ? normalizeVietnameseString(updateReq.name) : undefined,
+      email: updateReq.email,
       phoneNum: updateReq.phoneNum,
       socialMedias: updateReq.socialMedias,
       addresses: updateReq.addresses,
