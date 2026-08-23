@@ -6,7 +6,7 @@ import { Spinner } from "@/components/ui/spinner.tsx";
 import { storage } from "@/core/storage.ts";
 
 const BUCKET = "images";
-const MAX_FILE_SIZE = 10 * 1024 * 1024;
+const MAX_FILE_SIZE = 25 * 1024 * 1024;
 const MAX_WIDTH = 1920;
 
 // đọc kích thước gốc của ảnh (px) để tính resize theo width, không theo cạnh dài
@@ -48,7 +48,7 @@ export function ImageUploadButton({
       return;
     }
     if (selected.size > MAX_FILE_SIZE) {
-      setError("Image must be 10MB or smaller.");
+      setError("Image must be 25MB or smaller.");
       return;
     }
 
