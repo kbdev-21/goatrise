@@ -1,6 +1,7 @@
 import { type ReactNode, useState } from "react";
 import { Plus, Search, X } from "lucide-react";
 import type {
+  OrderDeliveryStatus,
   OrderPaymentMethod,
   OrderPaymentStatus,
   OrderStatus,
@@ -47,17 +48,21 @@ const PAYMENT_METHOD_OPTIONS: { label: string; value: OrderPaymentMethod }[] = [
 ];
 
 const PAYMENT_STATUS_OPTIONS: { label: string; value: OrderPaymentStatus }[] = [
-  { label: "Pending", value: "PENDING" },
+  { label: "Unpaid", value: "UNPAID" },
   { label: "Paid", value: "PAID" },
-  { label: "Failed", value: "FAILED" },
   { label: "Refunded", value: "REFUNDED" },
+];
+
+const DELIVERY_STATUS_OPTIONS: { label: string; value: OrderDeliveryStatus }[] = [
+  { label: "Pending", value: "PENDING" },
+  { label: "Shipping", value: "SHIPPING" },
+  { label: "Delivered", value: "DELIVERED" },
+  { label: "Returned", value: "RETURNED" },
 ];
 
 const STATUS_OPTIONS: { label: string; value: OrderStatus }[] = [
   { label: "Pending", value: "PENDING" },
-  { label: "Shipping", value: "SHIPPING" },
-  { label: "Delivered", value: "DELIVERED" },
-  { label: "Completed", value: "COMPLETED" },
+  { label: "Fulfilled", value: "FULFILLED" },
   { label: "Cancelled", value: "CANCELLED" },
 ];
 
@@ -101,7 +106,14 @@ export type OrderInfoFormValue = {
   paymentMethod: OrderPaymentMethod;
   paymentStatus: OrderPaymentStatus;
   status: OrderStatus;
+  deliveryStatus: OrderDeliveryStatus;
   channel: SalesChannel;
+  platformOrderId: string;
+  // cost: chi phí shop chịu, KHÔNG tham gia calculateOrder -> giữ dạng string như manualDiscount
+  platformCost: string;
+  taxCost: string;
+  shippingCost: string;
+  otherCost: string;
   note: string;
   createdAt: string; // dạng datetime-local ("YYYY-MM-DDTHH:mm"); "" = để backend dùng now()
 };
@@ -119,9 +131,15 @@ export const EMPTY_ORDER_INFO_FORM_VALUE: OrderInfoFormValue = {
   manualDiscount: "",
   manualShipping: "",
   paymentMethod: "COD",
-  paymentStatus: "PENDING",
+  paymentStatus: "UNPAID",
   status: "PENDING",
+  deliveryStatus: "PENDING",
   channel: "INSTAGRAM",
+  platformOrderId: "",
+  platformCost: "",
+  taxCost: "",
+  shippingCost: "",
+  otherCost: "",
   note: "",
   createdAt: "",
 };
@@ -146,7 +164,7 @@ export default function OrderInfoForm({
   summary,
   summaryState,
   orderCode,
-  locked = false,
+  couponLocked = false,
 }: {
   mode: "create" | "edit";
   value: OrderInfoFormValue;
@@ -156,12 +174,11 @@ export default function OrderInfoForm({
   // create: trạng thái live-calculate; edit bỏ trống (summary luôn có sẵn từ order)
   summaryState?: { calculating: boolean; error: string | null };
   orderCode?: string;
-  // edit + đơn đã COMPLETED: khóa status/paymentStatus/createdAt
-  locked?: boolean;
+  // đơn đã FULFILLED mà có coupon: backend cấm đổi khối tiền LẪN phone (coupon.usedPhoneNums
+  // đã ghi phone cũ) -> khóa items, pricing và phone. Mọi field khác luôn sửa được ở mọi status.
+  couponLocked?: boolean;
 }) {
   const set = (patch: Partial<OrderInfoFormValue>) => onChange({ ...value, ...patch });
-  // đơn chưa COMPLETED được sửa full như lúc create; completed (locked) mới khóa hết.
-  const readOnly = locked;
 
   const [itemDialogOpen, setItemDialogOpen] = useState(false);
 
@@ -217,9 +234,6 @@ export default function OrderInfoForm({
   const commitShipping = () =>
     set({ manualShipping: shippingInput.trim() ? String(Math.max(0, Number(shippingInput))) : "" });
 
-  const completingWithoutPaid =
-    value.status === "COMPLETED" && value.paymentStatus !== "PAID";
-
   return (
     <>
       <div className="flex items-start gap-4">
@@ -231,66 +245,51 @@ export default function OrderInfoForm({
 
             <div className="grid grid-cols-2 gap-3">
               <div className="flex flex-col gap-1.5">
-                <FieldLabel required={!readOnly}>Name</FieldLabel>
+                <FieldLabel required>Name</FieldLabel>
                 <Input
                   placeholder="e.g. Nguyen Van A"
                   value={value.customerName}
-                  disabled={readOnly}
                   onChange={(e) => set({ customerName: e.target.value })}
                 />
               </div>
               <div className="flex flex-col gap-1.5">
-                <FieldLabel optional={!readOnly}>Phone</FieldLabel>
+                <FieldLabel optional>Phone</FieldLabel>
                 <Input
                   placeholder="0xxxxxxxxx"
                   value={value.customerPhoneNum}
-                  disabled={readOnly}
+                  disabled={couponLocked}
                   onChange={(e) => set({ customerPhoneNum: e.target.value })}
                 />
               </div>
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <FieldLabel optional={!readOnly}>Email</FieldLabel>
+              <FieldLabel optional>Email</FieldLabel>
               <Input
                 type="email"
                 placeholder="name@example.com"
                 value={value.customerEmail}
-                disabled={readOnly}
                 onChange={(e) => set({ customerEmail: e.target.value })}
               />
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <FieldLabel optional={!readOnly}>Address</FieldLabel>
+              <FieldLabel optional>Address</FieldLabel>
               <Input
                 placeholder="Street, ward, district..."
                 value={value.address}
-                disabled={readOnly}
                 onChange={(e) => set({ address: e.target.value })}
               />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div className="flex flex-col gap-1.5">
-                <FieldLabel optional={!readOnly}>Country</FieldLabel>
-                {readOnly ? (
-                  <Input
-                    disabled
-                    value={
-                      COUNTRIES[value.countryCode as keyof typeof COUNTRIES]?.viName ??
-                      value.countryCode
-                    }
-                  />
-                ) : (
-                  <CountryCombobox value={value.countryCode} onChange={handleCountryChange} />
-                )}
+                <FieldLabel optional>Country</FieldLabel>
+                <CountryCombobox value={value.countryCode} onChange={handleCountryChange} />
               </div>
               <div className="flex flex-col gap-1.5">
-                <FieldLabel optional={!readOnly}>Province</FieldLabel>
-                {readOnly ? (
-                  <Input disabled value={value.provinceName || "—"} />
-                ) : provinces ? (
+                <FieldLabel optional>Province</FieldLabel>
+                {provinces ? (
                   <ProvinceCombobox
                     provinces={provinces}
                     value={value.provinceCode}
@@ -311,7 +310,7 @@ export default function OrderInfoForm({
           <div className="bg-card flex flex-col gap-4 rounded-md border p-6">
             <div className="flex items-center justify-between">
               <h2 className="text-base font-medium">Items</h2>
-              {!readOnly && (
+              {!couponLocked && (
                 <Button
                   type="button"
                   variant="outline"
@@ -353,7 +352,7 @@ export default function OrderInfoForm({
                       <ItemAttributeBadges attributeValues={line.attributeValues} />
                     </div>
 
-                    {!readOnly && (
+                    {!couponLocked && (
                       <Input
                         type="number"
                         min={1}
@@ -367,7 +366,7 @@ export default function OrderInfoForm({
                       {formatPriceVn(line.unitPrice * line.quantity)}
                     </span>
 
-                    {!readOnly && (
+                    {!couponLocked && (
                       <Button
                         type="button"
                         variant="ghost"
@@ -384,7 +383,7 @@ export default function OrderInfoForm({
             )}
 
             {/* pricing inputs (create only) */}
-            {!readOnly && (
+            {!couponLocked && (
               <div className="grid grid-cols-2 gap-3 border-t pt-4">
                 <div className="flex flex-col gap-1.5">
                   <FieldLabel optional>Coupon code</FieldLabel>
@@ -395,6 +394,11 @@ export default function OrderInfoForm({
                     onBlur={commitCoupon}
                     onKeyDown={(e) => e.key === "Enter" && commitCoupon()}
                   />
+                  {value.couponCode && !value.customerPhoneNum.trim() && (
+                    <span className="text-destructive text-xs">
+                      Phone number is required to apply a coupon.
+                    </span>
+                  )}
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <FieldLabel optional>Manual discount</FieldLabel>
@@ -481,134 +485,210 @@ export default function OrderInfoForm({
         </div>
 
         {/* ----- right ----- */}
-        <div className="bg-card flex w-96 shrink-0 flex-col gap-4 rounded-md border p-6">
-          <h2 className="text-base font-medium">Fulfillment</h2>
+        <div className="flex w-96 shrink-0 flex-col gap-4">
+          <div className="bg-card flex flex-col gap-4 rounded-md border p-6">
+            <h2 className="text-base font-medium">Fulfillment</h2>
 
-          {mode === "edit" && orderCode && (
+            {mode === "edit" && orderCode && (
+              <div className="flex flex-col gap-1.5">
+                <FieldLabel>Order code</FieldLabel>
+                <Input disabled value={orderCode} className="font-mono" />
+              </div>
+            )}
+
             <div className="flex flex-col gap-1.5">
-              <FieldLabel>Order code</FieldLabel>
-              <Input disabled value={orderCode} className="font-mono" />
-            </div>
-          )}
-
-          <div className="flex flex-col gap-1.5">
-            <FieldLabel required={!readOnly}>Payment method</FieldLabel>
-            <Select
-              value={value.paymentMethod}
-              onValueChange={(v) => set({ paymentMethod: v as OrderPaymentMethod })}
-              disabled={readOnly}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {PAYMENT_METHOD_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <FieldLabel>Payment status</FieldLabel>
-            <Select
-              value={value.paymentStatus}
-              onValueChange={(v) => set({ paymentStatus: v as OrderPaymentStatus })}
-              disabled={locked}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {PAYMENT_STATUS_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <FieldLabel>Status</FieldLabel>
-            <Select
-              value={value.status}
-              onValueChange={(v) => set({ status: v as OrderStatus })}
-              disabled={locked}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {STATUS_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {locked && (
-            <span className="text-muted-foreground text-xs">
-              Completed order: status, payment and created date can no longer be changed.
-            </span>
-          )}
-          {completingWithoutPaid && (
-            <span className="text-destructive text-xs">
-              Payment must be Paid to complete the order.
-            </span>
-          )}
-
-          <div className="flex flex-col gap-1.5">
-            <FieldLabel required={!readOnly}>Channel</FieldLabel>
-            <Select
-              value={value.channel}
-              onValueChange={(v) => set({ channel: v as SalesChannel })}
-              disabled={readOnly}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {CHANNEL_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <FieldLabel optional>Note</FieldLabel>
-            <Textarea
-              placeholder="Internal note..."
-              value={value.note}
-              onChange={(e) => set({ note: e.target.value })}
-            />
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <FieldLabel optional>Created date</FieldLabel>
-            <Input
-              type="datetime-local"
-              value={value.createdAt}
-              disabled={locked}
-              onChange={(e) => set({ createdAt: e.target.value })}
-            />
-            {mode === "create" && (
+              <FieldLabel optional>Platform order ID</FieldLabel>
+              <Input
+                placeholder="e.g. 2508XXXXXXXX"
+                value={value.platformOrderId}
+                className="font-mono"
+                onChange={(e) => set({ platformOrderId: e.target.value })}
+              />
               <span className="text-muted-foreground text-xs">
-                Leave empty to use the current time.
+                Order ID on the platform (Shopee, TikTok...).
+              </span>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <FieldLabel required>Channel</FieldLabel>
+              <Select
+                value={value.channel}
+                onValueChange={(v) => set({ channel: v as SalesChannel })}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {CHANNEL_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <FieldLabel>Status</FieldLabel>
+              <Select
+                value={value.status}
+                onValueChange={(v) => set({ status: v as OrderStatus })}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {STATUS_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {couponLocked && (
+              <span className="text-muted-foreground text-xs">
+                Fulfilled order with a coupon: items, pricing and phone number can no longer be
+                changed.
               </span>
             )}
+
+            <div className="flex flex-col gap-1.5">
+              <FieldLabel>Payment status</FieldLabel>
+              <Select
+                value={value.paymentStatus}
+                onValueChange={(v) => set({ paymentStatus: v as OrderPaymentStatus })}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {PAYMENT_STATUS_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <FieldLabel required>Payment method</FieldLabel>
+              <Select
+                value={value.paymentMethod}
+                onValueChange={(v) => set({ paymentMethod: v as OrderPaymentMethod })}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {PAYMENT_METHOD_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <FieldLabel>Delivery status</FieldLabel>
+              <Select
+                value={value.deliveryStatus}
+                onValueChange={(v) => set({ deliveryStatus: v as OrderDeliveryStatus })}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {DELIVERY_STATUS_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <FieldLabel optional>Note</FieldLabel>
+              <Textarea
+                placeholder="Internal note..."
+                value={value.note}
+                onChange={(e) => set({ note: e.target.value })}
+              />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <FieldLabel optional>Created date</FieldLabel>
+              <Input
+                type="datetime-local"
+                value={value.createdAt}
+                onChange={(e) => set({ createdAt: e.target.value })}
+              />
+              {mode === "create" && (
+                <span className="text-muted-foreground text-xs">
+                  Leave empty to use the current time.
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="bg-card flex flex-col gap-4 rounded-md border p-6">
+            <h2 className="text-base font-medium">Cost</h2>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col gap-1.5">
+                <FieldLabel optional>Platform cost</FieldLabel>
+                <Input
+                  type="number"
+                  min={0}
+                  placeholder="0"
+                  value={value.platformCost}
+                  onChange={(e) => set({ platformCost: e.target.value })}
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <FieldLabel optional>Tax cost</FieldLabel>
+                <Input
+                  type="number"
+                  min={0}
+                  placeholder="0"
+                  value={value.taxCost}
+                  onChange={(e) => set({ taxCost: e.target.value })}
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <FieldLabel optional>Shipping cost</FieldLabel>
+                <Input
+                  type="number"
+                  min={0}
+                  placeholder="0"
+                  value={value.shippingCost}
+                  onChange={(e) => set({ shippingCost: e.target.value })}
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <FieldLabel optional>Other cost</FieldLabel>
+                <Input
+                  type="number"
+                  min={0}
+                  placeholder="0"
+                  value={value.otherCost}
+                  onChange={(e) => set({ otherCost: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <span className="text-muted-foreground text-xs">
+              Costs the shop absorbs. They do not affect the order total.
+            </span>
           </div>
         </div>
       </div>
 
-      {!readOnly && (
+      {!couponLocked && (
         <AddItemDialog
           open={itemDialogOpen}
           onOpenChange={setItemDialogOpen}

@@ -1,7 +1,7 @@
 import z from "zod";
 import type { ItemTransactionType } from "../schema/item-transactions.schema.js";
 
-const itemTransactionTypes = ["IMPORT", "ADJUST", "SOLD"] satisfies ItemTransactionType[];
+const itemTransactionTypes = ["IMPORT", "ADJUST", "SOLD", "REFUND"] satisfies ItemTransactionType[];
 
 const ItemAttributeValuesSchema = z.object({
   COLOR: z.string().trim().min(1).optional(),

@@ -28,9 +28,11 @@ export async function updateOrder(orderId: string, request: UpdateOrderRequest):
   return res.data;
 }
 
-export type OrderStatus = "PENDING" | "SHIPPING" | "DELIVERED" | "COMPLETED" | "CANCELLED";
+export type OrderStatus = "PENDING" | "FULFILLED" | "CANCELLED";
 
-export type OrderPaymentStatus = "PENDING" | "PAID" | "FAILED" | "REFUNDED";
+export type OrderDeliveryStatus = "PENDING" | "SHIPPING" | "DELIVERED" | "RETURNED";
+
+export type OrderPaymentStatus = "UNPAID" | "PAID" | "REFUNDED";
 
 export type OrderPaymentMethod = "COD" | "MANUAL_TRANSFER" | "MOMO" | "VNPAY" | "STRIPE";
 
@@ -90,13 +92,19 @@ export type OrderBase = {
   shippingAmount: number;
   taxAmount: number;
   totalAmount: number;
-  paymentMethod: OrderPaymentMethod;
-  paymentStatus: OrderPaymentStatus;
   status: OrderStatus;
+  deliveryStatus: OrderDeliveryStatus;
+  paymentStatus: OrderPaymentStatus;
+  paymentMethod: OrderPaymentMethod;
   channel: SalesChannel;
+  platformOrderId: string | null;
   referrerId: string | null;
   creatorId: string | null;
   note: string | null;
+  platformCost: number;
+  taxCost: number;
+  shippingCost: number;
+  otherCost: number;
   createdAt: string;
   updatedAt: string;
 };
@@ -133,7 +141,13 @@ export type CreateOrderRequest = {
   paymentMethod: OrderPaymentMethod;
   paymentStatus?: OrderPaymentStatus;
   status?: OrderStatus;
+  deliveryStatus?: OrderDeliveryStatus;
   channel: SalesChannel;
+  platformOrderId?: string;
+  platformCost?: number;
+  taxCost?: number;
+  shippingCost?: number;
+  otherCost?: number;
   referrerId?: string;
   note?: string;
   createdAt?: string;
@@ -165,7 +179,13 @@ export type UpdateOrderRequest = {
   paymentMethod?: OrderPaymentMethod;
   paymentStatus?: OrderPaymentStatus;
   status?: OrderStatus;
+  deliveryStatus?: OrderDeliveryStatus;
   channel?: SalesChannel;
+  platformOrderId?: string | null;
+  platformCost?: number;
+  taxCost?: number;
+  shippingCost?: number;
+  otherCost?: number;
   referrerId?: string | null;
   note?: string;
   createdAt?: string;

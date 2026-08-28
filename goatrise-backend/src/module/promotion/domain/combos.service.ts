@@ -99,6 +99,18 @@ export async function incrementCombosUsage(db: DbExec, comboIds: string[]): Prom
     .where(inArray(combos.id, comboIds));
 }
 
+// nghịch đảo của incrementCombosUsage (gọi khi revert đơn đã fulfill).
+// clamp ở 0: usedCount là counter thống kê, lệch cũng không được để âm.
+export async function decrementCombosUsage(db: DbExec, comboIds: string[]): Promise<void> {
+  if (comboIds.length === 0) {
+    return;
+  }
+
+  await db.update(combos)
+    .set({ usedCount: sql`greatest(${combos.usedCount} - 1, 0)` })
+    .where(inArray(combos.id, comboIds));
+}
+
 export async function deleteCombo(db: DbExec, actorId: string, comboId: string): Promise<void> {
   await db.transaction(async (tx) => {
     const comboBefore = await getComboById(tx, comboId);

@@ -110,3 +110,27 @@ export async function applyCoupon(db: DbExec, couponId: string, orderSubtotal: n
 
   return updated;
 }
+
+// nghịch đảo của applyCoupon: nhả lại 1 lượt dùng. KHÔNG validate như applyCoupon - đơn đã
+// tiêu coupon rồi, nếu coupon hết hạn/hết lượt trong lúc đó thì vẫn phải nhả được.
+// gỡ đúng MỘT occurrence của phone (cùng người có thể dùng nhiều lượt trên 1 coupon).
+export async function revokeCoupon(db: DbExec, couponId: string, orderPhoneNum: string): Promise<Coupon> {
+  const coupon = await getCouponById(db, couponId);
+
+  const usedPhoneNums = [...coupon.usedPhoneNums];
+  const phoneIndex = usedPhoneNums.indexOf(orderPhoneNum);
+  if (phoneIndex !== -1) {
+    usedPhoneNums.splice(phoneIndex, 1);
+  }
+
+  const [updated] = await db
+    .update(coupons)
+    .set({
+      usedCount: Math.max(coupon.usedCount - 1, 0),
+      usedPhoneNums: usedPhoneNums
+    })
+    .where(eq(coupons.id, coupon.id))
+    .returning();
+
+  return updated;
+}

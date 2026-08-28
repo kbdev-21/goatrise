@@ -1,6 +1,11 @@
 import type { Coupon } from "./types.js";
 
 export function computeCouponDiscount(coupon: Coupon, orderSubtotal: number, orderPhoneNum: string): number | false {
+  // coupon định danh người dùng qua phone (usedPhoneNums) -> đơn không có phone thì không
+  // có danh tính để ràng buộc, cho apply sẽ khiến mọi đơn khuyết phone dùng chung khóa "".
+  if (!orderPhoneNum) {
+    return false;
+  }
   if (!coupon.isActive || coupon.isOutOfUse) {
     return false;
   }

@@ -27,6 +27,7 @@ import {
 import { SalesChannelBadge } from "@/components/shared/sales-channel-badge.tsx";
 import { OrderStatusBadge } from "@/components/shared/order-status-badge.tsx";
 import { OrderPaymentStatusBadge } from "@/components/shared/order-payment-status-badge.tsx";
+import { OrderDeliveryStatusBadge } from "@/components/shared/order-delivery-status-badge.tsx";
 
 const PAGE_SIZE = 20;
 const CHANNEL_ALL = "ALL";
@@ -44,9 +45,7 @@ const CHANNEL_OPTIONS: { label: string; value: SalesChannel }[] = [
 
 const STATUS_OPTIONS: { label: string; value: OrderStatus }[] = [
   { label: "Pending", value: "PENDING" },
-  { label: "Shipping", value: "SHIPPING" },
-  { label: "Delivered", value: "DELIVERED" },
-  { label: "Completed", value: "COMPLETED" },
+  { label: "Fulfilled", value: "FULFILLED" },
   { label: "Cancelled", value: "CANCELLED" },
 ];
 
@@ -226,12 +225,22 @@ export default function OrdersPage() {
                 ordersQuery.data.map((order) => (
                   <TableRow key={order.id}>
                     <TableCell className="font-mono text-xs">
-                      <span
-                        className="cursor-pointer hover:underline"
-                        onClick={() => navigate(`/orders/${order.id}`)}
-                      >
-                        {order.code}
-                      </span>
+                      <div className="flex flex-col gap-0.5">
+                        <span
+                          className="cursor-pointer hover:underline"
+                          onClick={() => navigate(`/orders/${order.id}`)}
+                        >
+                          {order.code}
+                        </span>
+                        {order.platformOrderId && (
+                          <span
+                            className="text-muted-foreground"
+                            title={`Platform order ID: ${order.platformOrderId}`}
+                          >
+                            {order.platformOrderId}
+                          </span>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-col gap-0.5">
@@ -273,12 +282,16 @@ export default function OrdersPage() {
                     <TableCell>
                       <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-2">
+                          <span className="text-muted-foreground text-xs">Status:</span>
+                          <OrderStatusBadge status={order.status} />
+                        </div>
+                        <div className="flex items-center gap-2">
                           <span className="text-muted-foreground text-xs">Payment:</span>
                           <OrderPaymentStatusBadge status={order.paymentStatus} />
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-muted-foreground text-xs">Status:</span>
-                          <OrderStatusBadge status={order.status} />
+                          <span className="text-muted-foreground text-xs">Delivery:</span>
+                          <OrderDeliveryStatusBadge status={order.deliveryStatus} />
                         </div>
                       </div>
                     </TableCell>

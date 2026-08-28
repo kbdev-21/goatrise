@@ -100,7 +100,13 @@ export default function CreateOrderPage() {
       paymentMethod: value.paymentMethod,
       paymentStatus: value.paymentStatus,
       status: value.status,
+      deliveryStatus: value.deliveryStatus,
       channel: value.channel,
+      platformOrderId: value.platformOrderId.trim() || undefined,
+      platformCost: value.platformCost ? Number(value.platformCost) : undefined,
+      taxCost: value.taxCost ? Number(value.taxCost) : undefined,
+      shippingCost: value.shippingCost ? Number(value.shippingCost) : undefined,
+      otherCost: value.otherCost ? Number(value.otherCost) : undefined,
       note: value.note.trim() || undefined,
       createdAt: value.createdAt ? new Date(value.createdAt).toISOString() : undefined,
       lines: value.lines.map((line): OrderLineRequest => ({

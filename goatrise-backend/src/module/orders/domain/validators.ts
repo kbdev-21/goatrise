@@ -1,10 +1,11 @@
 import z from "zod";
-import type { OrderStatus, OrderPaymentStatus } from "../schema/orders.schema.js";
+import type { OrderStatus, OrderDeliveryStatus, OrderPaymentStatus } from "../schema/orders.schema.js";
 import type { SalesChannel } from "../../../core/types.js";
 
 const orderChannels = ["WEBSITE", "INSTAGRAM", "FACEBOOK", "TIKTOK", "SHOPEE", "REFERRAL", "OTHER"] satisfies SalesChannel[];
-const orderStatuses = ["PENDING", "SHIPPING", "DELIVERED", "COMPLETED", "CANCELLED"] satisfies OrderStatus[];
-const orderPaymentStatuses = ["PENDING", "PAID", "FAILED", "REFUNDED"] satisfies OrderPaymentStatus[];
+const orderStatuses = ["PENDING", "FULFILLED", "CANCELLED"] satisfies OrderStatus[];
+const orderDeliveryStatuses = ["PENDING", "SHIPPING", "DELIVERED", "RETURNED"] satisfies OrderDeliveryStatus[];
+const orderPaymentStatuses = ["UNPAID", "PAID", "REFUNDED"] satisfies OrderPaymentStatus[];
 
 const OrderLineSchema = z.object({
   itemId: z.uuid(),
@@ -48,8 +49,14 @@ export const CreateOrderRequestSchema = z.object({
   paymentMethod: z.enum(["COD", "MANUAL_TRANSFER", "MOMO", "VNPAY", "STRIPE"]),
   paymentStatus: z.enum(orderPaymentStatuses).optional(),
   status: z.enum(orderStatuses).optional(),
+  deliveryStatus: z.enum(orderDeliveryStatuses).optional(),
 
   channel: z.enum(orderChannels),
+  platformOrderId: z.string().trim().min(1).optional(),
+  platformCost: z.number().int().nonnegative().optional(),
+  taxCost: z.number().int().nonnegative().optional(),
+  shippingCost: z.number().int().nonnegative().optional(),
+  otherCost: z.number().int().nonnegative().optional(),
   referrerId: z.uuid().optional(),
 
   note: z.string().trim().min(1).optional(),
@@ -71,7 +78,13 @@ export const PlaceOrderRequestSchema = CreateOrderRequestSchema.omit({
   manualShippingFee: true,
   paymentStatus: true,
   status: true,
+  deliveryStatus: true,
   channel: true,
+  platformOrderId: true,
+  platformCost: true,
+  taxCost: true,
+  shippingCost: true,
+  otherCost: true,
   referrerId: true,
   createdAt: true
 }).extend({
@@ -91,11 +104,11 @@ export const FindOrdersQuerySchema = z.object({
 });
 export type FindOrdersQuery = z.infer<typeof FindOrdersQuerySchema>;
 
-// update đơn chưa COMPLETED: cho sửa gần như mọi field như lúc create.
+// update order: cho sửa mọi field như lúc create, ở mọi status.
 // quy ước: field vắng mặt (undefined) = giữ nguyên; field nullable gửi null = xóa về null.
 export const UpdateOrderRequestSchema = z.object({
-  // customer info: chỉ ghi đè snapshot trên order, KHÔNG re-resolve customerId
-  // (đổi tên/email/phone ở đây không hồi tố bảng customers).
+  // customer info: ghi đè snapshot trên order, KHÔNG re-resolve customerId.
+  // name/phoneNum có hồi tố ngược vào bảng customers (xem updateOrderData).
   customerName: z.string().trim().min(1).max(100).optional(),
   customerEmail: z.email().nullable().optional(),
   customerPhoneNum: z.string().trim().min(1).max(20).nullable().optional(),
@@ -116,8 +129,14 @@ export const UpdateOrderRequestSchema = z.object({
   paymentMethod: z.enum(["COD", "MANUAL_TRANSFER", "MOMO", "VNPAY", "STRIPE"]).optional(),
   paymentStatus: z.enum(orderPaymentStatuses).optional(),
   status: z.enum(orderStatuses).optional(),
+  deliveryStatus: z.enum(orderDeliveryStatuses).optional(),
 
   channel: z.enum(orderChannels).optional(),
+  platformOrderId: z.string().trim().min(1).nullable().optional(),
+  platformCost: z.number().int().nonnegative().optional(),
+  taxCost: z.number().int().nonnegative().optional(),
+  shippingCost: z.number().int().nonnegative().optional(),
+  otherCost: z.number().int().nonnegative().optional(),
   referrerId: z.uuid().nullable().optional(),
 
   note: z.string().trim().min(1).optional(),

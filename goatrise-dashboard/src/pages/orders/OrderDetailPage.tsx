@@ -32,8 +32,10 @@ export default function OrderDetailPage() {
   const items = useMemo(() => itemsQuery.data ?? [], [itemsQuery.data]);
 
   const order = orderQuery.data;
-  // đơn đã COMPLETED: khóa toàn bộ; chưa completed thì sửa full như create
-  const locked = order?.status === "COMPLETED";
+  // rule duy nhất còn lại của backend: đơn FULFILLED mà có coupon thì cấm đổi khối tiền
+  // (revert + fulfill lại sẽ chạm applyCoupon lần hai) lẫn phone (usedPhoneNums giữ phone cũ
+  // -> chủ mới hưởng giảm giá mà không bị ghi nhận). Field khác sửa được ở mọi status.
+  const couponLocked = order?.status === "FULFILLED" && order?.couponId !== null;
 
   const [value, setValue] = useState<OrderInfoFormValue | null>(null);
   const [calculation, setCalculation] = useState<OrderCalculationResult | null>(null);
@@ -45,12 +47,12 @@ export default function OrderDetailPage() {
     }
   }, [order]);
 
-  // live-calculate khi chưa completed (giống create): lines/coupon/discount/shipping đổi -> tính lại
+  // live-calculate khi khối tiền còn sửa được (giống create): lines/coupon/discount/shipping đổi -> tính lại
   const linesKey = value
     ? JSON.stringify(value.lines.map((line) => ({ itemId: line.itemId, quantity: line.quantity })))
     : "";
   useEffect(() => {
-    if (!value || locked || value.lines.length === 0) {
+    if (!value || couponLocked || value.lines.length === 0) {
       setCalculation(null);
       return;
     }
@@ -70,26 +72,19 @@ export default function OrderDetailPage() {
       },
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [linesKey, value?.couponCode, value?.manualDiscount, value?.manualShipping, locked]);
+  }, [linesKey, value?.couponCode, value?.manualDiscount, value?.manualShipping, couponLocked]);
 
   const isDirty =
     !!value &&
     !!order &&
     JSON.stringify(value) !== JSON.stringify(orderToFormValue(order));
-  const completingWithoutPaid =
-    !!value && value.status === "COMPLETED" && value.paymentStatus !== "PAID";
-  // chưa completed: bắt buộc còn tên khách + ít nhất 1 item (giống create)
+  // bắt buộc còn tên khách + ít nhất 1 item (giống create)
   const hasRequiredFields =
-    !!value && (locked || (value.customerName.trim().length > 0 && value.lines.length > 0));
+    !!value && value.customerName.trim().length > 0 && value.lines.length > 0;
   // không cho lưu nếu người dùng xóa trắng ngày tạo
-  const canSave =
-    !!value &&
-    isDirty &&
-    hasRequiredFields &&
-    !completingWithoutPaid &&
-    value.createdAt !== "";
+  const canSave = !!value && isDirty && hasRequiredFields && value.createdAt !== "";
 
-  // summary: completed dùng số đã lưu; chưa completed dùng kết quả calculate live (fallback số đã lưu)
+  // summary: khối tiền bị khóa thì dùng số đã lưu; còn lại dùng kết quả calculate live (fallback số đã lưu)
   const storedSummary: OrderSummary | null = order
     ? {
         subtotal: order.subtotalAmount,
@@ -114,7 +109,7 @@ export default function OrderDetailPage() {
         total: calculation.total,
       }
     : null;
-  const summary: OrderSummary | null = locked ? storedSummary : (liveSummary ?? storedSummary);
+  const summary: OrderSummary | null = couponLocked ? storedSummary : (liveSummary ?? storedSummary);
 
   // message thật từ backend khi calculate lỗi (vd coupon/stock)
   const calcErrorMessage = calculateMutation.isError
@@ -130,42 +125,48 @@ export default function OrderDetailPage() {
     const createdAtChanged = value.createdAt !== toDateTimeLocalValue(order.createdAt);
     const createdAt = createdAtChanged ? new Date(value.createdAt).toISOString() : undefined;
 
-    // completed: backend chỉ cho sửa note/status/payment/createdAt -> chỉ gửi bấy nhiêu.
-    // chưa completed: gửi full như create (undefined = giữ, null = xóa field nullable).
-    const request: UpdateOrderRequest = locked
-      ? {
-          status: value.status,
-          paymentStatus: value.paymentStatus,
-          note: value.note.trim() || undefined,
-          createdAt: createdAt,
-        }
-      : {
-          customerName: value.customerName.trim(),
-          customerEmail: value.customerEmail.trim() || null,
-          customerPhoneNum: value.customerPhoneNum.trim() || null,
-          customerAddress: value.address.trim()
-            ? {
-                countryCode: value.countryCode,
-                provinceCode: value.provinceCode,
-                provinceName: value.provinceName.trim(),
-                address: value.address.trim(),
-              }
-            : null,
-          couponCode: value.couponCode.trim() || null,
-          // form là nguồn sự thật cho pricing -> gửi 0 khi trống (không để backend giữ giá trị cũ)
-          manualDiscountAmount: value.manualDiscount ? Number(value.manualDiscount) : 0,
-          manualShippingFee: value.manualShipping ? Number(value.manualShipping) : 0,
-          lines: value.lines.map((line): OrderLineRequest => ({
-            itemId: line.itemId,
-            quantity: line.quantity,
-          })),
-          paymentMethod: value.paymentMethod,
-          paymentStatus: value.paymentStatus,
-          status: value.status,
-          channel: value.channel,
-          note: value.note.trim() || undefined,
-          createdAt: createdAt,
-        };
+    // backend coi field khối tiền CÓ MẶT (kể cả giá trị không đổi) là pricingChanged -> khi
+    // couponLocked thì phải bỏ hẳn 4 field đó khỏi request, không gửi giá trị cũ.
+    // undefined = giữ nguyên, null = xóa field nullable.
+    const request: UpdateOrderRequest = {
+      customerName: value.customerName.trim(),
+      customerEmail: value.customerEmail.trim() || null,
+      customerPhoneNum: couponLocked ? undefined : value.customerPhoneNum.trim() || null,
+      customerAddress: value.address.trim()
+        ? {
+            countryCode: value.countryCode,
+            provinceCode: value.provinceCode,
+            provinceName: value.provinceName.trim(),
+            address: value.address.trim(),
+          }
+        : null,
+      paymentMethod: value.paymentMethod,
+      paymentStatus: value.paymentStatus,
+      status: value.status,
+      deliveryStatus: value.deliveryStatus,
+      channel: value.channel,
+      platformOrderId: value.platformOrderId.trim() || null,
+      // form là nguồn sự thật cho cost -> gửi 0 khi trống. Cost không nằm trong pricingChanged
+      // của backend nên gửi kèm không kích hoạt revert/fulfill.
+      platformCost: value.platformCost ? Number(value.platformCost) : 0,
+      taxCost: value.taxCost ? Number(value.taxCost) : 0,
+      shippingCost: value.shippingCost ? Number(value.shippingCost) : 0,
+      otherCost: value.otherCost ? Number(value.otherCost) : 0,
+      note: value.note.trim() || undefined,
+      createdAt: createdAt,
+      ...(couponLocked
+        ? {}
+        : {
+            couponCode: value.couponCode.trim() || null,
+            // form là nguồn sự thật cho pricing -> gửi 0 khi trống (không để backend giữ giá trị cũ)
+            manualDiscountAmount: value.manualDiscount ? Number(value.manualDiscount) : 0,
+            manualShippingFee: value.manualShipping ? Number(value.manualShipping) : 0,
+            lines: value.lines.map((line): OrderLineRequest => ({
+              itemId: line.itemId,
+              quantity: line.quantity,
+            })),
+          }),
+    };
     updateMutation.mutate(
       { orderId: id, request },
       {
@@ -225,10 +226,12 @@ export default function OrderDetailPage() {
           items={items}
           summary={summary}
           summaryState={
-            locked ? undefined : { calculating: calculateMutation.isPending, error: calcErrorMessage }
+            couponLocked
+              ? undefined
+              : { calculating: calculateMutation.isPending, error: calcErrorMessage }
           }
           orderCode={order.code}
-          locked={locked}
+          couponLocked={couponLocked}
         />
       )}
     </div>
@@ -259,7 +262,13 @@ function orderToFormValue(order: Order): OrderInfoFormValue {
     paymentMethod: order.paymentMethod,
     paymentStatus: order.paymentStatus,
     status: order.status,
+    deliveryStatus: order.deliveryStatus,
     channel: order.channel,
+    platformOrderId: order.platformOrderId ?? "",
+    platformCost: order.platformCost ? String(order.platformCost) : "",
+    taxCost: order.taxCost ? String(order.taxCost) : "",
+    shippingCost: order.shippingCost ? String(order.shippingCost) : "",
+    otherCost: order.otherCost ? String(order.otherCost) : "",
     note: order.note ?? "",
     createdAt: toDateTimeLocalValue(order.createdAt),
   };

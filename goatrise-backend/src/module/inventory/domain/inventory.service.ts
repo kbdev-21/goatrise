@@ -153,3 +153,57 @@ export async function soldItems(db: DbExec, soldList: { itemId: string, quantity
     }
   });
 }
+
+// nghịch đảo của soldItems: cộng lại stock, trừ sold, ghi transaction REFUND.
+// dùng khi hoàn tác side effect của một đơn đã xác nhận (hủy đơn / sửa đơn).
+// KHÔNG xóa dòng SOLD cũ - item_transactions là sổ cái append-only nên revert phải ghi dòng bù trừ.
+export async function refundItems(db: DbExec, refundList: { itemId: string, quantity: number }[]): Promise<void> {
+  const foundItems = await db.query.items.findMany({
+    where: {
+      id: {
+        in: refundList.map((refund) => refund.itemId)
+      }
+    }
+  });
+  const itemsMap = new Map(foundItems.map((item) => [item.id, item]));
+
+  await db.transaction(async (tx) => {
+    const refundedByProduct = new Map<string, number>();
+
+    for (const refund of refundList) {
+      const item = itemsMap.get(refund.itemId);
+      if (!item) {
+        throw new HTTPException(404, { message: "Item not found" });
+      }
+
+      await tx.insert(itemTransactions).values({
+        id: uuidv7(),
+        itemId: refund.itemId,
+        itemName: item.name,
+        itemSku: item.sku,
+        actorId: null,
+        type: "REFUND",
+        quantity: refund.quantity,
+        soldUnitPrice: item.price
+      });
+
+      // sold là counter thống kê, không phải invariant như stock -> chặn ở 0 thay vì ném lỗi,
+      // để counter lệch (vd đơn cũ chưa từng trừ sold) không block được việc hoàn kho.
+      await tx.update(items).set({
+        stock: sql`${items.stock} + ${refund.quantity}`,
+        sold: sql`greatest(${items.sold} - ${refund.quantity}, 0)`
+      }).where(eq(items.id, refund.itemId));
+
+      if (item.productId) {
+        refundedByProduct.set(item.productId, (refundedByProduct.get(item.productId) ?? 0) + refund.quantity);
+      }
+    }
+
+    // item lẻ (productId null) thì bỏ qua
+    for (const [productId, quantity] of refundedByProduct) {
+      await tx.update(products).set({
+        sold: sql`greatest(${products.sold} - ${quantity}, 0)`
+      }).where(eq(products.id, productId));
+    }
+  });
+}

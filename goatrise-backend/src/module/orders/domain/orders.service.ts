@@ -7,9 +7,9 @@ import { HTTPException } from "hono/http-exception";
 import { uuidv7 } from "uuidv7";
 import { recordAuditLog } from "../../audit/domain/audit-logs.service.js";
 import { calculateOrder } from "./order-calculation.service.js";
-import { applyCoupon, getCouponByCode } from "../../promotion/domain/coupons.service.js";
-import { incrementCombosUsage } from "../../promotion/domain/combos.service.js";
-import { soldItems } from "../../inventory/domain/inventory.service.js";
+import { applyCoupon, getCouponByCode, revokeCoupon } from "../../promotion/domain/coupons.service.js";
+import { decrementCombosUsage, incrementCombosUsage } from "../../promotion/domain/combos.service.js";
+import { refundItems, soldItems } from "../../inventory/domain/inventory.service.js";
 import { getOrCreateOrSyncCustomer } from "../../customers/domain/customers-sync.service.js";
 import { updateCustomer } from "../../customers/domain/customers.service.js";
 import type { UpdateCustomerRequest } from "../../customers/domain/validators.js";
@@ -41,6 +41,7 @@ export async function findOrders(db: DbExec, query: FindOrdersQuery): Promise<Or
       ...(search ? {
         OR: [
           { code: { ilike: `%${search}%` } },
+          { platformOrderId: { ilike: `%${search}%` } },
           { customerName: { ilike: `%${search}%` } },
           { customerPhoneNum: { ilike: `%${search}%` } },
           { customerEmail: { ilike: `%${search}%` } }
@@ -59,11 +60,6 @@ export async function findOrders(db: DbExec, query: FindOrdersQuery): Promise<Or
 }
 
 export async function createOrder(db: DbExec, actorId: string | null, createReq: CreateOrderRequest): Promise<Order> {
-  // rule: chưa PAID thì không được set status COMPLETED
-  if (createReq.status === "COMPLETED" && createReq.paymentStatus !== "PAID") {
-    throw new HTTPException(409, { message: "Cannot complete an order that is not paid" });
-  }
-
   const newOrderId = uuidv7();
 
   // lấy/tạo/sync customer chạy NGOÀI transaction: cơ chế bắt unique-violation (23505) rồi
@@ -87,7 +83,7 @@ export async function createOrder(db: DbExec, actorId: string | null, createReq:
     });
 
     // chỉ resolve couponId để gắn vào order; việc đánh dấu coupon đã dùng (applyCoupon)
-    // được dời sang onCompleteOrder -> coupon chỉ bị "tiêu" khi đơn hoàn tất.
+    // được dời sang onFulfillOrder -> coupon chỉ bị "tiêu" khi đơn được fulfill.
     const coupon = createReq.couponCode ? await getCouponByCode(tx, createReq.couponCode) : null;
     const couponId = coupon?.id ?? null;
 
@@ -113,7 +109,13 @@ export async function createOrder(db: DbExec, actorId: string | null, createReq:
       paymentMethod: createReq.paymentMethod,
       paymentStatus: createReq.paymentStatus,
       status: createReq.status,
+      deliveryStatus: createReq.deliveryStatus,
       channel: createReq.channel,
+      platformOrderId: createReq.platformOrderId ?? null,
+      platformCost: createReq.platformCost,
+      taxCost: createReq.taxCost,
+      shippingCost: createReq.shippingCost,
+      otherCost: createReq.otherCost,
       referrerId: createReq.referrerId ?? null,
       creatorId: actorId,
       note: createReq.note ?? null,
@@ -136,8 +138,8 @@ export async function createOrder(db: DbExec, actorId: string | null, createReq:
 
     const newOrder = await getOrderById(tx, newOrderId);
 
-    if (createReq.status === "COMPLETED") {
-      await onCompleteOrder(tx, newOrder);
+    if (createReq.status === "FULFILLED") {
+      await onFulfillOrder(tx, newOrder);
     }
 
     await recordAuditLog(tx, {
@@ -164,150 +166,58 @@ export async function placeOrder(db: DbExec, placeReq: PlaceOrderRequest): Promi
   return await createOrder(db, null, createReq);
 }
 
+// điều phối update: quyết side effect MỘT LẦN ở đầu (dựa trên status trước/sau + khối tiền
+// có đổi không), rồi mới ghi data. Tách quyết định ra khỏi 2 hàm ghi bên dưới để một PATCH
+// vừa đổi giá vừa đổi status không bị revert 2 lần.
 export async function updateOrder(db: DbExec, actorId: string, orderId: string, updateReq: UpdateOrderRequest): Promise<Order> {
   return await db.transaction(async (tx) => {
-    // khóa row order (FOR UPDATE) để 2 request complete song song không cùng qua guard -> tránh double-complete
+    // khóa row order (FOR UPDATE) để 2 request song song không cùng qua guard -> tránh double side effect
     await tx.select({ id: orders.id }).from(orders).where(eq(orders.id, orderId)).for("update");
     const orderBefore = await getOrderById(tx, orderId);
 
-    // money inputs: đụng bất kỳ input nào -> phải tính lại nguyên khối (không cho set lẻ cột tiền)
-    const pricingChanged =
-      updateReq.lines !== undefined ||
-      updateReq.couponCode !== undefined ||
-      updateReq.manualDiscountAmount !== undefined ||
-      updateReq.manualShippingFee !== undefined;
+    const pricingChanged = isPricingChanged(updateReq);
 
-    // customer info + các field mở rộng khác (ngoài status/payment/createdAt vốn có rule riêng)
-    const touchingExtraFields =
-      pricingChanged ||
-      updateReq.customerName !== undefined ||
-      updateReq.customerEmail !== undefined ||
-      updateReq.customerPhoneNum !== undefined ||
-      updateReq.customerAddress !== undefined ||
-      updateReq.paymentMethod !== undefined ||
-      updateReq.channel !== undefined ||
-      updateReq.referrerId !== undefined;
+    const wasFulfilled = orderBefore.status === "FULFILLED";
+    const effectiveStatus = updateReq.status ?? orderBefore.status;
 
-    // rule: đơn đã COMPLETED thì không được đổi status, paymentStatus lẫn createdAt nữa
-    if (orderBefore.status === "COMPLETED") {
-      const changingStatus = updateReq.status !== undefined && updateReq.status !== orderBefore.status;
-      const changingPayment = updateReq.paymentStatus !== undefined && updateReq.paymentStatus !== orderBefore.paymentStatus;
-      const changingCreatedAt = updateReq.createdAt !== undefined && updateReq.createdAt.getTime() !== orderBefore.createdAt.getTime();
-      if (changingStatus || changingPayment || changingCreatedAt) {
-        throw new HTTPException(409, { message: "Cannot change status, payment status or created date of a completed order" });
+    // phone đổi thật sự (undefined = giữ nguyên, trùng giá trị cũ = không tính là đổi).
+    // so sánh giá trị chứ không xét sự có mặt như pricingChanged: client gửi kèm phone ở
+    // mọi PATCH, xét có mặt sẽ chặn luôn cả những update không liên quan.
+    const changingPhoneNum =
+      updateReq.customerPhoneNum !== undefined &&
+      updateReq.customerPhoneNum !== orderBefore.customerPhoneNum;
+
+    // rule: đơn đã FULFILLED mà CÓ COUPON thì đóng băng khối tiền lẫn phone.
+    // - đổi giá buộc phải revert + fulfill lại -> applyCoupon chạy lần hai và sẽ ném 400 nếu
+    //   coupon đã hết hạn/hết lượt kể từ lúc fulfill.
+    // - đổi phone thì coupon.usedPhoneNums vẫn giữ phone CŨ (không revert/fulfill lại), nên
+    //   chủ mới của đơn được hưởng giảm giá mà không bị ghi nhận -> dùng lại coupon được.
+    // Muốn đổi thì set CANCELLED rồi tạo đơn mới.
+    if (wasFulfilled && orderBefore.couponId !== null) {
+      if (pricingChanged) {
+        throw new HTTPException(409, { message: "Cannot change pricing of a fulfilled order that used a coupon" });
       }
-
-      // đơn đã COMPLETED: đã trừ kho + áp coupon + cộng stats -> chỉ cho sửa note, chặn full update
-      if (touchingExtraFields) {
-        throw new HTTPException(409, { message: "Cannot edit customer info, lines or pricing of a completed order" });
+      if (changingPhoneNum) {
+        throw new HTTPException(409, { message: "Cannot change phone number of a fulfilled order that used a coupon" });
       }
     }
 
-    // rule: chưa PAID thì không được set status COMPLETED
-    const effectivePaymentStatus = updateReq.paymentStatus ?? orderBefore.paymentStatus;
-    if (updateReq.status === "COMPLETED" && effectivePaymentStatus !== "PAID") {
-      throw new HTTPException(409, { message: "Cannot complete an order that is not paid" });
+    // rời khỏi FULFILLED, hoặc ở lại FULFILLED nhưng đổi giá -> nhả side effect cũ
+    const needRevert = wasFulfilled && (pricingChanged || effectiveStatus !== "FULFILLED");
+    // vào FULFILLED, hoặc ở lại FULFILLED nhưng đổi giá -> áp side effect theo data MỚI
+    const needFulfill = effectiveStatus === "FULFILLED" && (!wasFulfilled || pricingChanged);
+
+    // revert TRƯỚC khi updateOrderData chạy calculateOrder: stock phải được trả lại thì
+    // check `quantity > item.stock` mới không false-fail vì chính đơn này đang giữ hàng.
+    if (needRevert) {
+      await onRevertOrder(tx, orderBefore);
     }
 
-    // createdAt hiệu lực (dùng cho cả order lẫn orderLines rebuild)
-    const effectiveCreatedAt = updateReq.createdAt ?? orderBefore.createdAt;
+    await updateOrderData(tx, actorId, orderBefore, updateReq);
+    await updateOrderStatus(tx, orderId, updateReq);
 
-    // tính lại khối tiền từ input đã merge (update ?? giá trị hiện tại của order)
-    let pricing: Partial<typeof orders.$inferInsert> = {};
-    if (pricingChanged) {
-      const effectiveLines = updateReq.lines
-        ?? orderBefore.lines.map((line) => ({ itemId: line.itemId, quantity: line.quantity }));
-
-      // couponCode: undefined = giữ coupon hiện tại (lấy code từ relation); null = bỏ coupon; string = coupon mới
-      const effectiveCouponCode = updateReq.couponCode === undefined
-        ? (orderBefore.coupon?.code ?? undefined)
-        : (updateReq.couponCode ?? undefined);
-
-      const effectivePhoneNum = updateReq.customerPhoneNum === undefined
-        ? (orderBefore.customerPhoneNum ?? undefined)
-        : (updateReq.customerPhoneNum ?? undefined);
-
-      const calculation = await calculateOrder(tx, {
-        lines: effectiveLines,
-        customerPhoneNum: effectivePhoneNum,
-        couponCode: effectiveCouponCode,
-        manualDiscountAmount: updateReq.manualDiscountAmount ?? orderBefore.manualDiscountAmount,
-        manualShippingFee: updateReq.manualShippingFee ?? orderBefore.shippingAmount
-      });
-
-      // chưa completed nên coupon chưa bị "tiêu"; chỉ resolve lại couponId để gắn vào order
-      const coupon = effectiveCouponCode ? await getCouponByCode(tx, effectiveCouponCode) : null;
-
-      pricing = {
-        couponId: coupon?.id ?? null,
-        combos: calculation.combos,
-        subtotalAmount: calculation.subtotal,
-        manualDiscountAmount: calculation.manualDiscount,
-        couponDiscountAmount: calculation.couponDiscount,
-        comboDiscountAmount: calculation.comboDiscount,
-        shippingAmount: calculation.shipping,
-        taxAmount: calculation.tax,
-        totalAmount: calculation.total
-      };
-
-      // rebuild toàn bộ orderLines theo snapshot mới (kho chưa bị trừ trước COMPLETED nên swap tự do)
-      await tx.delete(orderLines).where(eq(orderLines.orderId, orderId));
-      await tx.insert(orderLines).values(calculation.lines.map((line) => ({
-        id: uuidv7(),
-        orderId: orderId,
-        itemId: line.itemId,
-        productId: line.productId,
-        snapItem: line.snapItem,
-        quantity: line.quantity,
-        unitPrice: line.unitPrice,
-        subtotalAmount: line.subtotal,
-        createdAt: effectiveCreatedAt
-      })));
-    }
-
-    await tx.update(orders).set({
-      // customer info: ghi đè snapshot (undefined = giữ nguyên, null = xóa)
-      customerName: updateReq.customerName,
-      customerEmail: updateReq.customerEmail,
-      customerPhoneNum: updateReq.customerPhoneNum,
-      customerAddress: updateReq.customerAddress,
-      paymentMethod: updateReq.paymentMethod,
-      referrerId: updateReq.referrerId,
-      channel: updateReq.channel,
-      paymentStatus: updateReq.paymentStatus,
-      status: updateReq.status,
-      note: updateReq.note,
-      createdAt: updateReq.createdAt,
-      ...pricing
-    }).where(eq(orders.id, orderId));
-
-    // đồng bộ createdAt của các orderLines theo createdAt của order (nếu có cập nhật).
-    // bỏ qua khi pricingChanged vì lines đã được rebuild với effectiveCreatedAt ở trên.
-    if (updateReq.createdAt !== undefined && !pricingChanged) {
-      await tx.update(orderLines).set({
-        createdAt: updateReq.createdAt
-      }).where(eq(orderLines.orderId, orderId));
-    }
-
-    // đụng name/phone của customer -> hồi tố luôn vào bản ghi customers (nguồn sự thật).
-    // email không sync (updateCustomer không nhận email + email unique dễ đụng customer khác).
-    // phoneNum null (xóa trên order) -> bỏ qua, không null hóa phone của customer.
-    const customerSync: UpdateCustomerRequest = {};
-    if (updateReq.customerName !== undefined) {
-      customerSync.name = updateReq.customerName;
-    }
-    if (typeof updateReq.customerPhoneNum === "string") {
-      customerSync.phoneNum = updateReq.customerPhoneNum;
-    }
-    if (Object.keys(customerSync).length > 0) {
-      await updateCustomer(tx, actorId, orderBefore.customerId, customerSync);
-    }
-
-    // chuyển sang COMPLETED (từ trạng thái khác) -> trừ stock + áp coupon + cập nhật stats customer.
-    // dùng snapshot MỚI (đọc lại) để onComplete phản ánh đúng lines/coupon/total vừa sửa.
-    if (updateReq.status === "COMPLETED" && orderBefore.status !== "COMPLETED") {
-      const orderForComplete = await getOrderById(tx, orderId);
-      await onCompleteOrder(tx, orderForComplete);
+    if (needFulfill) {
+      await onFulfillOrder(tx, await getOrderById(tx, orderId));
     }
 
     const orderAfter = await getOrderById(tx, orderId);
@@ -327,7 +237,127 @@ export async function updateOrder(db: DbExec, actorId: string, orderId: string, 
   });
 }
 
-async function onCompleteOrder(db: DbExec, order: Order): Promise<void> {
+// ghi toàn bộ data của order TRỪ status. Thuần data, không side effect - side effect do
+// updateOrder quyết. Quy ước PATCH: undefined = giữ nguyên, null = xóa về null.
+async function updateOrderData(db: DbExec, actorId: string, orderBefore: Order, updateReq: UpdateOrderRequest): Promise<void> {
+  const orderId = orderBefore.id;
+
+  const pricingChanged = isPricingChanged(updateReq);
+
+  // createdAt hiệu lực (dùng cho cả order lẫn orderLines rebuild)
+  const effectiveCreatedAt = updateReq.createdAt ?? orderBefore.createdAt;
+
+  // tính lại khối tiền từ input đã merge (update ?? giá trị hiện tại của order)
+  let pricing: Partial<typeof orders.$inferInsert> = {};
+  if (pricingChanged) {
+    const effectiveLines = updateReq.lines
+      ?? orderBefore.lines.map((line) => ({ itemId: line.itemId, quantity: line.quantity }));
+
+    // couponCode: undefined = giữ coupon hiện tại (lấy code từ relation); null = bỏ coupon; string = coupon mới
+    const effectiveCouponCode = updateReq.couponCode === undefined
+      ? (orderBefore.coupon?.code ?? undefined)
+      : (updateReq.couponCode ?? undefined);
+
+    const effectivePhoneNum = updateReq.customerPhoneNum === undefined
+      ? (orderBefore.customerPhoneNum ?? undefined)
+      : (updateReq.customerPhoneNum ?? undefined);
+
+    const calculation = await calculateOrder(db, {
+      lines: effectiveLines,
+      customerPhoneNum: effectivePhoneNum,
+      couponCode: effectiveCouponCode,
+      manualDiscountAmount: updateReq.manualDiscountAmount ?? orderBefore.manualDiscountAmount,
+      manualShippingFee: updateReq.manualShippingFee ?? orderBefore.shippingAmount
+    });
+
+    // chỉ resolve lại couponId để gắn vào order; ghi usage là việc của onFulfillOrder
+    const coupon = effectiveCouponCode ? await getCouponByCode(db, effectiveCouponCode) : null;
+
+    pricing = {
+      couponId: coupon?.id ?? null,
+      combos: calculation.combos,
+      subtotalAmount: calculation.subtotal,
+      manualDiscountAmount: calculation.manualDiscount,
+      couponDiscountAmount: calculation.couponDiscount,
+      comboDiscountAmount: calculation.comboDiscount,
+      shippingAmount: calculation.shipping,
+      taxAmount: calculation.tax,
+      totalAmount: calculation.total
+    };
+
+    // rebuild toàn bộ orderLines theo snapshot mới
+    await db.delete(orderLines).where(eq(orderLines.orderId, orderId));
+    await db.insert(orderLines).values(calculation.lines.map((line) => ({
+      id: uuidv7(),
+      orderId: orderId,
+      itemId: line.itemId,
+      productId: line.productId,
+      snapItem: line.snapItem,
+      quantity: line.quantity,
+      unitPrice: line.unitPrice,
+      subtotalAmount: line.subtotal,
+      createdAt: effectiveCreatedAt
+    })));
+  }
+
+  await db.update(orders).set({
+    customerName: updateReq.customerName,
+    customerEmail: updateReq.customerEmail,
+    customerPhoneNum: updateReq.customerPhoneNum,
+    customerAddress: updateReq.customerAddress,
+    paymentMethod: updateReq.paymentMethod,
+    paymentStatus: updateReq.paymentStatus,
+    deliveryStatus: updateReq.deliveryStatus,
+    channel: updateReq.channel,
+    platformOrderId: updateReq.platformOrderId,
+    platformCost: updateReq.platformCost,
+    taxCost: updateReq.taxCost,
+    shippingCost: updateReq.shippingCost,
+    otherCost: updateReq.otherCost,
+    referrerId: updateReq.referrerId,
+    note: updateReq.note,
+    createdAt: updateReq.createdAt,
+    ...pricing
+  }).where(eq(orders.id, orderId));
+
+  // đồng bộ createdAt của các orderLines theo createdAt của order (nếu có cập nhật).
+  // bỏ qua khi pricingChanged vì lines đã được rebuild với effectiveCreatedAt ở trên.
+  if (updateReq.createdAt !== undefined && !pricingChanged) {
+    await db.update(orderLines).set({
+      createdAt: updateReq.createdAt
+    }).where(eq(orderLines.orderId, orderId));
+  }
+
+  // đụng name/phone của customer -> hồi tố luôn vào bản ghi customers (nguồn sự thật).
+  // customerId KHÔNG bao giờ đổi. email không sync (updateCustomer không nhận email +
+  // email unique dễ đụng customer khác). phoneNum null (xóa trên order) -> bỏ qua.
+  const customerSync: UpdateCustomerRequest = {};
+  if (updateReq.customerName !== undefined) {
+    customerSync.name = updateReq.customerName;
+  }
+  if (typeof updateReq.customerPhoneNum === "string") {
+    customerSync.phoneNum = updateReq.customerPhoneNum;
+  }
+  if (Object.keys(customerSync).length > 0) {
+    await updateCustomer(db, actorId, orderBefore.customerId, customerSync);
+  }
+}
+
+// ghi mỗi cột status. Không transition nào bị cấm: status đi lại tự do giữa
+// PENDING/FULFILLED/CANCELLED, side effect đã do updateOrder quyết trước đó.
+async function updateOrderStatus(db: DbExec, orderId: string, updateReq: UpdateOrderRequest): Promise<void> {
+  if (updateReq.status === undefined) {
+    return;
+  }
+
+  await db.update(orders).set({
+    status: updateReq.status
+  }).where(eq(orders.id, orderId));
+}
+
+// side effect khi đơn được FULFILL: chạy đúng 1 lần lúc đơn chuyển sang status FULFILLED
+// (hoặc lúc create nếu status khởi tạo đã là FULFILLED).
+async function onFulfillOrder(db: DbExec, order: Order): Promise<void> {
   const lines = order.lines.flatMap((line) =>
     line.itemId !== null ? [{ itemId: line.itemId, quantity: line.quantity }] : []
   );
@@ -335,12 +365,12 @@ async function onCompleteOrder(db: DbExec, order: Order): Promise<void> {
   // trừ stock + ghi transaction SOLD cho từng item trong đơn
   await soldItems(db, lines);
 
-  // đánh dấu coupon đã dùng (chỉ khi đơn hoàn tất)
+  // đánh dấu coupon đã dùng (chỉ khi đơn được fulfill)
   if (order.couponId) {
     await applyCoupon(db, order.couponId, order.subtotalAmount, order.customerPhoneNum ?? "");
   }
 
-  // +1 usedCount cho từng combo đã áp vào đơn (chỉ khi đơn hoàn tất)
+  // +1 usedCount cho từng combo đã áp vào đơn (chỉ khi đơn được fulfill)
   await incrementCombosUsage(db, order.combos.map((combo) => combo.id));
 
   // TODO: loyaltyPoints để dành cho feature riêng sau này
@@ -349,6 +379,41 @@ async function onCompleteOrder(db: DbExec, order: Order): Promise<void> {
     totalOrders: sql`${customers.totalOrders} + 1`,
     lastOrderAt: new Date()
   }).where(eq(customers.id, order.customerId));
+}
+
+// nghịch đảo của onFulfillOrder: nhả lại toàn bộ side effect của đơn đã fulfill.
+// nhận snapshot TRƯỚC khi sửa, vì phải nhả đúng thứ đã áp (lines/coupon/total cũ).
+async function onRevertOrder(db: DbExec, order: Order): Promise<void> {
+  const lines = order.lines.flatMap((line) =>
+    line.itemId !== null ? [{ itemId: line.itemId, quantity: line.quantity }] : []
+  );
+
+  // cộng lại stock + ghi transaction REFUND cho từng item trong đơn
+  await refundItems(db, lines);
+
+  // nhả lại lượt dùng của coupon
+  if (order.couponId) {
+    await revokeCoupon(db, order.couponId, order.customerPhoneNum ?? "");
+  }
+
+  // -1 usedCount cho từng combo đã áp vào đơn
+  await decrementCombosUsage(db, order.combos.map((combo) => combo.id));
+
+  // lastOrderAt KHÔNG revert: không lưu giá trị cũ ở đâu để khôi phục, chấp nhận lệch.
+  await db.update(customers).set({
+    totalSpent: sql`greatest(${customers.totalSpent} - ${order.totalAmount}, 0)`,
+    totalOrders: sql`greatest(${customers.totalOrders} - 1, 0)`
+  }).where(eq(customers.id, order.customerId));
+}
+
+// pure: PATCH có đụng vào input của khối tiền không. updateOrder dùng nó để quyết
+// revert/fulfill, updateOrderData dùng nó để quyết có chạy lại calculateOrder - hai chỗ
+// bắt buộc phải trả cùng một kết quả nên chỉ định nghĩa một lần ở đây.
+function isPricingChanged(updateReq: UpdateOrderRequest): boolean {
+  return updateReq.lines !== undefined
+    || updateReq.couponCode !== undefined
+    || updateReq.manualDiscountAmount !== undefined
+    || updateReq.manualShippingFee !== undefined;
 }
 
 async function generateUniqueOrderCode(db: DbExec): Promise<string> {

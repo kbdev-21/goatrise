@@ -21,4 +21,4 @@ export const itemTransactions = pgTable.withRLS("item_transactions", {
   index().on(t.supplierId)
 ]);
 
-export type ItemTransactionType = "IMPORT" | "ADJUST" | "SOLD";
+export type ItemTransactionType = "IMPORT" | "ADJUST" | "SOLD" | "REFUND";
