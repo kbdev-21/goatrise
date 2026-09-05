@@ -7,13 +7,10 @@ import "swiper/css/pagination";
 
 import type { ProductDetail } from "@/api/product/api";
 import { Button } from "@/components/ui/button";
-import { cn, getColorName } from "@/lib/utils";
+import { cn, formatPrice, getColorName } from "@/lib/utils";
+import { useCartStore } from "@/stores/cart.store";
 
 const SIZE_ORDER = ["XS", "S", "M", "L", "XL", "XXL", "XXXL"];
-
-function formatPrice(value: number) {
-  return `${new Intl.NumberFormat("vi-VN").format(value)} đ`;
-}
 
 export function ProductDetailView({ product }: { product: ProductDetail }) {
   const images = product.imgUrls ?? [];
@@ -48,6 +45,21 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
   const [selectedColor, setSelectedColor] = useState(colors[0] ?? null);
   const [selectedSize, setSelectedSize] = useState(sizes[0] ?? null);
   const [quantity, setQuantity] = useState(1);
+
+  const addLine = useCartStore((s) => s.addLine);
+
+  // requiredAttributes là nguồn đúng cho biết biến thể cần khớp thuộc tính nào
+  const selectedItem = useMemo(() => {
+    const required = product.requiredAttributes;
+    return (
+      product.items.find(
+        (item) =>
+          item.isActive &&
+          (!required.includes("COLOR") || item.attributeValues.COLOR === selectedColor) &&
+          (!required.includes("SIZE") || item.attributeValues.SIZE === selectedSize)
+      ) ?? null
+    );
+  }, [product.items, product.requiredAttributes, selectedColor, selectedSize]);
 
   const price = product.displayPrice ?? product.items[0]?.price ?? null;
   const hasDiscount =
@@ -231,8 +243,14 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
 
           {/* Actions */}
           <div className="mt-8 flex flex-col gap-3">
-            <Button className="h-12 w-full rounded-none bg-foreground text-background text-xs font-bold tracking-widest uppercase hover:bg-foreground/90">
-              Thêm vào giỏ hàng
+            <Button
+              disabled={!selectedItem}
+              onClick={() =>
+                selectedItem && addLine(selectedItem, product, quantity)
+              }
+              className="h-12 w-full rounded-none bg-foreground text-background text-xs font-bold tracking-widest uppercase hover:bg-foreground/90"
+            >
+              {selectedItem ? "Thêm vào giỏ hàng" : "Hết hàng"}
             </Button>
             <Button
               variant="outline"

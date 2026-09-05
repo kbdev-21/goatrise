@@ -45,7 +45,7 @@ const CHANNEL_OPTIONS: { label: string; value: SalesChannel }[] = [
 
 const STATUS_OPTIONS: { label: string; value: OrderStatus }[] = [
   { label: "Pending", value: "PENDING" },
-  { label: "Fulfilled", value: "FULFILLED" },
+  { label: "Confirmed", value: "CONFIRMED" },
   { label: "Cancelled", value: "CANCELLED" },
 ];
 

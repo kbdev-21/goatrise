@@ -62,7 +62,7 @@ const DELIVERY_STATUS_OPTIONS: { label: string; value: OrderDeliveryStatus }[] =
 
 const STATUS_OPTIONS: { label: string; value: OrderStatus }[] = [
   { label: "Pending", value: "PENDING" },
-  { label: "Fulfilled", value: "FULFILLED" },
+  { label: "Confirmed", value: "CONFIRMED" },
   { label: "Cancelled", value: "CANCELLED" },
 ];
 
@@ -174,7 +174,7 @@ export default function OrderInfoForm({
   // create: trạng thái live-calculate; edit bỏ trống (summary luôn có sẵn từ order)
   summaryState?: { calculating: boolean; error: string | null };
   orderCode?: string;
-  // đơn đã FULFILLED mà có coupon: backend cấm đổi khối tiền LẪN phone (coupon.usedPhoneNums
+  // đơn đã CONFIRMED mà có coupon: backend cấm đổi khối tiền LẪN phone (coupon.usedPhoneNums
   // đã ghi phone cũ) -> khóa items, pricing và phone. Mọi field khác luôn sửa được ở mọi status.
   couponLocked?: boolean;
 }) {
@@ -549,7 +549,7 @@ export default function OrderInfoForm({
 
             {couponLocked && (
               <span className="text-muted-foreground text-xs">
-                Fulfilled order with a coupon: items, pricing and phone number can no longer be
+                Confirmed order with a coupon: items, pricing and phone number can no longer be
                 changed.
               </span>
             )}

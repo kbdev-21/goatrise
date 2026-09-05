@@ -11,6 +11,7 @@ import type { QueryClient } from "@tanstack/react-query"
 import { useEffect } from "react"
 import "@/core/auth";
 import { useAuthStore } from "@/stores/auth.store";
+import { useCartStore } from "@/stores/cart.store";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 
@@ -76,6 +77,11 @@ function RootDocument({ children }: { children: React.ReactNode }) {
     const cleanup = init();
     return cleanup;
   }, [init]);
+
+  // rehydrate giỏ hàng sau khi mount để tránh lệch SSR (localStorage chỉ có ở client)
+  useEffect(() => {
+    void useCartStore.persist.rehydrate();
+  }, []);
 
   return (
     <html lang="en">

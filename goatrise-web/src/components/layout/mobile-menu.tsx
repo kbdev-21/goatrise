@@ -11,14 +11,17 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { navItems } from "@/components/layout/nav-config";
-
-const actions = [
-  { label: "Tìm kiếm", icon: Search },
-  { label: "Đăng nhập", icon: User },
-  { label: "Giỏ hàng", icon: ShoppingCart },
-] as const;
+import { useCartStore } from "@/stores/cart.store";
 
 export function MobileMenu({ triggerClassName }: { triggerClassName?: string }) {
+  const openCart = useCartStore((s) => s.openCart);
+
+  const actions = [
+    { label: "Tìm kiếm", icon: Search, onClick: undefined },
+    { label: "Đăng nhập", icon: User, onClick: undefined },
+    { label: "Giỏ hàng", icon: ShoppingCart, onClick: openCart },
+  ];
+
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -51,10 +54,11 @@ export function MobileMenu({ triggerClassName }: { triggerClassName?: string }) 
 
         {/* Các action từ header */}
         <div className="mt-auto flex flex-col border-t border-border">
-          {actions.map(({ label, icon: Icon }) => (
+          {actions.map(({ label, icon: Icon, onClick }) => (
             <SheetClose key={label} asChild>
               <button
                 type="button"
+                onClick={onClick}
                 className={cn(
                   "flex items-center gap-3 px-6 py-4 text-xs font-medium tracking-wide transition-colors hover:bg-muted"
                 )}

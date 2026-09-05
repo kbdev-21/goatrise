@@ -4,13 +4,19 @@ import { Search, ShoppingCart, User } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { MobileMenu } from "@/components/layout/mobile-menu";
+import { CartDrawer } from "@/components/layout/cart-drawer";
 import { navItems } from "@/components/layout/nav-config";
+import { selectItemCount, useCartStore } from "@/stores/cart.store";
 
 export function Header() {
   const [scrolled, setScrolled] = useState(false);
   const isHome = useRouterState({
     select: (s) => s.location.pathname === "/",
   });
+  const openCart = useCartStore((s) => s.openCart);
+  const cartCount = useCartStore(selectItemCount);
+  // chỉ hiện badge sau khi rehydrate xong để server và client render giống nhau
+  const hasHydrated = useCartStore((s) => s.hasHydrated);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 0);
@@ -100,13 +106,31 @@ export function Header() {
           </button>
           <button
             type="button"
-            aria-label="Giỏ hàng"
-            className={cn("flex items-center", underlineClass)}
+            aria-label={
+              hasHydrated && cartCount > 0
+                ? `Giỏ hàng, ${cartCount} sản phẩm`
+                : "Giỏ hàng"
+            }
+            onClick={openCart}
+            className={cn("relative flex items-center", underlineClass)}
           >
             <ShoppingCart className="size-[1.15rem]" strokeWidth={1.75} />
+            {/* chỉ báo "giỏ có hàng" bằng một chấm, không hiện số */}
+            {hasHydrated && cartCount > 0 ? (
+              <span
+                aria-hidden
+                className={cn(
+                  "absolute -top-0.5 -right-1 size-2 rounded-full",
+                  transitionClass,
+                  transparent ? "bg-white" : "bg-foreground"
+                )}
+              />
+            ) : null}
           </button>
         </div>
       </div>
+
+      <CartDrawer />
     </header>
   );
 }

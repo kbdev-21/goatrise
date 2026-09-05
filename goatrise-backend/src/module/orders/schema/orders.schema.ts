@@ -57,7 +57,7 @@ export type OrderCombo = {
   discountAmount: number
 }
 
-export type OrderStatus = "PENDING" | "FULFILLED" | "CANCELLED";
+export type OrderStatus = "PENDING" | "CONFIRMED" | "CANCELLED";
 export type OrderDeliveryStatus = "PENDING" | "SHIPPING" | "DELIVERED" | "RETURNED";
 export type OrderPaymentStatus = "UNPAID" | "PAID" | "REFUNDED";
 export type OrderPaymentMethod = "COD" | "MANUAL_TRANSFER" | "MOMO" | "VNPAY" | "STRIPE";

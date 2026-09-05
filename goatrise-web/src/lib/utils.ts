@@ -15,3 +15,8 @@ export function getColorName(hex: string): string {
     return hex
   }
 }
+
+// Định dạng giá VND dùng chung cho card / trang chi tiết / giỏ hàng
+export function formatPrice(value: number): string {
+  return `${new Intl.NumberFormat("vi-VN").format(value)} đ`
+}

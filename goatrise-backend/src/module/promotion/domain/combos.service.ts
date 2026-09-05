@@ -99,7 +99,7 @@ export async function incrementCombosUsage(db: DbExec, comboIds: string[]): Prom
     .where(inArray(combos.id, comboIds));
 }
 
-// nghịch đảo của incrementCombosUsage (gọi khi revert đơn đã fulfill).
+// nghịch đảo của incrementCombosUsage (gọi khi revert đơn đã confirm).
 // clamp ở 0: usedCount là counter thống kê, lệch cũng không được để âm.
 export async function decrementCombosUsage(db: DbExec, comboIds: string[]): Promise<void> {
   if (comboIds.length === 0) {

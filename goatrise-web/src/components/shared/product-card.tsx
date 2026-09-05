@@ -2,13 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
 
 import type { Product } from "@/api/product/api";
-import { cn } from "@/lib/utils";
-
-const priceFormatter = new Intl.NumberFormat("vi-VN", {
-  style: "currency",
-  currency: "VND",
-  maximumFractionDigits: 0,
-});
+import { cn, formatPrice } from "@/lib/utils";
 
 export function ProductCard({
   product,
@@ -75,7 +69,7 @@ export function ProductCard({
           {product.title.vi}
         </h3>
         <p className="text-sm text-muted-foreground">
-          {price === null ? "Liên hệ" : priceFormatter.format(price)}
+          {price === null ? "Liên hệ" : formatPrice(price)}
         </p>
         {colors.length > 0 ? (
           <div className="flex items-center gap-1.5 pt-0.5">

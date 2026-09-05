@@ -3,7 +3,7 @@ import type { OrderStatus, OrderDeliveryStatus, OrderPaymentStatus } from "../sc
 import type { SalesChannel } from "../../../core/types.js";
 
 const orderChannels = ["WEBSITE", "INSTAGRAM", "FACEBOOK", "TIKTOK", "SHOPEE", "REFERRAL", "OTHER"] satisfies SalesChannel[];
-const orderStatuses = ["PENDING", "FULFILLED", "CANCELLED"] satisfies OrderStatus[];
+const orderStatuses = ["PENDING", "CONFIRMED", "CANCELLED"] satisfies OrderStatus[];
 const orderDeliveryStatuses = ["PENDING", "SHIPPING", "DELIVERED", "RETURNED"] satisfies OrderDeliveryStatus[];
 const orderPaymentStatuses = ["UNPAID", "PAID", "REFUNDED"] satisfies OrderPaymentStatus[];
 

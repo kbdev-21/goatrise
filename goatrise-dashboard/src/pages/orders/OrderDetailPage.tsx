@@ -32,10 +32,10 @@ export default function OrderDetailPage() {
   const items = useMemo(() => itemsQuery.data ?? [], [itemsQuery.data]);
 
   const order = orderQuery.data;
-  // rule duy nhất còn lại của backend: đơn FULFILLED mà có coupon thì cấm đổi khối tiền
-  // (revert + fulfill lại sẽ chạm applyCoupon lần hai) lẫn phone (usedPhoneNums giữ phone cũ
+  // rule duy nhất còn lại của backend: đơn CONFIRMED mà có coupon thì cấm đổi khối tiền
+  // (revert + confirm lại sẽ chạm applyCoupon lần hai) lẫn phone (usedPhoneNums giữ phone cũ
   // -> chủ mới hưởng giảm giá mà không bị ghi nhận). Field khác sửa được ở mọi status.
-  const couponLocked = order?.status === "FULFILLED" && order?.couponId !== null;
+  const couponLocked = order?.status === "CONFIRMED" && order?.couponId !== null;
 
   const [value, setValue] = useState<OrderInfoFormValue | null>(null);
   const [calculation, setCalculation] = useState<OrderCalculationResult | null>(null);
@@ -147,7 +147,7 @@ export default function OrderDetailPage() {
       channel: value.channel,
       platformOrderId: value.platformOrderId.trim() || null,
       // form là nguồn sự thật cho cost -> gửi 0 khi trống. Cost không nằm trong pricingChanged
-      // của backend nên gửi kèm không kích hoạt revert/fulfill.
+      // của backend nên gửi kèm không kích hoạt revert/confirm.
       platformCost: value.platformCost ? Number(value.platformCost) : 0,
       taxCost: value.taxCost ? Number(value.taxCost) : 0,
       shippingCost: value.shippingCost ? Number(value.shippingCost) : 0,

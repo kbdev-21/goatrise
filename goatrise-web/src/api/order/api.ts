@@ -1,44 +1,47 @@
-import axiosInstance from "@/api/axios-instance.ts";
-import type { ItemAttributeValues } from "@/api/item/api.ts";
-import type { Coupon } from "@/api/coupon/api.ts";
-import type { Address, LanguageString, SalesChannel } from "@/core/types.ts";
+import axiosInstance from "@/api/axios-instance";
+import type { ItemBase } from "@/api/product/api";
 
-export async function findOrders(params?: FindOrdersParams): Promise<Order[]> {
-  const res = await axiosInstance.get<Order[]>("/api/orders", { params });
+export async function calculateOrder(
+  request: CalculateOrderRequest
+): Promise<OrderCalculationResult> {
+  const res = await axiosInstance.post<OrderCalculationResult>(
+    "/api/orders/calculate",
+    request
+  );
   return res.data;
 }
 
-export async function findOrderById(orderId: string): Promise<Order> {
-  const res = await axiosInstance.get<Order>(`/api/orders/${orderId}`);
+export async function placeOrder(request: PlaceOrderRequest): Promise<Order> {
+  const res = await axiosInstance.post<Order>("/api/orders/place", request);
   return res.data;
 }
 
-export async function calculateOrder(request: CalculateOrderRequest): Promise<OrderCalculationResult> {
-  const res = await axiosInstance.post<OrderCalculationResult>("/api/orders/calculate", request);
-  return res.data;
-}
+// web tự dùng cho địa chỉ, không phụ thuộc core/types của backend
+export type LanguageString = { vi: string; en: string };
 
-export async function createOrder(request: CreateOrderRequest): Promise<Order> {
-  const res = await axiosInstance.post<Order>("/api/orders", request);
-  return res.data;
-}
+export type SalesChannel =
+  | "WEBSITE"
+  | "INSTAGRAM"
+  | "FACEBOOK"
+  | "TIKTOK"
+  | "SHOPEE"
+  | "REFERRAL"
+  | "OTHER";
 
-export async function updateOrder(orderId: string, request: UpdateOrderRequest): Promise<Order> {
-  const res = await axiosInstance.patch<Order>(`/api/orders/${orderId}`, request);
-  return res.data;
-}
+// Mirror backend: core/types.ts -> Address (validators.ts AddressSchema)
+export type Address = {
+  countryCode: string;
+  provinceCode: string | null;
+  provinceName: string;
+  address: string;
+};
 
 export type OrderStatus = "PENDING" | "CONFIRMED" | "CANCELLED";
-
 export type OrderDeliveryStatus = "PENDING" | "SHIPPING" | "DELIVERED" | "RETURNED";
-
 export type OrderPaymentStatus = "UNPAID" | "PAID" | "REFUNDED";
-
 export type OrderPaymentMethod = "COD" | "MANUAL_TRANSFER" | "MOMO" | "VNPAY" | "STRIPE";
 
-
 // Mirror backend: module/orders/schema/orders.schema.ts -> OrderCombo
-// (structurally same as AppliedCombo from combo-calculation.service.ts)
 export type OrderCombo = {
   id: string;
   code: string;
@@ -50,7 +53,7 @@ export type OrderLineSnapItem = {
   sku: string;
   name: string;
   imgUrl: string | null;
-  attributeValues: ItemAttributeValues;
+  attributeValues: ItemBase["attributeValues"];
   price: number;
   product: {
     slug: string;
@@ -63,7 +66,7 @@ export type OrderLineSnapItem = {
 export type OrderLineBase = {
   id: string;
   orderId: string;
-  itemId: string | null;
+  itemId: string;
   productId: string | null;
   snapItem: OrderLineSnapItem;
   quantity: number;
@@ -73,11 +76,31 @@ export type OrderLineBase = {
   updatedAt: string;
 };
 
+// Mirror backend: module/promotion/schema/coupons.schema.ts -> CouponBase
+export type Coupon = {
+  id: string;
+  code: string;
+  discountType: "FIXED" | "PERCENTAGE";
+  discountValue: number;
+  minAppliablePrice: number;
+  maxDiscountAmount: number | null;
+  maximalUsage: number;
+  usedCount: number;
+  usedPhoneNums: string[];
+  isActive: boolean;
+  isOutOfUse: boolean;
+  startsAt: string;
+  expiresAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
 // Base: cột gốc của order (mirror OrderBase backend)
 // bigint columns serialized as number; timestamps serialized as ISO string
 export type OrderBase = {
   id: string;
   code: string;
+  platformOrderId: string | null;
   customerId: string;
   customerName: string;
   customerEmail: string | null;
@@ -97,7 +120,6 @@ export type OrderBase = {
   paymentStatus: OrderPaymentStatus;
   paymentMethod: OrderPaymentMethod;
   channel: SalesChannel;
-  platformOrderId: string | null;
   referrerId: string | null;
   creatorId: string | null;
   note: string | null;
@@ -115,43 +137,9 @@ export type Order = OrderBase & {
   coupon: Coupon | null;
 };
 
-export type FindOrdersParams = {
-  search?: string;
-  channel?: SalesChannel;
-  status?: OrderStatus;
-  sort?: string;
-  offset?: number;
-  limit?: number;
-};
-
 export type OrderLineRequest = {
   itemId: string;
   quantity: number;
-};
-
-// Mirror backend: module/orders/domain/validators.ts -> CreateOrderRequestSchema
-export type CreateOrderRequest = {
-  customerName: string;
-  customerEmail?: string;
-  customerPhoneNum?: string;
-  customerAddress?: Address;
-  couponCode?: string;
-  manualDiscountAmount?: number;
-  manualShippingFee?: number;
-  paymentMethod: OrderPaymentMethod;
-  paymentStatus?: OrderPaymentStatus;
-  status?: OrderStatus;
-  deliveryStatus?: OrderDeliveryStatus;
-  channel: SalesChannel;
-  platformOrderId?: string;
-  platformCost?: number;
-  taxCost?: number;
-  shippingCost?: number;
-  otherCost?: number;
-  referrerId?: string;
-  note?: string;
-  createdAt?: string;
-  lines: OrderLineRequest[];
 };
 
 // Mirror backend: module/orders/domain/validators.ts -> CalculateOrderRequestSchema
@@ -165,30 +153,17 @@ export type CalculateOrderRequest = {
   lines: OrderLineRequest[];
 };
 
-// Mirror backend: module/orders/domain/validators.ts -> UpdateOrderRequestSchema
-// Quy ước: field vắng mặt (undefined) = giữ nguyên; field nullable gửi null = xóa về null.
-export type UpdateOrderRequest = {
-  customerName?: string;
-  customerEmail?: string | null;
-  customerPhoneNum?: string | null;
-  customerAddress?: Address | null;
-  couponCode?: string | null;
-  manualDiscountAmount?: number;
-  manualShippingFee?: number;
-  lines?: OrderLineRequest[];
-  paymentMethod?: OrderPaymentMethod;
-  paymentStatus?: OrderPaymentStatus;
-  status?: OrderStatus;
-  deliveryStatus?: OrderDeliveryStatus;
-  channel?: SalesChannel;
-  platformOrderId?: string | null;
-  platformCost?: number;
-  taxCost?: number;
-  shippingCost?: number;
-  otherCost?: number;
-  referrerId?: string | null;
+// Mirror backend: module/orders/domain/validators.ts -> PlaceOrderRequestSchema
+// đơn khách tự đặt (storefront): channel = WEBSITE do backend gán, SĐT + địa chỉ bắt buộc
+export type PlaceOrderRequest = {
+  customerName: string;
+  customerEmail?: string;
+  customerPhoneNum: string;
+  customerAddress: Address;
+  couponCode?: string;
+  paymentMethod: OrderPaymentMethod;
   note?: string;
-  createdAt?: string;
+  lines: OrderLineRequest[];
 };
 
 // Mirror backend: module/orders/domain/order-calculation.service.ts -> CalculateOrderResult
