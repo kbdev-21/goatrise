@@ -1,7 +1,4 @@
 import heroImg from "@/assets/hero.jpg";
-import d1GoatImg from "@/assets/d1-goat.jpg";
-import menImg from "@/assets/men.jpg";
-import womenImg from "@/assets/women.jpg";
 
 // Dữ liệu tạm cho trang home redesign — chưa gọi API.
 // Toàn bộ ảnh dùng tạm hero.jpg trong /src/assets làm placeholder.
@@ -88,33 +85,5 @@ export const featuredReleases: FeaturedRelease[] = [
     audience: "men",
     colors: ["#f4f0e8", "#e7b7a1"],
     image: heroImg,
-  },
-];
-
-export type FeaturedCollection = {
-  id: string;
-  title: string;
-  ctaLabel: string;
-  image: string;
-};
-
-export const featuredCollections: FeaturedCollection[] = [
-  {
-    id: "col-icons",
-    title: "D'1 GOAT",
-    ctaLabel: "Shop now",
-    image: d1GoatImg,
-  },
-  {
-    id: "col-performance",
-    title: "Men",
-    ctaLabel: "Shop now",
-    image: menImg,
-  },
-  {
-    id: "col-footwear",
-    title: "Women",
-    ctaLabel: "Shop now",
-    image: womenImg,
   },
 ];
