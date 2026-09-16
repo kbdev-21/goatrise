@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Search, ShoppingCart, User } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { MobileMenu } from "@/components/layout/mobile-menu";
@@ -41,7 +40,7 @@ export function Header() {
         transparent ? "bg-transparent" : "bg-background"
       )}
     >
-      <div className="grid h-18 grid-cols-[1fr_auto_1fr] items-center gap-4 px-6 lg:px-10">
+      <div className="mx-auto grid h-18 w-full max-w-[1500px] grid-cols-[1fr_auto_1fr] items-center gap-4 px-6 lg:px-10">
         <div className="flex items-center gap-8">
           {/* Mobile: chỉ hiện nút Menu */}
           <MobileMenu
@@ -60,7 +59,7 @@ export function Header() {
                 to={item.to}
                 activeOptions={{ exact: true }}
                 className={cn(
-                  "text-sm font-medium tracking-wide",
+                  "text-sm font-medium tracking-wide uppercase",
                   underlineClass,
                   transitionClass,
                   textClass
@@ -93,16 +92,22 @@ export function Header() {
           <button
             type="button"
             aria-label="Tìm kiếm"
-            className={cn("flex items-center", underlineClass)}
+            className={cn(
+              "flex items-center text-sm font-medium tracking-wide uppercase",
+              underlineClass
+            )}
           >
-            <Search className="size-[1.15rem]" strokeWidth={1.75} />
+            Search
           </button>
           <button
             type="button"
             aria-label="Tài khoản"
-            className={cn("hidden items-center md:flex", underlineClass)}
+            className={cn(
+              "hidden items-center text-sm font-medium tracking-wide uppercase md:flex",
+              underlineClass
+            )}
           >
-            <User className="size-[1.15rem]" strokeWidth={1.75} />
+            Account
           </button>
           <button
             type="button"
@@ -112,15 +117,18 @@ export function Header() {
                 : "Giỏ hàng"
             }
             onClick={openCart}
-            className={cn("relative flex items-center", underlineClass)}
+            className={cn(
+              "relative flex items-center text-sm font-medium tracking-wide uppercase",
+              underlineClass
+            )}
           >
-            <ShoppingCart className="size-[1.15rem]" strokeWidth={1.75} />
+            Cart
             {/* chỉ báo "giỏ có hàng" bằng một chấm, không hiện số */}
             {hasHydrated && cartCount > 0 ? (
               <span
                 aria-hidden
                 className={cn(
-                  "absolute -top-0.5 -right-1 size-2 rounded-full",
+                  "absolute -top-0.5 -right-2 size-2 rounded-full",
                   transitionClass,
                   transparent ? "bg-white" : "bg-foreground"
                 )}

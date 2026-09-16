@@ -5,7 +5,7 @@ import { ProductCard } from "@/components/shared/product-card";
 
 export function BestSellers({ products }: { products: Product[] }) {
   return (
-    <section className="px-6 py-16 lg:px-10">
+    <section className="mx-auto max-w-[1500px] px-6 py-16 lg:px-10">
       <div className="flex items-center gap-4">
         <h2 className="text-xl font-semibold tracking-tight uppercase lg:text-2xl">
           Best Sellers
@@ -23,7 +23,7 @@ export function BestSellers({ products }: { products: Product[] }) {
           Chưa có sản phẩm nào.
         </p>
       ) : (
-        <div className="mt-8 grid grid-cols-2 gap-4 lg:grid-cols-4 2xl:grid-cols-5">
+        <div className="mt-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
           {products.slice(0, 5).map((product, index) => (
             <ProductCard
               key={product.id}

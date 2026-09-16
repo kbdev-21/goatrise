@@ -9,7 +9,7 @@ import { BestSellers } from "@/components/home/best-sellers";
 import { BrandIntro } from "@/components/home/brand-intro";
 
 const BEST_SELLER_LIMIT = 8;
-const FEATURED_COLLECTION_LIMIT = 3;
+const FEATURED_COLLECTION_LIMIT = 2;
 
 export const Route = createFileRoute("/")({
   loader: ({ context }) =>

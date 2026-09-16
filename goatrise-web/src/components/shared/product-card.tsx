@@ -46,13 +46,13 @@ export function ProductCard({
                 src={hoverImage}
                 alt={product.title.vi}
                 loading="lazy"
-                className="absolute inset-0 size-full object-cover opacity-0 transition-opacity duration-400 ease-in-out group-hover:opacity-100"
+                className="absolute inset-0 size-full object-cover opacity-0 transition-opacity duration-300 ease-in-out group-hover:opacity-100"
               />
             ) : null}
 
             <span
               aria-hidden
-              className="absolute right-3 bottom-3 flex size-8 items-center justify-center border-[0.5px] border-foreground/50 bg-background/90 text-foreground transition-colors hover:bg-foreground hover:text-background"
+              className="absolute right-3 bottom-3 flex size-8 items-center justify-center border-[0.5px] border-foreground/50 bg-background/90 text-foreground opacity-0 transition-[opacity,color,background-color] duration-200 ease-in-out group-hover:opacity-100 hover:bg-foreground hover:text-background"
             >
               <Plus className="size-3.5" />
             </span>
@@ -65,7 +65,7 @@ export function ProductCard({
       </div>
 
       <div className="mt-3 space-y-1.5">
-        <h3 className="text-sm font-medium tracking-wide uppercase">
+        <h3 className="text-sm font-semibold tracking-wide uppercase">
           {product.title.vi}
         </h3>
         <p className="text-sm text-muted-foreground">

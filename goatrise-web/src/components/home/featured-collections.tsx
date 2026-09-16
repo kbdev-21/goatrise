@@ -14,10 +14,10 @@ export function FeaturedCollections({ collections }: { collections: Collection[]
   const isSingle = collections.length === 1;
 
   return (
-    <section className="px-6 pb-20 lg:px-10">
+    <section className="pb-20">
       <div
         className={cn(
-          "grid grid-cols-1 gap-4",
+          "grid grid-cols-1 gap-0",
           collections.length === 2 && "md:grid-cols-2",
           collections.length >= 3 && "md:grid-cols-3"
         )}
@@ -41,10 +41,10 @@ export function FeaturedCollections({ collections }: { collections: Collection[]
             ) : null}
             <div
               aria-hidden
-              className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent"
+              className="absolute inset-0 bg-black/25"
             />
 
-            <div className="absolute inset-x-0 bottom-0 flex flex-col items-center gap-4 p-8 text-white">
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 p-8 text-white">
               <h3 className="text-xl font-semibold tracking-tight uppercase lg:text-2xl">
                 {collection.title.vi}
               </h3>
