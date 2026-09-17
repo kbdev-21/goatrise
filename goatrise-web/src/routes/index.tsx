@@ -29,7 +29,7 @@ function App() {
     .sort((a, b) => b.sold - a.sold)
     .slice(0, BEST_SELLER_LIMIT);
 
-  // Chỉ collection featured; priority cao lên trước; tối đa 3
+  // Chỉ collection featured; priority cao lên trước; tối đa 2
   const featuredCollections = collections
     .filter((collection) => collection.isFeatured)
     .sort((a, b) => b.displayPriority - a.displayPriority)
@@ -38,6 +38,7 @@ function App() {
   return (
     <>
       <Hero />
+
       <BestSellers products={bestSellers} />
       <FeaturedCollections collections={featuredCollections} />
       <BrandIntro />

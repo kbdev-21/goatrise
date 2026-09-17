@@ -1,71 +1,102 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 
 import { cn } from "@/lib/utils";
 import { MobileMenu } from "@/components/layout/mobile-menu";
 import { CartDrawer } from "@/components/layout/cart-drawer";
 import { navItems } from "@/components/layout/nav-config";
+import { RollText } from "@/components/shared/roll-text";
 import { selectItemCount, useCartStore } from "@/stores/cart.store";
 
+// Dưới ngưỡng này header luôn hiện, tránh giật khi cuộn nhẹ ở đầu trang
+const HIDE_THRESHOLD = 180;
+// Bỏ qua rung lắc nhỏ của trackpad, chỉ đổi trạng thái khi thật sự đổi hướng
+const DIRECTION_DELTA = 6;
+
+const LABEL_CLASS = "text-[11px] font-bold tracking-[0.08em] uppercase";
+const ACTION_CLASS = cn(
+  LABEL_CLASS,
+  "group -my-3 flex items-baseline gap-1.5 py-3 opacity-60 transition-opacity duration-300 hover:opacity-100 focus-visible:opacity-100"
+);
+
 export function Header() {
-  const [scrolled, setScrolled] = useState(false);
+  const [atTop, setAtTop] = useState(true);
+  const [hidden, setHidden] = useState(false);
+  const lastY = useRef(0);
+
   const isHome = useRouterState({
     select: (s) => s.location.pathname === "/",
   });
   const openCart = useCartStore((s) => s.openCart);
   const cartCount = useCartStore(selectItemCount);
-  // chỉ hiện badge sau khi rehydrate xong để server và client render giống nhau
+  // chỉ hiện số thật sau khi rehydrate xong để server và client render giống nhau
   const hasHydrated = useCartStore((s) => s.hasHydrated);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 0);
-    onScroll();
+    let frame = 0;
+    // trình duyệt có thể khôi phục vị trí cuộn cũ; lấy mốc thật để lần chạy
+    // đầu tiên không bị hiểu nhầm là "đang cuộn xuống" rồi giấu header đi
+    lastY.current = window.scrollY;
+
+    const update = () => {
+      frame = 0;
+      const y = window.scrollY;
+      const delta = y - lastY.current;
+
+      // đổi nền ngay khi rời đỉnh để có phản hồi tức thì
+      setAtTop(y <= 8);
+
+      if (Math.abs(delta) < DIRECTION_DELTA) return;
+      // cuộn xuống thì header trượt lên giấu đi, cuộn lên là trượt ra lại
+      setHidden(y > HIDE_THRESHOLD && delta > 0);
+      lastY.current = y;
+    };
+
+    const onScroll = () => {
+      if (frame === 0) frame = requestAnimationFrame(update);
+    };
+
+    update();
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", onScroll);
+    };
   }, []);
 
-  // Chỉ trong suốt khi ở đầu trang chủ (nơi có hero tối phía sau)
-  const transparent = isHome && !scrolled;
-  const textClass = transparent ? "text-white" : "text-foreground";
-  const transitionClass = "transition-colors duration-500 ease-in-out";
-  // Hover: gạch chân chạy từ trái (width 0 -> full) thay vì đổi màu
-  const underlineClass =
-    "relative after:absolute after:-bottom-1 after:left-0 after:h-px after:w-0 after:bg-current after:transition-[width] after:duration-300 after:content-[''] hover:after:w-full";
+  // Chỉ trong suốt khi đứng ở đầu trang chủ (nơi có hero tối phía sau)
+  const transparent = isHome && atTop;
+  const count = hasHydrated ? cartCount : 0;
 
   return (
     <header
       className={cn(
-        "sticky top-0 z-40 w-full",
-        transitionClass,
-        transparent ? "bg-transparent" : "bg-background"
+        "header-shell fixed inset-x-0 top-0 z-40 border-b",
+        hidden ? "-translate-y-full" : "translate-y-0",
+        transparent
+          ? "border-transparent bg-transparent text-white"
+          : "border-border bg-background/100 text-foreground backdrop-blur-xl"
       )}
+      onFocusCapture={() => setHidden(false)}
     >
-      <div className="mx-auto grid h-18 w-full max-w-[1500px] grid-cols-[1fr_auto_1fr] items-center gap-4 px-6 lg:px-10">
-        <div className="flex items-center gap-8">
+      <div className="mx-auto grid h-12 w-full max-w-[1500px] grid-cols-[1fr_auto_1fr] items-center gap-4 px-5 md:h-16 lg:px-10">
+        <div className="flex items-center gap-5">
           {/* Mobile: chỉ hiện nút Menu */}
-          <MobileMenu
-            triggerClassName={cn(
-              "flex items-center md:hidden",
-              underlineClass,
-              transitionClass,
-              textClass
-            )}
-          />
-          {/* Desktop: hiện toàn bộ nav, ẩn nút Menu */}
-          <nav className="hidden items-center gap-8 md:flex">
+          <MobileMenu triggerClassName="-ml-3 flex size-11 items-center justify-center opacity-70 transition-opacity duration-300 hover:opacity-100 md:hidden" />
+
+          {/* Desktop: hiện toàn bộ nav */}
+          <nav className="hidden items-center gap-5 md:flex">
             {navItems.map((item) => (
               <Link
                 key={item.to}
                 to={item.to}
                 activeOptions={{ exact: true }}
                 className={cn(
-                  "text-sm font-medium tracking-wide uppercase",
-                  underlineClass,
-                  transitionClass,
-                  textClass
+                  LABEL_CLASS,
+                  "group -my-3 py-3 opacity-60 transition-opacity duration-300 hover:opacity-100 data-[status=active]:opacity-100"
                 )}
               >
-                {item.label}
+                <RollText label={item.label} />
               </Link>
             ))}
           </nav>
@@ -73,67 +104,38 @@ export function Header() {
 
         <Link
           to="/"
-          className={cn(
-            "justify-self-center font-logo text-2xl sm:text-3xl font-extrabold tracking-tight uppercase",
-            transitionClass,
-            textClass
-          )}
+          aria-label="GOAT RISE — về trang chủ"
+          className="-my-2 justify-self-center py-2 font-logo text-xl font-extrabold tracking-[0.12em] uppercase sm:text-2xl"
         >
           GOAT RISE
         </Link>
 
-        <div
-          className={cn(
-            "flex items-center gap-4 justify-self-end md:gap-7",
-            transitionClass,
-            textClass
-          )}
-        >
-          <button
-            type="button"
-            aria-label="Tìm kiếm"
-            className={cn(
-              "flex items-center text-sm font-medium tracking-wide uppercase",
-              underlineClass
-            )}
-          >
-            Search
+        <div className="flex items-center gap-4 justify-self-end md:gap-6">
+          <button type="button" aria-label="Tìm kiếm" className={ACTION_CLASS}>
+            <RollText label="Search" />
           </button>
+
           <button
             type="button"
             aria-label="Tài khoản"
-            className={cn(
-              "hidden items-center text-sm font-medium tracking-wide uppercase md:flex",
-              underlineClass
-            )}
+            className={cn(ACTION_CLASS, "hidden md:flex")}
           >
-            Account
+            <RollText label="Account" />
           </button>
+
           <button
             type="button"
             aria-label={
-              hasHydrated && cartCount > 0
-                ? `Giỏ hàng, ${cartCount} sản phẩm`
-                : "Giỏ hàng"
+              count > 0 ? `Giỏ hàng, ${count} sản phẩm` : "Giỏ hàng, đang trống"
             }
             onClick={openCart}
-            className={cn(
-              "relative flex items-center text-sm font-medium tracking-wide uppercase",
-              underlineClass
-            )}
+            className={ACTION_CLASS}
           >
-            Cart
-            {/* chỉ báo "giỏ có hàng" bằng một chấm, không hiện số */}
-            {hasHydrated && cartCount > 0 ? (
-              <span
-                aria-hidden
-                className={cn(
-                  "absolute -top-0.5 -right-2 size-2 rounded-full",
-                  transitionClass,
-                  transparent ? "bg-white" : "bg-foreground"
-                )}
-              />
-            ) : null}
+            <RollText label="Cart" />
+            {/* số lượng luôn 2 chữ số để bề ngang không nhảy */}
+            <span aria-hidden className="tabular-nums opacity-65">
+              {String(Math.min(count, 99)).padStart(2, "0")}
+            </span>
           </button>
         </div>
       </div>

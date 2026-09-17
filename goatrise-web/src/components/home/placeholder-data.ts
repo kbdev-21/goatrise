@@ -12,8 +12,8 @@ export type Hero = {
 };
 
 export const hero: Hero = {
-  eyebrow: "1st Collection",
-  title: "1st Collection\nD'1 GOAT",
+  eyebrow: "1st Collection · Est. 2026",
+  title: "D'1 GOAT",
   description:
     "Bộ sưu tập đầu tiên của GOAT RISE - hoạt phục và thời trang cổ điển được thiết kế để đồng hành cùng bạn mỗi ngày.",
   ctaLabel: "Khám phá",

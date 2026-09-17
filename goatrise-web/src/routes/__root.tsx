@@ -9,11 +9,13 @@ import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools"
 import { TanStackDevtools } from "@tanstack/react-devtools"
 import type { QueryClient } from "@tanstack/react-query"
 import { useEffect } from "react"
+import { cn } from "@/lib/utils";
 import "@/core/auth";
 import { useAuthStore } from "@/stores/auth.store";
 import { useCartStore } from "@/stores/cart.store";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
+import { useSmoothScroll } from "@/hooks/use-smooth-scroll";
 
 import appCss from "../styles.css?url"
 
@@ -69,6 +71,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   const init = useAuthStore((s) => s.init);
+
+  useSmoothScroll();
   const isComingSoon = useRouterState({
     select: (s) => s.location.pathname === COMING_SOON_PATH,
   });
@@ -87,11 +91,18 @@ function RootDocument({ children }: { children: React.ReactNode }) {
     <html lang="en">
       <head>
         <HeadContent />
+        {/* Không có JS thì bỏ qua hiệu ứng hiện dần, nội dung vẫn đọc được */}
+        <noscript>
+          <style>{`[data-reveal]{opacity:1;transform:none}`}</style>
+        </noscript>
       </head>
       <body>
         <div className="flex min-h-svh flex-col">
           {isComingSoon ? null : <Header />}
-          <main className="flex-1">{children}</main>
+          {/* header fixed nên main phải tự chừa đúng chiều cao của nó */}
+          <main className={cn("flex-1", isComingSoon ? null : "pt-12 md:pt-14")}>
+            {children}
+          </main>
           {isComingSoon ? null : <Footer />}
         </div>
         <TanStackDevtools
