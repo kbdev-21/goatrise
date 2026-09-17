@@ -1,15 +1,11 @@
 import { Hono } from "hono";
 import z from "zod";
 import { createMcpHandler, McpServer } from "@modelcontextprotocol/server";
-import { localhostHostValidation, localhostOriginValidation } from "@modelcontextprotocol/hono";
 import type { ContextVariables } from "../../core/types.js";
 import { db } from "../../db/db.js";
 import { sql } from "drizzle-orm";
 import { CreateOrderRequestSchema } from "../../domain/orders/validators.js";
 import { createOrder } from "../../domain/orders/orders.service.js";
-import { createMiddleware } from "hono/factory";
-import { MCP_KEY } from "../../core/env.js";
-import { HTTPException } from "hono/http-exception";
 import { mcpMiddleware } from "../middlewares/mcp.middleware.js";
 
 // Stateless: SDK gọi factory để tạo McpServer mới cho mỗi HTTP request
@@ -18,8 +14,6 @@ const mcpHandler = createMcpHandler(createMcpServer);
 export const mcpRouter = new Hono<{ Variables: ContextVariables }>();
 
 mcpRouter.all("/mcp",
-  localhostHostValidation(),
-  localhostOriginValidation(),
   mcpMiddleware,
   (c) => mcpHandler.fetch(c.req.raw)
 );
