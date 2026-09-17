@@ -12,13 +12,15 @@ import { customersRouter } from "./router/http/customers.router.js";
 import { couponsRouter } from "./router/http/coupons.router.js";
 import { combosRouter } from "./router/http/combos.router.js";
 import { logger } from "hono/logger";
+import { except } from "hono/combine";
 import { analyticsRouter } from "./router/http/analytics.router.js";
 import type { ContextVariables } from "./core/types.js";
+import { mcpRouter } from "./router/mcp/mcp.router.js";
 
 const app = new Hono<{ Variables: ContextVariables }>();
 
 app.use("*", cors());
-app.use(logger());
+app.use(except("/mcp", logger()));
 
 app.get("/hello", (c) => {
   return c.text("Hello world");
@@ -35,6 +37,7 @@ app.route("/", customersRouter);
 app.route("/", couponsRouter);
 app.route("/", combosRouter);
 app.route("/", analyticsRouter);
+app.route("/", mcpRouter);
 
 serve({
   fetch: app.fetch,
