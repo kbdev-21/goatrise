@@ -32,7 +32,7 @@ export function MobileMenu({ triggerClassName }: { triggerClassName?: string }) 
 
       <SheetContent side="left" className="w-[min(20rem,85vw)] p-0">
         <SheetHeader className="border-b border-border p-6">
-          <SheetTitle className="text-xl font-extrabold tracking-tight uppercase">
+          <SheetTitle className="font-logo text-xl font-extrabold tracking-tight uppercase">
             GOAT RISE
           </SheetTitle>
         </SheetHeader>

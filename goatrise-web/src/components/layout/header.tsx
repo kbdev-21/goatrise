@@ -74,7 +74,7 @@ export function Header() {
         <Link
           to="/"
           className={cn(
-            "justify-self-center text-2xl sm:text-3xl font-extrabold tracking-tight uppercase",
+            "justify-self-center font-logo text-2xl sm:text-3xl font-extrabold tracking-tight uppercase",
             transitionClass,
             textClass
           )}
