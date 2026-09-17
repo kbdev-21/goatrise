@@ -1,0 +1,35 @@
+import { boolean, integer, pgTable, text, timestamp, uuid, bigint, jsonb, index } from "drizzle-orm/pg-core";
+import { products } from "./products.schema.js";
+
+export const items = pgTable.withRLS("items", {
+  id: uuid("id").primaryKey(),
+  productId: uuid("product_id").references(() => products.id),
+
+  sku: text("sku").unique().notNull(),
+  name: text("name").notNull(),
+  normalizedName: text("normalized_name").notNull(),
+  imgUrl: text("img_url"),
+  attributeValues: jsonb("attribute_values").$type<ItemAttributeValues>().notNull().default({}),
+
+  price: bigint("price", { mode: "number" }).notNull(),
+  weight: integer("weight"),
+
+  stock: integer("stock").default(0).notNull(),
+  sold: integer("sold").default(0).notNull(),
+  displayPriority: integer("display_priority").notNull().default(1),
+  isActive: boolean("is_active").notNull().default(true),
+  note: text("note"),
+
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+}, (t) => [
+  index().on(t.productId),
+]);
+
+export type ItemDb = typeof items.$inferSelect;
+
+export type ItemAttribute = "COLOR" | "SIZE";
+export type ItemAttributeValues = {
+  COLOR?: string, // mã hex, cũng là key định danh biến thể
+  SIZE?: string
+}

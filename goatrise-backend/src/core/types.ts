@@ -1,4 +1,4 @@
-import type { User } from "../module/auth/domain/types.js";
+import type { User } from "../domain/auth/types.js";
 
 export type ContextVariables = {
   currentUser: User

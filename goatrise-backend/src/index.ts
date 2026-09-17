@@ -1,20 +1,21 @@
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
-import { usersRouter } from "./module/auth/router/users.router.js";
-import { auditLogsRouter } from "./module/audit/router/audit-logs.router.js";
-import { suppliersRouter } from "./module/inventory/router/suppliers.router.js";
-import { itemsRouter } from "./module/inventory/router/items.router.js";
-import { productsRouter } from "./module/catalog/router/products.router.js";
-import { collectionsRouter } from "./module/catalog/router/collections.router.js";
+import { usersRouter } from "./router/http/users.router.js";
+import { auditLogsRouter } from "./router/http/audit-logs.router.js";
+import { suppliersRouter } from "./router/http/suppliers.router.js";
+import { itemsRouter } from "./router/http/items.router.js";
+import { productsRouter } from "./router/http/products.router.js";
+import { collectionsRouter } from "./router/http/collections.router.js";
 import { cors } from "hono/cors";
-import { ordersRouter } from "./module/orders/router/orders.router.js";
-import { customersRouter } from "./module/customers/router/customers.router.js";
-import { couponsRouter } from "./module/promotion/router/coupons.router.js";
-import { combosRouter } from "./module/promotion/router/combos.router.js";
+import { ordersRouter } from "./router/http/orders.router.js";
+import { customersRouter } from "./router/http/customers.router.js";
+import { couponsRouter } from "./router/http/coupons.router.js";
+import { combosRouter } from "./router/http/combos.router.js";
 import { logger } from "hono/logger";
-import { analyticsRouter } from "./module/analytics/router/analytics.router.js";
+import { analyticsRouter } from "./router/http/analytics.router.js";
+import type { ContextVariables } from "./core/types.js";
 
-const app = new Hono();
+const app = new Hono<{ Variables: ContextVariables }>();
 
 app.use("*", cors());
 app.use(logger());
