@@ -40,7 +40,7 @@ export function MobileMenu({ triggerClassName }: { triggerClassName?: string }) 
         {/* Nav chính */}
         <nav className="flex flex-col">
           {navItems.map((item) => (
-            <SheetClose key={item.to} asChild>
+            <SheetClose key={item.label} asChild>
               <Link
                 to={item.to}
                 activeOptions={{ exact: true }}

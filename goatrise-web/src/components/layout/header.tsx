@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
+import { Search, ShoppingCart } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { MobileMenu } from "@/components/layout/mobile-menu";
@@ -13,7 +14,12 @@ const HIDE_THRESHOLD = 180;
 // Bỏ qua rung lắc nhỏ của trackpad, chỉ đổi trạng thái khi thật sự đổi hướng
 const DIRECTION_DELTA = 6;
 
-const LABEL_CLASS = "text-[11px] font-bold tracking-[0.08em] uppercase";
+const LABEL_CLASS =
+  "text-[11px] font-bold tracking-[0.08em] whitespace-nowrap uppercase";
+// Nút icon trên mobile: ô chạm 44x44, icon cùng cỡ với nút Menu
+const ICON_CLASS =
+  "flex size-11 items-center justify-center opacity-70 transition-opacity duration-300 hover:opacity-100";
+
 const ACTION_CLASS = cn(
   LABEL_CLASS,
   "group -my-3 flex items-baseline gap-1.5 py-3 opacity-60 transition-opacity duration-300 hover:opacity-100 focus-visible:opacity-100"
@@ -67,6 +73,8 @@ export function Header() {
   // Chỉ trong suốt khi đứng ở đầu trang chủ (nơi có hero tối phía sau)
   const transparent = isHome && atTop;
   const count = hasHydrated ? cartCount : 0;
+  const cartLabel =
+    count > 0 ? `Giỏ hàng, ${count} sản phẩm` : "Giỏ hàng, đang trống";
 
   return (
     <header
@@ -79,7 +87,7 @@ export function Header() {
       )}
       onFocusCapture={() => setHidden(false)}
     >
-      <div className="mx-auto grid h-12 w-full max-w-[1500px] grid-cols-[1fr_auto_1fr] items-center gap-4 px-5 md:h-16 lg:px-10">
+      <div className="mx-auto grid h-14 w-full max-w-[1500px] grid-cols-[1fr_auto_1fr] items-center gap-4 px-5 md:h-16 lg:px-10">
         <div className="flex items-center gap-5">
           {/* Mobile: chỉ hiện nút Menu */}
           <MobileMenu triggerClassName="-ml-3 flex size-11 items-center justify-center opacity-70 transition-opacity duration-300 hover:opacity-100 md:hidden" />
@@ -88,7 +96,7 @@ export function Header() {
           <nav className="hidden items-center gap-5 md:flex">
             {navItems.map((item) => (
               <Link
-                key={item.to}
+                key={item.label}
                 to={item.to}
                 activeOptions={{ exact: true }}
                 className={cn(
@@ -105,38 +113,75 @@ export function Header() {
         <Link
           to="/"
           aria-label="GOAT RISE — về trang chủ"
-          className="-my-2 justify-self-center py-2 font-logo text-xl font-extrabold tracking-[0.12em] uppercase sm:text-2xl"
+          className="-my-2 justify-self-center py-2 font-logo text-2xl font-extrabold uppercase md:text-3xl"
         >
           GOAT RISE
         </Link>
 
-        <div className="flex items-center gap-4 justify-self-end md:gap-6">
-          <button type="button" aria-label="Tìm kiếm" className={ACTION_CLASS}>
-            <RollText label="Search" />
-          </button>
+        <div className="flex items-center justify-self-end">
+          {/* Mobile: icon cho gọn; Đăng nhập nằm trong menu mobile */}
+          <div className="-mr-3 flex items-center md:hidden">
+            <button type="button" aria-label="Tìm kiếm" className={ICON_CLASS}>
+              <Search
+                aria-hidden
+                className="size-[1.15rem]"
+                strokeWidth={1.75}
+              />
+            </button>
 
-          <button
-            type="button"
-            aria-label="Tài khoản"
-            className={cn(ACTION_CLASS, "hidden md:flex")}
-          >
-            <RollText label="Account" />
-          </button>
+            <button
+              type="button"
+              aria-label={cartLabel}
+              onClick={openCart}
+              className={cn(ICON_CLASS, "relative")}
+            >
+              <ShoppingCart
+                aria-hidden
+                className="size-[1.15rem]"
+                strokeWidth={1.75}
+              />
+              {count > 0 ? (
+                <span
+                  aria-hidden
+                  className="absolute top-1.5 right-1 text-[10px] leading-none font-bold tabular-nums"
+                >
+                  {count > 99 ? "99+" : count}
+                </span>
+              ) : null}
+            </button>
+          </div>
 
-          <button
-            type="button"
-            aria-label={
-              count > 0 ? `Giỏ hàng, ${count} sản phẩm` : "Giỏ hàng, đang trống"
-            }
-            onClick={openCart}
-            className={ACTION_CLASS}
-          >
-            <RollText label="Cart" />
-            {/* số lượng luôn 2 chữ số để bề ngang không nhảy */}
-            <span aria-hidden className="tabular-nums opacity-65">
-              {String(Math.min(count, 99)).padStart(2, "0")}
-            </span>
-          </button>
+          {/* Desktop: nhãn chữ */}
+          <div className="hidden items-center gap-6 md:flex">
+            <button
+              type="button"
+              aria-label="Tìm kiếm"
+              className={ACTION_CLASS}
+            >
+              <RollText label="Tìm kiếm" />
+            </button>
+
+            <button
+              type="button"
+              aria-label="Đăng nhập"
+              className={ACTION_CLASS}
+            >
+              <RollText label="Đăng nhập" />
+            </button>
+
+            <button
+              type="button"
+              aria-label={cartLabel}
+              onClick={openCart}
+              className={ACTION_CLASS}
+            >
+              <RollText label="Giỏ hàng" />
+              {/* số lượng dạng (n), chặn ở 99+ cho gọn */}
+              <span aria-hidden className="tabular-nums opacity-65">
+                ({count > 99 ? "99+" : count})
+              </span>
+            </button>
+          </div>
         </div>
       </div>
 

@@ -6,7 +6,7 @@ import { ProductCard } from "@/components/shared/product-card";
 import { RollText } from "@/components/shared/roll-text";
 import { useReveal } from "@/hooks/use-reveal";
 
-export function BestSellers({ products }: { products: Product[] }) {
+export function FeaturedProducts({ products }: { products: Product[] }) {
   const ref = useReveal<HTMLElement>();
 
   return (
@@ -14,18 +14,10 @@ export function BestSellers({ products }: { products: Product[] }) {
       ref={ref}
       className="mx-auto max-w-[1500px] px-5 py-20 lg:px-10 lg:py-28"
     >
-      <div
-        data-reveal
-        className="flex items-end justify-between gap-6 border-b border-border pb-5"
-      >
-        <div>
-          <p className="text-[11px] font-bold tracking-[0.22em] text-muted-foreground uppercase">
-            (01)
-          </p>
-          <h2 className="mt-3 text-[clamp(1.75rem,5vw,3.25rem)] leading-none font-extrabold tracking-[-0.03em] uppercase">
-            Best Sellers
-          </h2>
-        </div>
+      <div data-reveal className="flex items-end justify-between gap-6">
+        <h2 className="font-logo text-[clamp(1.5rem,4vw,2.75rem)] leading-none font-extrabold tracking-[-0.03em] uppercase">
+          Featured Products
+        </h2>
 
         <Link
           to="/products"

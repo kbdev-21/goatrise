@@ -158,12 +158,11 @@
     transform: none;
   }
 
-  /* Vỏ header: cú trượt thong thả hơn nhịp đổi màu một chút.
-     Tailwind v4 dựng -translate-y-* bằng property `translate`, không phải
-     `transform`, nên phải transition đúng `translate` thì mới chạy. */
+  /* Vỏ header. Tailwind v4 dựng -translate-y-* bằng property `translate`,
+     không phải `transform`, nên phải transition đúng `translate` thì mới chạy. */
   .header-shell {
     transition:
-      translate 0.7s var(--ease-smooth),
+      translate 1s var(--ease-smooth),
       background-color 0.55s var(--ease-smooth),
       border-color 0.55s var(--ease-smooth),
       color 0.55s var(--ease-smooth),

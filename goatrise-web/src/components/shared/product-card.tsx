@@ -65,7 +65,7 @@ export function ProductCard({
       </div>
 
       <div className="mt-3 space-y-1.5">
-        <h3 className="text-sm font-semibold tracking-wide uppercase">
+        <h3 className="truncate text-[13px] font-bold tracking-[0.04em] uppercase opacity-80 transition-opacity duration-300 group-hover:opacity-100">
           {product.title.vi}
         </h3>
         <p className="text-sm text-muted-foreground">
