@@ -1,8 +1,15 @@
 import { useMemo } from "react";
+import type { CSSProperties } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { ArrowRight } from "lucide-react";
 
 import { collectionsQueryOptions } from "@/api/collection/query-hooks";
+import type { Collection } from "@/api/collection/api";
+import { RollText } from "@/components/shared/roll-text";
+import { useReveal } from "@/hooks/use-reveal";
+import { useScrollProgress } from "@/hooks/use-scroll-progress";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/collections")({
   loader: ({ context }) =>
@@ -41,43 +48,111 @@ function CollectionsPage() {
           Chưa có bộ sưu tập nào.
         </p>
       ) : (
-        // mỗi bộ sưu tập một hàng, ảnh ngang full-width, chữ đè góc dưới
-        <div className="mt-8 flex flex-col gap-4 border-t border-border pt-8 lg:gap-6">
-          {visibleCollections.map((collection) => (
-            <Link
+        // kiểu editorial: ảnh lớn xen kẽ trái / phải, chữ bám đáy ở cột còn lại
+        <div className="mt-8 flex flex-col gap-20 border-t border-border pt-10 lg:gap-36 lg:pt-16">
+          {visibleCollections.map((collection, index) => (
+            <CollectionRow
               key={collection.id}
-              to="/collections/$id"
-              params={{ id: collection.id }}
-              className="group relative block aspect-[4/3] w-full overflow-hidden bg-black text-white sm:aspect-[16/9] lg:aspect-[21/9]"
-            >
-              {collection.imgUrl ? (
-                <img
-                  src={collection.imgUrl}
-                  alt={collection.title.vi}
-                  loading="lazy"
-                  className="absolute inset-0 size-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-                />
-              ) : null}
-              {/* phủ tối từ dưới lên để chữ trắng luôn đọc được */}
-              <div
-                aria-hidden
-                className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-transparent"
-              />
-
-              <div className="absolute inset-x-0 bottom-0 p-6 lg:p-10">
-                <h2 className="font-logo text-[clamp(1.5rem,3.5vw,2.75rem)] leading-[0.95] font-extrabold tracking-[-0.03em] uppercase">
-                  {collection.title.vi}
-                </h2>
-                {collection.shortDescription.vi ? (
-                  <p className="mt-3 max-w-md text-sm leading-relaxed text-white/75">
-                    {collection.shortDescription.vi}
-                  </p>
-                ) : null}
-              </div>
-            </Link>
+              collection={collection}
+              index={index}
+              reversed={index % 2 === 1}
+            />
           ))}
         </div>
       )}
     </div>
+  );
+}
+
+function CollectionRow({
+  collection,
+  index,
+  reversed,
+}: {
+  collection: Collection;
+  index: number;
+  reversed: boolean;
+}) {
+  const rowRef = useReveal<HTMLAnchorElement>();
+  // ảnh trôi chậm hơn trang khi cuộn, cùng kiểu với ảnh cuối BrandIntro
+  const mediaRef = useScrollProgress<HTMLDivElement>();
+  const productCount = collection.products.length;
+
+  return (
+    <Link
+      ref={rowRef}
+      to="/collections/$id"
+      params={{ id: collection.id }}
+      className="group grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-end lg:gap-10"
+    >
+      <div
+        ref={mediaRef}
+        data-reveal
+        className={cn(
+          "relative aspect-[4/5] overflow-hidden bg-muted sm:aspect-[3/2] lg:col-span-7 lg:row-start-1 lg:aspect-[5/4]",
+          reversed && "lg:col-start-6"
+        )}
+      >
+        {collection.imgUrl ? (
+          <img
+            src={collection.imgUrl}
+            alt={collection.title.vi}
+            loading="lazy"
+            className="absolute inset-0 size-full scale-[1.14] object-cover transition-[scale] duration-700 ease-out group-hover:scale-[1.2]"
+            style={{ translate: "0 calc((var(--p, 0.5) - 0.5) * -8%)" }}
+          />
+        ) : null}
+        <div
+          aria-hidden
+          className="absolute inset-0 bg-black/10 transition-colors duration-500 group-hover:bg-black/25"
+        />
+
+        {/* số thứ tự cỡ lớn đè góc ảnh */}
+        <span
+          aria-hidden
+          className={cn(
+            "absolute top-4 font-logo text-[clamp(3rem,8vw,7rem)] leading-none font-extrabold tracking-[-0.05em] text-white tabular-nums mix-blend-difference lg:top-6",
+            reversed ? "right-5 lg:right-8" : "left-5 lg:left-8"
+          )}
+        >
+          {String(index + 1).padStart(2, "0")}
+        </span>
+      </div>
+
+      <div
+        data-reveal
+        style={{ "--reveal-delay": "120ms" } as CSSProperties}
+        className={cn(
+          "flex flex-col gap-5 lg:col-span-4 lg:row-start-1 lg:pb-4",
+          reversed ? "lg:col-start-1" : "lg:col-start-9"
+        )}
+      >
+        {productCount > 0 ? (
+          <p className="flex items-center gap-3 text-[11px] font-bold tracking-[0.18em] uppercase tabular-nums opacity-55">
+            <span aria-hidden className="h-px w-10 bg-current" />
+            {productCount} sản phẩm
+          </p>
+        ) : null}
+
+        <h2 className="font-logo text-[clamp(2rem,4.5vw,4rem)] leading-[0.9] font-extrabold tracking-[-0.04em] uppercase">
+          {collection.title.vi}
+        </h2>
+
+        {collection.shortDescription.vi ? (
+          <p className="max-w-sm text-sm leading-relaxed text-muted-foreground">
+            {collection.shortDescription.vi}
+          </p>
+        ) : null}
+
+        {/* cùng kiểu nút với hero, bản nền sáng; cả hàng là link nên hover đi theo group */}
+        <span className="mt-2 inline-flex h-11 w-fit items-center gap-3 border border-border px-7 text-[11px] font-bold tracking-[0.18em] uppercase transition-colors duration-300 group-hover:border-foreground group-hover:bg-foreground group-hover:text-background group-focus-visible:border-foreground group-focus-visible:bg-foreground group-focus-visible:text-background">
+          <RollText label="Xem bộ sưu tập" />
+          <ArrowRight
+            aria-hidden
+            className="size-3.5 transition-transform duration-300 group-hover:translate-x-1"
+          />
+        </span>
+      </div>
+    </Link>
   );
 }

@@ -235,6 +235,37 @@
     opacity: clamp(0.14, calc(var(--p, 1) * var(--n) - var(--i)), 1);
     transition: opacity 0.2s linear;
   }
+
+  /* Chồng thẻ trang /collections. Khối cha có --s (useStackProgress), mỗi thẻ có --i:
+     --c: 0 → 1 khi thẻ bị thẻ sau đè kín; --e: 0 → 1 khi thẻ trượt vào vị trí dính */
+  .stack-item {
+    --c: clamp(0, calc(var(--s, 0) - var(--i)), 1);
+    --e: clamp(0, calc(var(--s, 0) - var(--i) + 1), 1);
+  }
+
+  /* thẻ đầu đã nằm sẵn trong màn hình lúc vào trang */
+  .stack-item:first-child {
+    --e: 1;
+  }
+
+  .stack-card {
+    transform: scale(calc(1 - var(--c) * 0.14)) rotate(calc(var(--c) * var(--tilt, 2deg)));
+    transform-origin: 50% 0%;
+    will-change: transform;
+  }
+
+  .stack-shade {
+    opacity: calc(0.3 + var(--c) * 0.6);
+  }
+
+  /* ảnh zoom lùi dần khi thẻ trượt vào */
+  .stack-media {
+    transform: scale(calc(1.3 - var(--e) * 0.3));
+  }
+
+  .stack-title {
+    transform: translateY(calc((1 - var(--e)) * 105%));
+  }
 }
 
 @keyframes rise-up {
@@ -288,5 +319,15 @@
 
   .manifesto-word {
     opacity: 1;
+  }
+
+  .stack-card,
+  .stack-media,
+  .stack-title {
+    transform: none;
+  }
+
+  .stack-shade {
+    opacity: 0.3;
   }
 }
