@@ -123,10 +123,6 @@ export type OrderBase = {
   referrerId: string | null;
   creatorId: string | null;
   note: string | null;
-  platformCost: number;
-  taxCost: number;
-  shippingCost: number;
-  otherCost: number;
   createdAt: string;
   updatedAt: string;
 };

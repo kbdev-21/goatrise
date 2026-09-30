@@ -16,6 +16,16 @@ export function getColorName(hex: string): string {
   }
 }
 
+// bỏ dấu + viết thường để tìm kiếm: gõ "da nang" vẫn ra "Đà Nẵng"
+export function normalizeText(text: string): string {
+  return text
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/đ/g, "d")
+    .replace(/Đ/g, "D")
+    .toLowerCase()
+}
+
 // Định dạng giá VND dùng chung cho card / trang chi tiết / giỏ hàng
 export function formatPrice(value: number): string {
   return `${new Intl.NumberFormat("vi-VN").format(value)} đ`

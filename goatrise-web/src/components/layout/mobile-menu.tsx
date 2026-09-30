@@ -12,12 +12,14 @@ import {
 } from "@/components/ui/sheet";
 import { navItems } from "@/components/layout/nav-config";
 import { useCartStore } from "@/stores/cart.store";
+import { useSearchStore } from "@/stores/search.store";
 
 export function MobileMenu({ triggerClassName }: { triggerClassName?: string }) {
   const openCart = useCartStore((s) => s.openCart);
+  const openSearch = useSearchStore((s) => s.openSearch);
 
   const actions = [
-    { label: "Tìm kiếm", icon: Search, onClick: undefined },
+    { label: "Tìm kiếm", icon: Search, onClick: openSearch },
     { label: "Đăng nhập", icon: User, onClick: undefined },
     { label: "Giỏ hàng", icon: ShoppingCart, onClick: openCart },
   ];
@@ -30,7 +32,15 @@ export function MobileMenu({ triggerClassName }: { triggerClassName?: string }) 
         </button>
       </SheetTrigger>
 
-      <SheetContent side="left" className="w-[min(20rem,85vw)] p-0">
+      <SheetContent
+        side="left"
+        className="w-[min(20rem,85vw)] p-0"
+        // menu đóng xong sẽ trả focus về nút Menu; nếu vừa mở tìm kiếm thì
+        // không được giật focus khỏi ô nhập của panel tìm kiếm
+        onCloseAutoFocus={(event) => {
+          if (useSearchStore.getState().isOpen) event.preventDefault();
+        }}
+      >
         <SheetHeader className="border-b border-border p-6">
           <SheetTitle className="font-logo text-xl font-extrabold tracking-tight uppercase">
             GOAT RISE

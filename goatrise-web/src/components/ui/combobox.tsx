@@ -2,22 +2,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Popover } from "radix-ui";
 import { Check, ChevronDown } from "lucide-react";
 
-import { cn } from "@/lib/utils";
+import { cn, normalizeText as normalize } from "@/lib/utils";
 
 export type ComboboxItem = {
   value: string;
   label: string;
 };
-
-// bỏ dấu để gõ "da nang" vẫn ra "Đà Nẵng"
-function normalize(text: string) {
-  return text
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/đ/g, "d")
-    .replace(/Đ/g, "D")
-    .toLowerCase();
-}
 
 export function Combobox({
   items,

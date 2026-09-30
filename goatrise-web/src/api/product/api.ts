@@ -24,6 +24,7 @@ export type ProductBase = {
   shortDescription: { vi: string; en: string };
   markdownDescription: { vi: string; en: string } | null;
   imgUrls: string[] | null;
+  sizeImgUrl: string | null;
   displayPrice: number | null;
   comparePrice: number | null;
   isActive: boolean;

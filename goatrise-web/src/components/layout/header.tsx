@@ -5,12 +5,12 @@ import { Search, ShoppingCart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MobileMenu } from "@/components/layout/mobile-menu";
 import { CartDrawer } from "@/components/layout/cart-drawer";
+import { SearchOverlay } from "@/components/layout/search-overlay";
 import { navItems } from "@/components/layout/nav-config";
 import { RollText } from "@/components/shared/roll-text";
 import { selectItemCount, useCartStore } from "@/stores/cart.store";
+import { useSearchStore } from "@/stores/search.store";
 
-// Dưới ngưỡng này header luôn hiện, tránh giật khi cuộn nhẹ ở đầu trang
-const HIDE_THRESHOLD = 180;
 // Bỏ qua rung lắc nhỏ của trackpad, chỉ đổi trạng thái khi thật sự đổi hướng
 const DIRECTION_DELTA = 6;
 
@@ -26,14 +26,16 @@ const ACTION_CLASS = cn(
 );
 
 export function Header() {
-  const [atTop, setAtTop] = useState(true);
+  const [inTransparentZone, setInTransparentZone] = useState(true);
   const [hidden, setHidden] = useState(false);
   const lastY = useRef(0);
+  const headerRef = useRef<HTMLElement>(null);
 
   const isHome = useRouterState({
     select: (s) => s.location.pathname === "/",
   });
   const openCart = useCartStore((s) => s.openCart);
+  const openSearch = useSearchStore((s) => s.openSearch);
   const cartCount = useCartStore(selectItemCount);
   // chỉ hiện số thật sau khi rehydrate xong để server và client render giống nhau
   const hasHydrated = useCartStore((s) => s.hasHydrated);
@@ -49,12 +51,17 @@ export function Header() {
       const y = window.scrollY;
       const delta = y - lastY.current;
 
-      // đổi nền ngay khi rời đỉnh để có phản hồi tức thì
-      setAtTop(y <= 8);
+      // giữ trong suốt tới khi header đi hết hero (cao 100svh). Cuộn xuống là
+      // header trượt đi ngay, nên lúc đổi sang nền trắng nó đang ẩn:
+      // user chỉ thấy trượt lên, không thấy vừa đổi màu vừa trượt
+      const headerHeight = headerRef.current?.offsetHeight ?? 0;
+      setInTransparentZone(y <= window.innerHeight - headerHeight);
 
       if (Math.abs(delta) < DIRECTION_DELTA) return;
-      // cuộn xuống thì header trượt lên giấu đi, cuộn lên là trượt ra lại
-      setHidden(y > HIDE_THRESHOLD && delta > 0);
+      // cuộn xuống thì header trượt lên giấu đi ngay, cuộn lên là trượt ra lại.
+      // y > 0: cú nảy cao su ở đỉnh trang (iOS) đi từ âm về 0 cũng là "delta > 0",
+      // không được tính là cuộn xuống
+      setHidden(y > 0 && delta > 0);
       lastY.current = y;
     };
 
@@ -64,20 +71,24 @@ export function Header() {
 
     update();
     window.addEventListener("scroll", onScroll, { passive: true });
+    // chiều cao màn hình đổi thì mốc hết hero cũng đổi theo
+    window.addEventListener("resize", onScroll, { passive: true });
     return () => {
       cancelAnimationFrame(frame);
       window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
     };
   }, []);
 
-  // Chỉ trong suốt khi đứng ở đầu trang chủ (nơi có hero tối phía sau)
-  const transparent = isHome && atTop;
+  // Chỉ trong suốt khi header còn nằm trên hero tối của trang chủ
+  const transparent = isHome && inTransparentZone;
   const count = hasHydrated ? cartCount : 0;
   const cartLabel =
     count > 0 ? `Giỏ hàng, ${count} sản phẩm` : "Giỏ hàng, đang trống";
 
   return (
     <header
+      ref={headerRef}
       className={cn(
         "header-shell fixed inset-x-0 top-0 z-40 border-b",
         hidden ? "-translate-y-full" : "translate-y-0",
@@ -121,7 +132,12 @@ export function Header() {
         <div className="flex items-center justify-self-end">
           {/* Mobile: icon cho gọn; Đăng nhập nằm trong menu mobile */}
           <div className="-mr-3 flex items-center md:hidden">
-            <button type="button" aria-label="Tìm kiếm" className={ICON_CLASS}>
+            <button
+              type="button"
+              aria-label="Tìm kiếm"
+              onClick={openSearch}
+              className={ICON_CLASS}
+            >
               <Search
                 aria-hidden
                 className="size-[1.15rem]"
@@ -156,6 +172,7 @@ export function Header() {
             <button
               type="button"
               aria-label="Tìm kiếm"
+              onClick={openSearch}
               className={ACTION_CLASS}
             >
               <RollText label="Tìm kiếm" />
@@ -186,6 +203,7 @@ export function Header() {
       </div>
 
       <CartDrawer />
+      <SearchOverlay />
     </header>
   );
 }
