@@ -4,7 +4,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { isAxiosError } from "axios";
 import {
-  useCalculateOrder,
+  useCalculateOrderUpdate,
   useOrder,
   useUpdateOrder,
 } from "@/api/order/query-hooks.ts";
@@ -27,7 +27,8 @@ export default function OrderDetailPage() {
   const { id } = useParams<{ id: string }>();
   const orderQuery = useOrder(id ?? "");
   const updateMutation = useUpdateOrder();
-  const calculateMutation = useCalculateOrder();
+  // endpoint preview theo đơn: đơn CONFIRMED được cộng lại stock nó đang giữ khi check tồn kho
+  const calculateMutation = useCalculateOrderUpdate();
   const itemsQuery = useItems();
   const items = useMemo(() => itemsQuery.data ?? [], [itemsQuery.data]);
 
@@ -63,20 +64,23 @@ export default function OrderDetailPage() {
     ? JSON.stringify(value.lines.map((line) => ({ itemId: line.itemId, quantity: line.quantity })))
     : "";
   useEffect(() => {
-    if (!value || couponLocked || !pricingEditing || value.lines.length === 0) {
+    if (!id || !value || couponLocked || !pricingEditing || value.lines.length === 0) {
       setCalculation(null);
       return;
     }
     calculateMutation.mutate(
       {
-        lines: value.lines.map((line): OrderLineRequest => ({
-          itemId: line.itemId,
-          quantity: line.quantity,
-        })),
-        customerPhoneNum: value.customerPhoneNum.trim() || undefined,
-        couponCode: value.couponCode || undefined,
-        manualDiscountAmount: value.manualDiscount ? Number(value.manualDiscount) : undefined,
-        manualShippingFee: value.manualShipping ? Number(value.manualShipping) : undefined,
+        orderId: id,
+        request: {
+          lines: value.lines.map((line): OrderLineRequest => ({
+            itemId: line.itemId,
+            quantity: line.quantity,
+          })),
+          customerPhoneNum: value.customerPhoneNum.trim() || undefined,
+          couponCode: value.couponCode || undefined,
+          manualDiscountAmount: value.manualDiscount ? Number(value.manualDiscount) : undefined,
+          manualShippingFee: value.manualShipping ? Number(value.manualShipping) : undefined,
+        },
       },
       {
         onSuccess: (result) => setCalculation(result),
@@ -182,12 +186,6 @@ export default function OrderDetailPage() {
       deliveryStatus: value.deliveryStatus,
       channel: value.channel,
       platformOrderId: value.platformOrderId.trim() || null,
-      // form là nguồn sự thật cho cost -> gửi 0 khi trống. Cost không nằm trong pricingChanged
-      // của backend nên gửi kèm không kích hoạt revert/confirm.
-      platformCost: value.platformCost ? Number(value.platformCost) : 0,
-      taxCost: value.taxCost ? Number(value.taxCost) : 0,
-      shippingCost: value.shippingCost ? Number(value.shippingCost) : 0,
-      otherCost: value.otherCost ? Number(value.otherCost) : 0,
       note: value.note.trim() || undefined,
       createdAt: createdAt,
       ...(!pricingDirty
@@ -306,10 +304,6 @@ function orderToFormValue(order: Order): OrderInfoFormValue {
     deliveryStatus: order.deliveryStatus,
     channel: order.channel,
     platformOrderId: order.platformOrderId ?? "",
-    platformCost: order.platformCost ? String(order.platformCost) : "",
-    taxCost: order.taxCost ? String(order.taxCost) : "",
-    shippingCost: order.shippingCost ? String(order.shippingCost) : "",
-    otherCost: order.otherCost ? String(order.otherCost) : "",
     note: order.note ?? "",
     createdAt: toDateTimeLocalValue(order.createdAt),
   };

@@ -4,7 +4,7 @@ import { requiredRolesMiddleware } from "../middlewares/required-roles.middlewar
 import type { ContextVariables } from "../../core/types.js";
 import { db } from "../../db/db.js";
 import { calculateOrder } from "../../domain/orders/order-calculation.service.js";
-import { createOrder, findOrders, getOrderById, placeOrder, updateOrder } from "../../domain/orders/orders.service.js";
+import { calculateOrderUpdate, createOrder, findOrders, getOrderById, placeOrder, updateOrder } from "../../domain/orders/orders.service.js";
 import { zValidator } from "@hono/zod-validator";
 import { CalculateOrderRequestSchema, CreateOrderRequestSchema, FindOrdersQuerySchema, PlaceOrderRequestSchema, UpdateOrderRequestSchema } from "../../domain/orders/validators.js";
 
@@ -36,6 +36,19 @@ ordersRouter.post("/api/orders/calculate",
   async (c) => {
     const req = c.req.valid("json");
     const calculateResult = await calculateOrder(db, req);
+    return c.json(calculateResult);
+  }
+);
+
+// preview khối tiền khi sửa đơn có sẵn: admin-only (khác /calculate public của storefront)
+ordersRouter.post("/api/orders/:id/calculate",
+  authMiddleware,
+  requiredRolesMiddleware(["ADMIN", "STAFF"]),
+  zValidator("json", CalculateOrderRequestSchema),
+  async (c) => {
+    const orderId = c.req.param("id");
+    const req = c.req.valid("json");
+    const calculateResult = await calculateOrderUpdate(db, orderId, req);
     return c.json(calculateResult);
   }
 );

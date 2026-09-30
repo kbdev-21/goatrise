@@ -6,14 +6,14 @@ import { eq, sql } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import { uuidv7 } from "uuidv7";
 import { recordAuditLog } from "../audit/audit-logs.service.js";
-import { calculateOrder } from "./order-calculation.service.js";
+import { calculateOrder, type CalculateOrderResult } from "./order-calculation.service.js";
 import { applyCoupon, getCouponByCode, revokeCoupon } from "../promotion/coupons.service.js";
 import { decrementCombosUsage, incrementCombosUsage } from "../promotion/combos.service.js";
 import { refundItems, soldItems } from "../inventory/inventory.service.js";
 import { getOrCreateOrSyncCustomer } from "../customers/customers-sync.service.js";
 import { updateCustomer } from "../customers/customers.service.js";
 import type { UpdateCustomerRequest } from "../customers/validators.js";
-import type { CreateOrderRequest, FindOrdersQuery, PlaceOrderRequest, UpdateOrderRequest } from "./validators.js";
+import type { CalculateOrderRequest, CreateOrderRequest, FindOrdersQuery, PlaceOrderRequest, UpdateOrderRequest } from "./validators.js";
 import { ORDER_RELATIONS, type Order } from "./types.js";
 
 export async function getOrderById(db: DbExec, id: string): Promise<Order> {
@@ -112,10 +112,6 @@ export async function createOrder(db: DbExec, actorId: string | null, createReq:
       deliveryStatus: createReq.deliveryStatus,
       channel: createReq.channel,
       platformOrderId: createReq.platformOrderId ?? null,
-      platformCost: createReq.platformCost,
-      taxCost: createReq.taxCost,
-      shippingCost: createReq.shippingCost,
-      otherCost: createReq.otherCost,
       referrerId: createReq.referrerId ?? null,
       creatorId: actorId,
       note: createReq.note ?? null,
@@ -164,6 +160,22 @@ export async function placeOrder(db: DbExec, placeReq: PlaceOrderRequest): Promi
   };
 
   return await createOrder(db, null, createReq);
+}
+
+// preview khối tiền khi sửa 1 đơn có sẵn. Đơn CONFIRMED đã trừ stock cho các line của nó,
+// mà lúc save updateOrder sẽ revert (trả stock) TRƯỚC khi tính lại -> preview phải cộng phần
+// hàng đơn đang giữ vào stock khi check, nếu không sẽ false-fail "Insufficient stock".
+export async function calculateOrderUpdate(db: DbExec, orderId: string, req: CalculateOrderRequest): Promise<CalculateOrderResult> {
+  const order = await getOrderById(db, orderId);
+
+  const heldQuantities = new Map<string, number>();
+  if (order.status === "CONFIRMED") {
+    for (const line of order.lines) {
+      heldQuantities.set(line.itemId, line.quantity);
+    }
+  }
+
+  return await calculateOrder(db, req, heldQuantities);
 }
 
 // điều phối update: quyết side effect MỘT LẦN ở đầu (dựa trên status trước/sau + khối tiền
@@ -310,10 +322,6 @@ async function updateOrderData(db: DbExec, actorId: string, orderBefore: Order, 
     deliveryStatus: updateReq.deliveryStatus,
     channel: updateReq.channel,
     platformOrderId: updateReq.platformOrderId,
-    platformCost: updateReq.platformCost,
-    taxCost: updateReq.taxCost,
-    shippingCost: updateReq.shippingCost,
-    otherCost: updateReq.otherCost,
     referrerId: updateReq.referrerId,
     note: updateReq.note,
     createdAt: updateReq.createdAt,

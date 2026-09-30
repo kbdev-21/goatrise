@@ -109,11 +109,6 @@ export type OrderInfoFormValue = {
   deliveryStatus: OrderDeliveryStatus;
   channel: SalesChannel;
   platformOrderId: string;
-  // cost: chi phí shop chịu, KHÔNG tham gia calculateOrder -> giữ dạng string như manualDiscount
-  platformCost: string;
-  taxCost: string;
-  shippingCost: string;
-  otherCost: string;
   note: string;
   createdAt: string; // dạng datetime-local ("YYYY-MM-DDTHH:mm"); "" = để backend dùng now()
 };
@@ -136,10 +131,6 @@ export const EMPTY_ORDER_INFO_FORM_VALUE: OrderInfoFormValue = {
   deliveryStatus: "PENDING",
   channel: "INSTAGRAM",
   platformOrderId: "",
-  platformCost: "",
-  taxCost: "",
-  shippingCost: "",
-  otherCost: "",
   note: "",
   createdAt: "",
 };
@@ -599,57 +590,6 @@ export default function OrderInfoForm({
                 </span>
               )}
             </div>
-          </div>
-
-          <div className="bg-card flex flex-col gap-4 rounded-md border p-6">
-            <h2 className="text-base font-medium">Cost</h2>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="flex flex-col gap-1.5">
-                <FieldLabel optional>Platform cost</FieldLabel>
-                <Input
-                  type="number"
-                  min={0}
-                  placeholder="0"
-                  value={value.platformCost}
-                  onChange={(e) => set({ platformCost: e.target.value })}
-                />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <FieldLabel optional>Tax cost</FieldLabel>
-                <Input
-                  type="number"
-                  min={0}
-                  placeholder="0"
-                  value={value.taxCost}
-                  onChange={(e) => set({ taxCost: e.target.value })}
-                />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <FieldLabel optional>Shipping cost</FieldLabel>
-                <Input
-                  type="number"
-                  min={0}
-                  placeholder="0"
-                  value={value.shippingCost}
-                  onChange={(e) => set({ shippingCost: e.target.value })}
-                />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <FieldLabel optional>Other cost</FieldLabel>
-                <Input
-                  type="number"
-                  min={0}
-                  placeholder="0"
-                  value={value.otherCost}
-                  onChange={(e) => set({ otherCost: e.target.value })}
-                />
-              </div>
-            </div>
-
-            <span className="text-muted-foreground text-xs">
-              Costs the shop absorbs. They do not affect the order total.
-            </span>
           </div>
         </div>
       </div>

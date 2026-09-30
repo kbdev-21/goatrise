@@ -39,11 +39,6 @@ export const orders = pgTable.withRLS("orders", {
 
   note: text("note"),
 
-  platformCost: bigint("platform_cost", { mode: "number" }).default(0).notNull(),
-  taxCost: bigint("tax_cost", { mode: "number" }).default(0).notNull(),
-  shippingCost: bigint("shipping_cost", { mode: "number" }).default(0).notNull(),
-  otherCost: bigint("other_cost", { mode: "number" }).default(0).notNull(),
-
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().$onUpdateFn(() => new Date()).notNull(),
 }, (t) => [

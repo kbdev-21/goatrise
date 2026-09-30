@@ -18,6 +18,18 @@ export async function calculateOrder(request: CalculateOrderRequest): Promise<Or
   return res.data;
 }
 
+// preview khối tiền khi sửa đơn có sẵn: backend cộng lại stock mà đơn CONFIRMED đang giữ
+export async function calculateOrderUpdate(
+  orderId: string,
+  request: CalculateOrderRequest,
+): Promise<OrderCalculationResult> {
+  const res = await axiosInstance.post<OrderCalculationResult>(
+    `/api/orders/${orderId}/calculate`,
+    request,
+  );
+  return res.data;
+}
+
 export async function createOrder(request: CreateOrderRequest): Promise<Order> {
   const res = await axiosInstance.post<Order>("/api/orders", request);
   return res.data;
@@ -101,10 +113,6 @@ export type OrderBase = {
   referrerId: string | null;
   creatorId: string | null;
   note: string | null;
-  platformCost: number;
-  taxCost: number;
-  shippingCost: number;
-  otherCost: number;
   createdAt: string;
   updatedAt: string;
 };
@@ -144,10 +152,6 @@ export type CreateOrderRequest = {
   deliveryStatus?: OrderDeliveryStatus;
   channel: SalesChannel;
   platformOrderId?: string;
-  platformCost?: number;
-  taxCost?: number;
-  shippingCost?: number;
-  otherCost?: number;
   referrerId?: string;
   note?: string;
   createdAt?: string;
@@ -182,10 +186,6 @@ export type UpdateOrderRequest = {
   deliveryStatus?: OrderDeliveryStatus;
   channel?: SalesChannel;
   platformOrderId?: string | null;
-  platformCost?: number;
-  taxCost?: number;
-  shippingCost?: number;
-  otherCost?: number;
   referrerId?: string | null;
   note?: string;
   createdAt?: string;

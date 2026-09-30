@@ -53,10 +53,6 @@ export const CreateOrderRequestSchema = z.object({
 
   channel: z.enum(orderChannels),
   platformOrderId: z.string().trim().min(1).optional(),
-  platformCost: z.number().int().nonnegative().optional(),
-  taxCost: z.number().int().nonnegative().optional(),
-  shippingCost: z.number().int().nonnegative().optional(),
-  otherCost: z.number().int().nonnegative().optional(),
   referrerId: z.uuid().optional(),
 
   note: z.string().trim().min(1).optional(),
@@ -81,10 +77,6 @@ export const PlaceOrderRequestSchema = CreateOrderRequestSchema.omit({
   deliveryStatus: true,
   channel: true,
   platformOrderId: true,
-  platformCost: true,
-  taxCost: true,
-  shippingCost: true,
-  otherCost: true,
   referrerId: true,
   createdAt: true
 }).extend({
@@ -133,10 +125,6 @@ export const UpdateOrderRequestSchema = z.object({
 
   channel: z.enum(orderChannels).optional(),
   platformOrderId: z.string().trim().min(1).nullable().optional(),
-  platformCost: z.number().int().nonnegative().optional(),
-  taxCost: z.number().int().nonnegative().optional(),
-  shippingCost: z.number().int().nonnegative().optional(),
-  otherCost: z.number().int().nonnegative().optional(),
   referrerId: z.uuid().nullable().optional(),
 
   note: z.string().trim().min(1).optional(),
