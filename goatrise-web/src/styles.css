@@ -169,6 +169,25 @@
       backdrop-filter 0.55s var(--ease-smooth);
   }
 
+  /* Trang chủ đang ở intro: header đứng yên tại chỗ nhưng giấu nội dung. Lúc
+     intro nhả, GOAT RISE của intro vừa bay tới đúng chỗ logo => logo hiện tức
+     thì để trao tay liền mạch, còn nav / nút hai bên hiện dần */
+  .header-shell[data-intro] {
+    pointer-events: none;
+  }
+
+  .header-shell [data-header-bar] > * {
+    transition: opacity 0.6s var(--ease-smooth);
+  }
+
+  .header-shell [data-header-bar] > [data-header-logo] {
+    transition: none;
+  }
+
+  .header-shell[data-intro] [data-header-bar] > * {
+    opacity: 0;
+  }
+
   /* Chữ trượt lên từ sau một mặt nạ — dùng cho tiêu đề hero, logo */
   .rise-mask {
     display: inline-block;
@@ -266,6 +285,93 @@
   .stack-title {
     transform: translateY(calc((1 - var(--e)) * 105%));
   }
+
+  /* Màn mở đầu trang chủ (useIntroScroll). Section có --h (trượt ngang 0 → 1),
+     --f (dê bay ra 0 → 1), --c (chuyển sang hero 0 → 1), --x (độ dịch dải, px),
+     --wm-* (đích bay của GOAT RISE); mỗi chữ cái có --d. */
+  .intro-section {
+    /* cỡ chữ GOAT RISE (vừa một màn hình) và khung ảnh logo, dê cần cả hai để đáp lên chữ */
+    --word: min(18vw, 38svh);
+    --goat: min(80vw, 64svh);
+    /* --c làm mượt (smoothstep): chậm lúc bắt đầu và lúc đáp */
+    --k: calc(var(--c, 0) * var(--c, 0) * (3 - 2 * var(--c, 0)));
+    /* trượt ngang 180svh + dê bay ra 50svh (FLY_SCREENS) + chuyển sang hero + màn ghim */
+    height: 430svh;
+  }
+
+  .intro-track {
+    transform: translate3d(calc(var(--x, 0) * 1px), 0, 0);
+    will-change: transform;
+  }
+
+  /* chữ trồi khỏi đáy mặt nạ khi tâm chữ trôi từ mép phải (d = 1) vào tới 88%
+     màn hình; chữ cuối của GOAT RISE lúc dừng nằm trong mốc này nên đã lên hết */
+  .intro-letter {
+    transform: translate3d(
+      0,
+      calc(clamp(0, (var(--d, 0) - 0.88) * 8.5, 1) * 105%),
+      0
+    );
+  }
+
+  .intro-goat {
+    /* 0 → 1 trong 1/6 đầu: từ logo lớn giữa màn hình thu lại thành dê đang chạy */
+    --t: min(var(--h, 0) * 6, 1);
+    /* 5 nhịp nhảy: |sin| đi 0 → 1 → 0 mỗi nhịp, nhịp cuối chạm đất đúng h = 1 */
+    --hop: max(sin(var(--h, 0) * 15.708), sin(var(--h, 0) * -15.708));
+    /* nhịp cuối (h 0.8 → 1) đáp lên đỉnh chữ GOAT thay vì về đường giữa:
+       đỉnh chữ hoa Afacad cách tâm dòng ~0.29em, móng dê cách tâm ảnh ~16.7%
+       khung (x0.55 khi thu nhỏ) */
+    --land: clamp(0, (var(--h, 0) - 0.8) * 5, 1);
+    --perch: calc(0.28 * var(--word) + 0.092 * var(--goat));
+    /* bay ra: bình phương => cất cánh chậm rồi vọt nhanh */
+    --fly: calc(var(--f, 0) * var(--f, 0));
+    transform: translate3d(
+        calc(-50% + var(--t) * -22vw + var(--h, 0) * 6vw + var(--fly) * 80vw),
+        calc(
+          -50% + (1 - var(--t)) * -4svh - var(--hop) * 18svh - var(--land) *
+            var(--perch) - var(--fly) * 110svh
+        ),
+        0
+      )
+      /* ngóc đầu lúc lấy đà, chúi xuống lúc tiếp đất; lúc bay ra ngóc hẳn lên */
+      rotate(
+        calc(sin(var(--h, 0) * 31.416) * -9deg * var(--t) - var(--f, 0) * 25deg)
+      )
+      scale(calc(1 - var(--t) * 0.45));
+  }
+
+  /* GOAT RISE: khoảng cách chữ / giữa hai từ đổi dần về đúng như logo header
+     (tracking 0, dấu cách thật), rồi thu nhỏ theo cấp số nhân (đều mắt hơn tuyến
+     tính) trong lúc tâm bay thẳng tới tâm logo */
+  .intro-wordmark {
+    gap: calc((0.22 + var(--k) * (var(--wm-gap, 0.22) - 0.22)) * 1em);
+    letter-spacing: calc(-0.05em * (1 - var(--k)));
+    transform: translate3d(
+        calc(var(--k) * var(--wm-dx, 0) * 1px),
+        calc(var(--k) * var(--wm-dy, 0) * 1px),
+        0
+      )
+      scale(pow(var(--wm-s, 1), var(--k)));
+    /* tắt đúng lúc intro nhả (c ≈ 1) — cũng là lúc logo header hiện ra */
+    opacity: clamp(0, (0.998 - var(--c, 0)) * 10000, 1);
+  }
+
+  /* màn đen mờ dần, hero hiện dần ra phía sau */
+  .intro-curtain {
+    opacity: calc(1 - var(--k));
+  }
+
+  /* hero nằm dưới cả màn đen lẫn intro (khung dính là stacking context nên
+     z-index âm vẫn ở trên nền section) */
+  .intro-hero {
+    z-index: -1;
+  }
+
+  /* hero lùi nhẹ về đúng cỡ khi lộ ra => có chiều sâu thay vì hiện phẳng */
+  .intro-hero-inner {
+    transform: scale(calc(1.12 - var(--k) * 0.12));
+  }
 }
 
 @keyframes rise-up {
@@ -313,7 +419,8 @@
     animation: none;
   }
 
-  .header-shell {
+  .header-shell,
+  .header-shell [data-header-bar] > * {
     transition: none;
   }
 
@@ -329,5 +436,36 @@
 
   .stack-shade {
     opacity: 0.3;
+  }
+
+  /* Màn mở đầu: bỏ ghim, chỉ còn logo tĩnh một màn hình, hero xếp ngay bên dưới */
+  .intro-section,
+  .intro-stage {
+    height: auto;
+  }
+
+  .intro-stage {
+    position: relative;
+    overflow: visible;
+  }
+
+  .intro-scene {
+    height: 100svh;
+  }
+
+  /* khung không còn dính => không còn là stacking context, hero xếp bình thường */
+  .intro-hero {
+    position: relative;
+    z-index: auto;
+  }
+
+  .intro-curtain {
+    display: none;
+  }
+
+  .intro-track,
+  .intro-letter,
+  .intro-hero-inner {
+    transform: none;
   }
 }

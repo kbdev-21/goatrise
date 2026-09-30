@@ -4,6 +4,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { productsQueryOptions } from "@/api/product/query-hooks";
 import { collectionsQueryOptions } from "@/api/collection/query-hooks";
 import { Hero } from "@/components/home/hero";
+import { IntroLeap } from "@/components/home/intro-leap";
 import { FeaturedCollections } from "@/components/home/featured-collections";
 import { FeaturedProducts } from "@/components/home/featured-products";
 import { CollectionStack } from "@/components/home/collection-stack";
@@ -56,7 +57,10 @@ function App() {
 
   return (
     <>
-      <Hero collection={heroCollection} />
+      {/* màn mở đầu cuộn ngang: logo + tên thương hiệu, hết dải thì hero trượt ngang vào */}
+      <IntroLeap>
+        <Hero collection={heroCollection} />
+      </IntroLeap>
 
       <FeaturedProducts products={featuredProducts} />
       <FeaturedCollections collections={featuredCategories} />

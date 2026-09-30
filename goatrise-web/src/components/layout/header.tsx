@@ -28,12 +28,17 @@ const ACTION_CLASS = cn(
 export function Header() {
   const [inTransparentZone, setInTransparentZone] = useState(true);
   const [hidden, setHidden] = useState(false);
+  // bản sao của hidden để đọc trong vòng cập nhật cuộn (effect chỉ chạy lại khi đổi trang)
+  const hiddenRef = useRef(false);
   const lastY = useRef(0);
   const headerRef = useRef<HTMLElement>(null);
 
   const isHome = useRouterState({
     select: (s) => s.location.pathname === "/",
   });
+  // trang chủ mở ra là đang ở intro: giấu nội dung header ngay từ lần render đầu
+  // (cả SSR), không để nó hiện ra rồi mới biến mất
+  const [inIntro, setInIntro] = useState(isHome);
   const openCart = useCartStore((s) => s.openCart);
   const openSearch = useSearchStore((s) => s.openSearch);
   const cartCount = useCartStore(selectItemCount);
@@ -51,17 +56,45 @@ export function Header() {
       const y = window.scrollY;
       const delta = y - lastY.current;
 
-      // giữ trong suốt tới khi header đi hết hero (cao 100svh). Cuộn xuống là
-      // header trượt đi ngay, nên lúc đổi sang nền trắng nó đang ẩn:
-      // user chỉ thấy trượt lên, không thấy vừa đổi màu vừa trượt
+      // intro trang chủ [data-header-hide] còn ghim full màn hình (đáy chưa lên
+      // tới đáy viewport) thì giấu nội dung header (data-intro). Header vẫn đứng
+      // yên tại chỗ, không trượt đi: GOAT RISE của intro bay lên đúng chỗ logo
+      // rồi trao tay, header mà đang trượt thì logo lệch
+      const intro = document.querySelector<HTMLElement>("[data-header-hide]");
+      const introActive =
+        intro !== null &&
+        intro.getBoundingClientRect().bottom > window.innerHeight + 1;
+      setInIntro(introActive);
+      if (introActive) {
+        hiddenRef.current = false;
+        setHidden(false);
+        lastY.current = y;
+        return;
+      }
+
+      // hero trang chủ đánh dấu [data-header-zone]: header còn nằm trên hero thì
+      // luôn hiện và trong suốt, cuộn xuống cũng không giấu đi
       const headerHeight = headerRef.current?.offsetHeight ?? 0;
-      setInTransparentZone(y <= window.innerHeight - headerHeight);
+      const zone = document.querySelector<HTMLElement>("[data-header-zone]");
+      if (zone && zone.getBoundingClientRect().bottom >= headerHeight) {
+        setInTransparentZone(true);
+        hiddenRef.current = false;
+        setHidden(false);
+        lastY.current = y;
+        return;
+      }
 
       if (Math.abs(delta) < DIRECTION_DELTA) return;
       // cuộn xuống thì header trượt lên giấu đi ngay, cuộn lên là trượt ra lại.
       // y > 0: cú nảy cao su ở đỉnh trang (iOS) đi từ âm về 0 cũng là "delta > 0",
       // không được tính là cuộn xuống
-      setHidden(y > 0 && delta > 0);
+      const hide = y > 0 && delta > 0;
+      // đã qua hero thì đổi sang nền trắng, trừ frame header vừa bắt đầu trượt
+      // lên (lúc đó nó đang hiện): giữ trong suốt để user chỉ thấy trượt đi,
+      // không thấy vừa đổi màu vừa trượt; lần cập nhật sau nó đã ẩn mới đổi
+      if (!hide || hiddenRef.current) setInTransparentZone(false);
+      hiddenRef.current = hide;
+      setHidden(hide);
       lastY.current = y;
     };
 
@@ -78,7 +111,9 @@ export function Header() {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
     };
-  }, []);
+    // đổi trang (vào / rời trang chủ) có thể không phát sinh sự kiện cuộn nào,
+    // chạy lại để tính ngay có đang ở intro không
+  }, [isHome]);
 
   // Chỉ trong suốt khi header còn nằm trên hero tối của trang chủ
   const transparent = isHome && inTransparentZone;
@@ -96,9 +131,18 @@ export function Header() {
           ? "border-transparent bg-transparent text-white"
           : "border-border bg-background/100 text-foreground backdrop-blur-xl"
       )}
-      onFocusCapture={() => setHidden(false)}
+      data-intro={inIntro ? "" : undefined}
+      // dùng bàn phím tab vào header thì luôn hiện ra, kể cả đang ở intro
+      onFocusCapture={() => {
+        hiddenRef.current = false;
+        setHidden(false);
+        setInIntro(false);
+      }}
     >
-      <div className="mx-auto grid h-14 w-full max-w-[1500px] grid-cols-[1fr_auto_1fr] items-center gap-4 px-5 md:h-16 lg:px-10">
+      <div
+        data-header-bar
+        className="mx-auto grid h-14 w-full max-w-[1500px] grid-cols-[1fr_auto_1fr] items-center gap-4 px-5 md:h-16 lg:px-10"
+      >
         <div className="flex items-center gap-5">
           {/* Mobile: chỉ hiện nút Menu */}
           <MobileMenu triggerClassName="-ml-3 flex size-11 items-center justify-center opacity-70 transition-opacity duration-300 hover:opacity-100 md:hidden" />
@@ -121,8 +165,10 @@ export function Header() {
           </nav>
         </div>
 
+        {/* data-header-logo: intro trang chủ đo logo này để GOAT RISE bay tới đúng chỗ */}
         <Link
           to="/"
+          data-header-logo
           aria-label="GOAT RISE — về trang chủ"
           className="-my-2 justify-self-center py-2 font-logo text-2xl font-extrabold uppercase md:text-3xl"
         >

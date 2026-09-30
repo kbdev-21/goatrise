@@ -7,7 +7,7 @@ import { RollText } from "@/components/shared/roll-text";
 import { useScrollProgress } from "@/hooks/use-scroll-progress";
 
 export function Hero({ collection }: { collection?: Collection }) {
-  // --p chạy 0 → 1 trong đúng một màn hình cuộn đầu tiên
+  // --p chạy 0 → 1 trong một màn hình cuộn, tính từ lúc hero chạm đỉnh viewport
   const ref = useScrollProgress<HTMLElement>({ start: 0.5, end: 1 });
 
   // chưa có COLLECTION nào featured thì dùng tạm dữ liệu placeholder
@@ -17,10 +17,13 @@ export function Hero({ collection }: { collection?: Collection }) {
     : hero.description;
   const image = collection?.imgUrl ?? hero.image;
 
+  // hero nằm trong khung dính của intro (đã tự chui dưới header), không cần -mt
+  // nữa; data-header-zone: header trong suốt tới hết hero
   return (
     <section
       ref={ref}
-      className="relative -mt-12 h-[100svh] min-h-[34rem] w-full overflow-hidden bg-black text-white md:-mt-14"
+      data-header-zone
+      className="relative h-[100svh] min-h-[34rem] w-full overflow-hidden bg-black text-white"
     >
       {/* Ảnh trôi chậm hơn nội dung khi cuộn */}
       <div className="absolute inset-0">
