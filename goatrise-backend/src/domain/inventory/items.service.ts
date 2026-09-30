@@ -134,7 +134,16 @@ export async function deleteItem(db: DbExec, actorId: string, itemId: string): P
   await db.transaction(async (tx) => {
     const itemBefore = await getItemById(tx, itemId);
 
-    // TODO: chỉ cho phép delete nếu chưa có order nào, nếu có rồi thì throw 409
+    // item đã nằm trong order (mọi status) thì cấm xóa: order_lines giữ itemId không FK nên
+    // xóa xong sẽ treo reference -> revert/confirm/tính lại đơn đó đều ném 404 "Item not found".
+    const linkedOrderLine = await tx.query.orderLines.findFirst({
+      where: {
+        itemId: itemId
+      }
+    });
+    if (linkedOrderLine) {
+      throw new HTTPException(409, { message: "Cannot delete item that is used in orders" });
+    }
 
     await tx.delete(items).where(eq(items.id, itemId));
 

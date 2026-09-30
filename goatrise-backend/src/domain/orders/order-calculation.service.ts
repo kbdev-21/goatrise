@@ -30,7 +30,13 @@ export type CalculateOrderResult = {
   total: number
 }
 
-export async function calculateOrder(db: DbExec, req: CalculateOrderRequest): Promise<CalculateOrderResult> {
+// heldQuantities: số lượng mỗi item đang bị giữ bởi chính đơn đang sửa (đơn CONFIRMED đã trừ stock)
+// -> cộng lại khi check tồn kho để preview không false-fail. Mặc định rỗng = check như bình thường.
+export async function calculateOrder(
+  db: DbExec,
+  req: CalculateOrderRequest,
+  heldQuantities: Map<string, number> = new Map()
+): Promise<CalculateOrderResult> {
   const items = await db.query.items.findMany({
     where: {
       id: {
@@ -40,7 +46,7 @@ export async function calculateOrder(db: DbExec, req: CalculateOrderRequest): Pr
     with: ITEM_RELATIONS
   });
 
-  const { lines, subtotal } = computeOrderLines(items, req.lines);
+  const { lines, subtotal } = computeOrderLines(items, req.lines, heldQuantities);
 
   const manualDiscount = req.manualDiscountAmount ?? 0;
   const shipping = req.manualShippingFee ?? 0;
@@ -76,7 +82,11 @@ export async function calculateOrder(db: DbExec, req: CalculateOrderRequest): Pr
 }
 
 // pure: dựng snapshot từng line + subtotal + check tồn kho.
-function computeOrderLines(itemsData: Item[], orderLines: { itemId: string, quantity: number }[]): { lines: CalculateOrderResult["lines"], subtotal: number } {
+function computeOrderLines(
+  itemsData: Item[],
+  orderLines: { itemId: string, quantity: number }[],
+  heldQuantities: Map<string, number>
+): { lines: CalculateOrderResult["lines"], subtotal: number } {
   const itemsMap = new Map(itemsData.map((item) => [item.id, item]));
 
   const lines: CalculateOrderResult["lines"] = [];
@@ -87,7 +97,8 @@ function computeOrderLines(itemsData: Item[], orderLines: { itemId: string, quan
       throw new HTTPException(404, { message: "Item not found" });
     }
 
-    if (line.quantity > item.stock) {
+    const availableStock = item.stock + (heldQuantities.get(item.id) ?? 0);
+    if (line.quantity > availableStock) {
       throw new HTTPException(409, { message: `Insufficient stock for item ${item.sku}` });
     }
 

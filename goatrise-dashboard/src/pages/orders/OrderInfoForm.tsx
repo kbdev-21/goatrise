@@ -1,5 +1,5 @@
 import { type ReactNode, useState } from "react";
-import { Plus, Search, X } from "lucide-react";
+import { Pencil, Plus, Search, X } from "lucide-react";
 import type {
   OrderDeliveryStatus,
   OrderPaymentMethod,
@@ -165,27 +165,28 @@ export default function OrderInfoForm({
   summaryState,
   orderCode,
   couponLocked = false,
+  pricingEdit,
 }: {
   mode: "create" | "edit";
   value: OrderInfoFormValue;
   onChange: (value: OrderInfoFormValue) => void;
   items: Item[];
   summary: OrderSummary | null;
-  // create: trạng thái live-calculate; edit bỏ trống (summary luôn có sẵn từ order)
+  // trạng thái live-calculate; bỏ trống khi summary là số đã lưu (edit ở chế độ xem)
   summaryState?: { calculating: boolean; error: string | null };
   orderCode?: string;
   // đơn đã CONFIRMED mà có coupon: backend cấm đổi khối tiền LẪN phone (coupon.usedPhoneNums
   // đã ghi phone cũ) -> khóa items, pricing và phone. Mọi field khác luôn sửa được ở mọi status.
   couponLocked?: boolean;
+  // edit: khối tiền (items + pricing) mặc định chỉ xem snapshot, bấm Edit mới cho sửa.
+  // create bỏ trống -> luôn sửa được.
+  pricingEdit?: { editing: boolean; onEdit: () => void; onCancel: () => void };
 }) {
   const set = (patch: Partial<OrderInfoFormValue>) => onChange({ ...value, ...patch });
 
   const [itemDialogOpen, setItemDialogOpen] = useState(false);
 
-  // typing buffer cho pricing (chỉ dùng ở create) -> commit vào value khi blur/Enter
-  const [couponInput, setCouponInput] = useState(value.couponCode);
-  const [discountInput, setDiscountInput] = useState(value.manualDiscount);
-  const [shippingInput, setShippingInput] = useState(value.manualShipping);
+  const pricingEditable = !couponLocked && (pricingEdit?.editing ?? true);
 
   const provinces = (
     COUNTRIES[value.countryCode as keyof typeof COUNTRIES] as {
@@ -227,12 +228,6 @@ export default function OrderInfoForm({
         line.itemId === itemId ? { ...line, quantity: Math.max(1, quantity) } : line,
       ),
     });
-
-  const commitCoupon = () => set({ couponCode: couponInput.trim() });
-  const commitDiscount = () =>
-    set({ manualDiscount: discountInput.trim() ? String(Math.max(0, Number(discountInput))) : "" });
-  const commitShipping = () =>
-    set({ manualShipping: shippingInput.trim() ? String(Math.max(0, Number(shippingInput))) : "" });
 
   return (
     <>
@@ -310,17 +305,30 @@ export default function OrderInfoForm({
           <div className="bg-card flex flex-col gap-4 rounded-md border p-6">
             <div className="flex items-center justify-between">
               <h2 className="text-base font-medium">Items</h2>
-              {!couponLocked && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setItemDialogOpen(true)}
-                >
-                  <Plus className="size-4" />
-                  Add item
-                </Button>
-              )}
+              <div className="flex items-center gap-2">
+                {pricingEditable && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setItemDialogOpen(true)}
+                  >
+                    <Plus className="size-4" />
+                    Add item
+                  </Button>
+                )}
+                {pricingEdit && !couponLocked && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={pricingEdit.editing ? pricingEdit.onCancel : pricingEdit.onEdit}
+                  >
+                    {pricingEdit.editing ? <X className="size-4" /> : <Pencil className="size-4" />}
+                    {pricingEdit.editing ? "Cancel" : "Edit"}
+                  </Button>
+                )}
+              </div>
             </div>
 
             {value.lines.length === 0 ? (
@@ -352,7 +360,7 @@ export default function OrderInfoForm({
                       <ItemAttributeBadges attributeValues={line.attributeValues} />
                     </div>
 
-                    {!couponLocked && (
+                    {pricingEditable && (
                       <Input
                         type="number"
                         min={1}
@@ -366,7 +374,7 @@ export default function OrderInfoForm({
                       {formatPriceVn(line.unitPrice * line.quantity)}
                     </span>
 
-                    {!couponLocked && (
+                    {pricingEditable && (
                       <Button
                         type="button"
                         variant="ghost"
@@ -382,50 +390,8 @@ export default function OrderInfoForm({
               </div>
             )}
 
-            {/* pricing inputs (create only) */}
-            {!couponLocked && (
-              <div className="grid grid-cols-2 gap-3 border-t pt-4">
-                <div className="flex flex-col gap-1.5">
-                  <FieldLabel optional>Coupon code</FieldLabel>
-                  <Input
-                    placeholder="e.g. SALE10"
-                    value={couponInput}
-                    onChange={(e) => setCouponInput(e.target.value)}
-                    onBlur={commitCoupon}
-                    onKeyDown={(e) => e.key === "Enter" && commitCoupon()}
-                  />
-                  {value.couponCode && !value.customerPhoneNum.trim() && (
-                    <span className="text-destructive text-xs">
-                      Phone number is required to apply a coupon.
-                    </span>
-                  )}
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <FieldLabel optional>Manual discount</FieldLabel>
-                  <Input
-                    type="number"
-                    min={0}
-                    placeholder="0"
-                    value={discountInput}
-                    onChange={(e) => setDiscountInput(e.target.value)}
-                    onBlur={commitDiscount}
-                    onKeyDown={(e) => e.key === "Enter" && commitDiscount()}
-                  />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <FieldLabel optional>Shipping fee</FieldLabel>
-                  <Input
-                    type="number"
-                    min={0}
-                    placeholder="0"
-                    value={shippingInput}
-                    onChange={(e) => setShippingInput(e.target.value)}
-                    onBlur={commitShipping}
-                    onKeyDown={(e) => e.key === "Enter" && commitShipping()}
-                  />
-                </div>
-              </div>
-            )}
+            {/* pricing inputs: chỉ hiện khi khối tiền đang sửa được */}
+            {pricingEditable && <PricingInputs value={value} set={set} />}
 
             {/* summary */}
             <div className="flex flex-col gap-1.5 border-t pt-4">
@@ -688,7 +654,7 @@ export default function OrderInfoForm({
         </div>
       </div>
 
-      {!couponLocked && (
+      {pricingEditable && (
         <AddItemDialog
           open={itemDialogOpen}
           onOpenChange={setItemDialogOpen}
@@ -698,6 +664,70 @@ export default function OrderInfoForm({
         />
       )}
     </>
+  );
+}
+
+// tách riêng để typing buffer được khởi tạo lại từ value mỗi lần mount (vd bấm Edit sau khi Cancel)
+function PricingInputs({
+  value,
+  set,
+}: {
+  value: OrderInfoFormValue;
+  set: (patch: Partial<OrderInfoFormValue>) => void;
+}) {
+  // typing buffer cho pricing -> commit vào value khi blur/Enter
+  const [couponInput, setCouponInput] = useState(value.couponCode);
+  const [discountInput, setDiscountInput] = useState(value.manualDiscount);
+  const [shippingInput, setShippingInput] = useState(value.manualShipping);
+
+  const commitCoupon = () => set({ couponCode: couponInput.trim() });
+  const commitDiscount = () =>
+    set({ manualDiscount: discountInput.trim() ? String(Math.max(0, Number(discountInput))) : "" });
+  const commitShipping = () =>
+    set({ manualShipping: shippingInput.trim() ? String(Math.max(0, Number(shippingInput))) : "" });
+
+  return (
+    <div className="grid grid-cols-2 gap-3 border-t pt-4">
+      <div className="flex flex-col gap-1.5">
+        <FieldLabel optional>Coupon code</FieldLabel>
+        <Input
+          placeholder="e.g. SALE10"
+          value={couponInput}
+          onChange={(e) => setCouponInput(e.target.value)}
+          onBlur={commitCoupon}
+          onKeyDown={(e) => e.key === "Enter" && commitCoupon()}
+        />
+        {value.couponCode && !value.customerPhoneNum.trim() && (
+          <span className="text-destructive text-xs">
+            Phone number is required to apply a coupon.
+          </span>
+        )}
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <FieldLabel optional>Manual discount</FieldLabel>
+        <Input
+          type="number"
+          min={0}
+          placeholder="0"
+          value={discountInput}
+          onChange={(e) => setDiscountInput(e.target.value)}
+          onBlur={commitDiscount}
+          onKeyDown={(e) => e.key === "Enter" && commitDiscount()}
+        />
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <FieldLabel optional>Shipping fee</FieldLabel>
+        <Input
+          type="number"
+          min={0}
+          placeholder="0"
+          value={shippingInput}
+          onChange={(e) => setShippingInput(e.target.value)}
+          onBlur={commitShipping}
+          onKeyDown={(e) => e.key === "Enter" && commitShipping()}
+        />
+      </div>
+    </div>
   );
 }
 

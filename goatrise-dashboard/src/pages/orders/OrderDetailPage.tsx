@@ -39,20 +39,31 @@ export default function OrderDetailPage() {
 
   const [value, setValue] = useState<OrderInfoFormValue | null>(null);
   const [calculation, setCalculation] = useState<OrderCalculationResult | null>(null);
+  // khối tiền mặc định chỉ xem snapshot; bấm Edit mới cho sửa + live-calculate
+  const [pricingEditing, setPricingEditing] = useState(false);
+
+  const initialValue = useMemo(() => (order ? orderToFormValue(order) : null), [order]);
 
   // seed form từ order khi load xong
   useEffect(() => {
-    if (order) {
-      setValue(orderToFormValue(order));
+    if (initialValue) {
+      setValue(initialValue);
     }
-  }, [order]);
+  }, [initialValue]);
 
-  // live-calculate khi khối tiền còn sửa được (giống create): lines/coupon/discount/shipping đổi -> tính lại
+  // đang edit VÀ khối tiền thật sự khác snapshot -> mới gửi pricing khi save
+  const pricingDirty =
+    pricingEditing &&
+    !!value &&
+    !!initialValue &&
+    pricingKey(value) !== pricingKey(initialValue);
+
+  // live-calculate chỉ khi đang edit khối tiền: lines/coupon/discount/shipping đổi -> tính lại
   const linesKey = value
     ? JSON.stringify(value.lines.map((line) => ({ itemId: line.itemId, quantity: line.quantity })))
     : "";
   useEffect(() => {
-    if (!value || couponLocked || value.lines.length === 0) {
+    if (!value || couponLocked || !pricingEditing || value.lines.length === 0) {
       setCalculation(null);
       return;
     }
@@ -72,7 +83,27 @@ export default function OrderDetailPage() {
       },
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [linesKey, value?.couponCode, value?.manualDiscount, value?.manualShipping, couponLocked]);
+  }, [
+    linesKey,
+    value?.couponCode,
+    value?.manualDiscount,
+    value?.manualShipping,
+    couponLocked,
+    pricingEditing,
+  ]);
+
+  // Cancel: trả khối tiền về snapshot (giữ nguyên các field khác đang sửa) rồi về chế độ xem
+  function handleCancelPricing() {
+    if (!value || !initialValue) return;
+    setValue({
+      ...value,
+      lines: initialValue.lines,
+      couponCode: initialValue.couponCode,
+      manualDiscount: initialValue.manualDiscount,
+      manualShipping: initialValue.manualShipping,
+    });
+    setPricingEditing(false);
+  }
 
   const isDirty =
     !!value &&
@@ -84,7 +115,8 @@ export default function OrderDetailPage() {
   // không cho lưu nếu người dùng xóa trắng ngày tạo
   const canSave = !!value && isDirty && hasRequiredFields && value.createdAt !== "";
 
-  // summary: khối tiền bị khóa thì dùng số đã lưu; còn lại dùng kết quả calculate live (fallback số đã lưu)
+  // summary: chế độ xem (hoặc bị khóa) dùng số đã lưu; đang edit dùng kết quả calculate live
+  // (fallback số đã lưu trong lúc chờ lần calculate đầu)
   const storedSummary: OrderSummary | null = order
     ? {
         subtotal: order.subtotalAmount,
@@ -109,7 +141,11 @@ export default function OrderDetailPage() {
         total: calculation.total,
       }
     : null;
-  const summary: OrderSummary | null = couponLocked ? storedSummary : (liveSummary ?? storedSummary);
+  const summary: OrderSummary | null = !pricingEditing
+    ? storedSummary
+    : value?.lines.length
+      ? (liveSummary ?? storedSummary)
+      : null;
 
   // message thật từ backend khi calculate lỗi (vd coupon/stock)
   const calcErrorMessage = calculateMutation.isError
@@ -125,9 +161,9 @@ export default function OrderDetailPage() {
     const createdAtChanged = value.createdAt !== toDateTimeLocalValue(order.createdAt);
     const createdAt = createdAtChanged ? new Date(value.createdAt).toISOString() : undefined;
 
-    // backend coi field khối tiền CÓ MẶT (kể cả giá trị không đổi) là pricingChanged -> khi
-    // couponLocked thì phải bỏ hẳn 4 field đó khỏi request, không gửi giá trị cũ.
-    // undefined = giữ nguyên, null = xóa field nullable.
+    // backend coi field khối tiền CÓ MẶT (kể cả giá trị không đổi) là pricingChanged -> tính lại
+    // theo giá hiện tại. Nên chỉ gửi 4 field đó khi pricingDirty (couponLocked thì không vào
+    // được edit nên pricingDirty luôn false). undefined = giữ nguyên, null = xóa field nullable.
     const request: UpdateOrderRequest = {
       customerName: value.customerName.trim(),
       customerEmail: value.customerEmail.trim() || null,
@@ -154,7 +190,7 @@ export default function OrderDetailPage() {
       otherCost: value.otherCost ? Number(value.otherCost) : 0,
       note: value.note.trim() || undefined,
       createdAt: createdAt,
-      ...(couponLocked
+      ...(!pricingDirty
         ? {}
         : {
             couponCode: value.couponCode.trim() || null,
@@ -226,12 +262,17 @@ export default function OrderDetailPage() {
           items={items}
           summary={summary}
           summaryState={
-            couponLocked
-              ? undefined
-              : { calculating: calculateMutation.isPending, error: calcErrorMessage }
+            pricingEditing
+              ? { calculating: calculateMutation.isPending, error: calcErrorMessage }
+              : undefined
           }
           orderCode={order.code}
           couponLocked={couponLocked}
+          pricingEdit={{
+            editing: pricingEditing,
+            onEdit: () => setPricingEditing(true),
+            onCancel: handleCancelPricing,
+          }}
         />
       )}
     </div>
@@ -272,6 +313,16 @@ function orderToFormValue(order: Order): OrderInfoFormValue {
     note: order.note ?? "",
     createdAt: toDateTimeLocalValue(order.createdAt),
   };
+}
+
+// key so sánh khối tiền; chuẩn hóa số để "0" và "" (trống) coi như nhau
+function pricingKey(value: OrderInfoFormValue): string {
+  return JSON.stringify({
+    lines: value.lines.map((line) => ({ itemId: line.itemId, quantity: line.quantity })),
+    couponCode: value.couponCode.trim(),
+    manualDiscount: Number(value.manualDiscount || 0),
+    manualShipping: Number(value.manualShipping || 0),
+  });
 }
 
 // ISO string -> "YYYY-MM-DDTHH:mm" theo giờ local (định dạng input datetime-local yêu cầu)
