@@ -41,6 +41,7 @@ export type ProductBase = {
   shortDescription: LanguageString;
   markdownDescription: LanguageString | null;
   imgUrls: string[] | null;
+  sizeImgUrl: string | null;
   displayPrice: number | null;
   comparePrice: number | null;
   isActive: boolean;
@@ -67,6 +68,7 @@ export type CreateProductRequest = {
   shortDescription: LanguageString;
   markdownDescription?: LanguageString;
   imgUrls?: string[];
+  sizeImgUrl?: string;
   displayPrice?: number;
   comparePrice?: number;
   displayPriority?: number;
@@ -81,6 +83,7 @@ export type UpdateProductRequest = {
   shortDescription?: LanguageString;
   markdownDescription?: LanguageString;
   imgUrls?: string[];
+  sizeImgUrl?: string | null;
   displayPrice?: number;
   comparePrice?: number | null;
   displayPriority?: number;

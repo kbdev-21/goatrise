@@ -27,6 +27,7 @@ export type ProductInfoFormValue = {
   markdownDescriptionEn: string;
   markdownDescriptionVi: string;
   imgUrls: string[];
+  sizeImgUrl: string;
   comparePrice: string;
   comparePriceEnabled: boolean;
   displayPriority: string;
@@ -45,6 +46,7 @@ export const EMPTY_PRODUCT_INFO_FORM_VALUE: ProductInfoFormValue = {
   markdownDescriptionEn: "",
   markdownDescriptionVi: "",
   imgUrls: [],
+  sizeImgUrl: "",
   comparePrice: "",
   comparePriceEnabled: false,
   displayPriority: "1",
@@ -190,6 +192,17 @@ export default function ProductInfoForm({
               />
             ))}
             <ImageUploadButton onUpload={addImgUrl} />
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <FieldLabel>Size chart image</FieldLabel>
+          <div className="flex flex-wrap items-center gap-2">
+            {value.sizeImgUrl ? (
+              <ImageThumbnail url={value.sizeImgUrl} onRemove={() => set({ sizeImgUrl: "" })} />
+            ) : (
+              <ImageUploadButton onUpload={(url) => set({ sizeImgUrl: url })} />
+            )}
           </div>
         </div>
 

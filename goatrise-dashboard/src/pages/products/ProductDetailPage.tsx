@@ -63,6 +63,7 @@ export default function ProductDetailPage() {
     if (value.sizeRequired) requiredAttributes.push("SIZE");
 
     const imgUrls = value.imgUrls.map((u) => u.trim()).filter(Boolean);
+    const sizeImgUrl = value.sizeImgUrl.trim();
     const itemIds = value.itemIds.filter(Boolean);
     const markdownEn = value.markdownDescriptionEn.trim();
     const markdownVi = value.markdownDescriptionVi.trim();
@@ -77,6 +78,8 @@ export default function ProductDetailPage() {
       markdownDescription:
         markdownEn && markdownVi ? { en: markdownEn, vi: markdownVi } : undefined,
       imgUrls: imgUrls.length > 0 ? imgUrls : undefined,
+      // null = xóa ảnh size chart
+      sizeImgUrl: sizeImgUrl || null,
       displayPrice: undefined,
       comparePrice: value.comparePriceEnabled ? Number(value.comparePrice || "0") : null,
       displayPriority: value.displayPriority ? Number(value.displayPriority) : undefined,
@@ -239,6 +242,7 @@ function productToFormValue(product: ProductDetail): ProductInfoFormValue {
     markdownDescriptionEn: product.markdownDescription?.en ?? "",
     markdownDescriptionVi: product.markdownDescription?.vi ?? "",
     imgUrls: product.imgUrls ?? [],
+    sizeImgUrl: product.sizeImgUrl ?? "",
     comparePrice: product.comparePrice?.toString() ?? "",
     comparePriceEnabled: product.comparePrice !== null,
     displayPriority: String(product.displayPriority),

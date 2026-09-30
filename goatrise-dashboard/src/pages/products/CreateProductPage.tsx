@@ -34,6 +34,7 @@ export default function CreateProductPage() {
     if (value.sizeRequired) requiredAttributes.push("SIZE");
 
     const imgUrls = value.imgUrls.map((u) => u.trim()).filter(Boolean);
+    const sizeImgUrl = value.sizeImgUrl.trim();
     const itemIds = value.itemIds.filter(Boolean);
     const markdownEn = value.markdownDescriptionEn.trim();
     const markdownVi = value.markdownDescriptionVi.trim();
@@ -48,6 +49,7 @@ export default function CreateProductPage() {
       markdownDescription:
         markdownEn && markdownVi ? { en: markdownEn, vi: markdownVi } : undefined,
       imgUrls: imgUrls.length > 0 ? imgUrls : undefined,
+      sizeImgUrl: sizeImgUrl || undefined,
       displayPrice: undefined,
       comparePrice: value.comparePriceEnabled ? Number(value.comparePrice || "0") : undefined,
       displayPriority: value.displayPriority ? Number(value.displayPriority) : undefined,

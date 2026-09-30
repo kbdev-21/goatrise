@@ -10,6 +10,7 @@ export const products = pgTable.withRLS("products", {
   shortDescription: jsonb("short_description").$type<LanguageString>().notNull(),
   markdownDescription: jsonb("markdown_description").$type<LanguageString>(),
   imgUrls: jsonb("img_urls").$type<string[]>(),
+  sizeImgUrl: text("size_img_url"),
   displayPrice: bigint("display_price", { mode: "number" }),
   comparePrice: bigint("compare_price", { mode: "number" }),
 
