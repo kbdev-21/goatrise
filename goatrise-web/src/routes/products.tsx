@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { SlidersHorizontal } from "lucide-react";
+import { Check, SlidersHorizontal } from "lucide-react";
 
 import { productsQueryOptions } from "@/api/product/query-hooks";
 import { collectionsQueryOptions } from "@/api/collection/query-hooks";
@@ -20,7 +20,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { formatPrice, getColorName } from "@/lib/utils";
+import { cn, formatPrice, getColorName } from "@/lib/utils";
 
 // bước nhảy của thanh trượt giá (VND)
 const PRICE_STEP = 10_000;
@@ -118,8 +118,7 @@ function ProductsPage() {
       if (!firstHexByName.has(name)) {
         firstHexByName.set(name, hex);
       }
-    }
-    return [...firstHexByName]
+    }    return [...firstHexByName]
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([name, hex]) => ({ name, hex }));
   }, [colorNameByHex]);
@@ -306,28 +305,43 @@ function ProductsPage() {
       ) : null}
 
       {colorOptions.length > 0 ? (
-        <FilterSection title="Màu sắc">
-          <ul className="flex flex-col">
-            {colorOptions.map(({ name, hex }) => (
-              <li key={name}>
-                <Checkbox
-                  label={
-                    <span className="flex items-center gap-2">
-                      <span
-                        aria-hidden
-                        style={{ backgroundColor: hex }}
-                        className="size-3.5 shrink-0 rounded-full ring-1 ring-foreground/30 ring-inset"
-                      />
-                      <span className="capitalize">{name}</span>
+        <FilterSection
+          title={
+            selectedColors.length > 0
+              ? `Màu sắc (${selectedColors.length})`
+              : "Màu sắc"
+          }
+        >
+          <ul className="grid grid-cols-3 gap-x-2 gap-y-4">
+            {colorOptions.map(({ name, hex }) => {
+              const checked = selectedColors.includes(name);
+              return (
+                <li key={name}>
+                  <button
+                    type="button"
+                    aria-pressed={checked}
+                    onClick={() => toggleValue("color", selectedColors, name)}
+                    className="group flex w-full cursor-pointer flex-col items-center gap-1.5 text-center"
+                  >
+                    <span
+                      aria-hidden
+                      style={{ backgroundColor: hex }}
+                      className={cn(
+                        "flex size-7 items-center justify-center rounded-full ring-1 ring-foreground/20 ring-inset transition-shadow group-hover:ring-foreground/50",
+                        isLightColor(hex) ? "text-black" : "text-white"
+                      )}
+                    >
+                      {checked ? (
+                        <Check className="size-4" strokeWidth={3} />
+                      ) : null}
                     </span>
-                  }
-                  checked={selectedColors.includes(name)}
-                  onCheckedChange={() =>
-                    toggleValue("color", selectedColors, name)
-                  }
-                />
-              </li>
-            ))}
+                    <span className="text-xs leading-tight capitalize">
+                      {name}
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         </FilterSection>
       ) : null}
@@ -495,6 +509,20 @@ function asPrice(value: unknown): number | undefined {
   return typeof price === "number" && Number.isFinite(price) && price >= 0
     ? price
     : undefined;
+}
+
+// màu nền sáng thì dấu tick đen, tối thì tick trắng (độ sáng cảm nhận theo YIQ)
+function isLightColor(hex: string): boolean {
+  const value = hex.replace("#", "");
+  const full =
+    value.length === 3
+      ? [...value].map((char) => char + char).join("")
+      : value.slice(0, 6);
+  const r = parseInt(full.slice(0, 2), 16);
+  const g = parseInt(full.slice(2, 4), 16);
+  const b = parseInt(full.slice(4, 6), 16);
+  if ([r, g, b].some(Number.isNaN)) return false;
+  return (r * 299 + g * 587 + b * 114) / 1000 >= 150;
 }
 
 function clamp(value: number, min: number, max: number): number {
