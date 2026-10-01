@@ -8,7 +8,7 @@ const OPTIONS = {
   easing: (t: number) => (t === 1 ? 1 : 1 - Math.pow(2, -10 * t)),
   smoothWheel: true,
   // mỗi nấc lăn đi xa hơn cuộn thường, bù lại cho duration ngắn
-  wheelMultiplier: 1.2,
+  wheelMultiplier: 1,
   // trên mobile giữ cuộn native, quán tính của hệ điều hành đã đủ tốt
   syncTouch: false,
 };

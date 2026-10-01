@@ -290,8 +290,9 @@
      --f (dê bay ra 0 → 1), --c (chuyển sang hero 0 → 1), --x (độ dịch dải, px),
      --wm-* (đích bay của GOAT RISE); mỗi chữ cái có --d. */
   .intro-section {
-    /* cỡ chữ GOAT RISE (vừa một màn hình) và khung ảnh logo, dê cần cả hai để đáp lên chữ */
-    --word: min(18vw, 38svh);
+    /* cỡ chữ của intro (câu chào và GOAT RISE dùng chung) và khung ảnh logo,
+       dê cần cả hai để đáp lên chữ */
+    --word: min(12.5vw, 25svh);
     --goat: min(80vw, 64svh);
     /* --c làm mượt (smoothstep): chậm lúc bắt đầu và lúc đáp */
     --k: calc(var(--c, 0) * var(--c, 0) * (3 - 2 * var(--c, 0)));
@@ -304,8 +305,8 @@
     will-change: transform;
   }
 
-  /* chữ trồi khỏi đáy mặt nạ khi tâm chữ trôi từ mép phải (d = 1) vào tới 88%
-     màn hình; chữ cuối của GOAT RISE lúc dừng nằm trong mốc này nên đã lên hết */
+  /* chữ câu chào trồi khỏi đáy mặt nạ khi tâm chữ trôi từ mép phải (d = 1) vào
+     tới 88% màn hình */
   .intro-letter {
     transform: translate3d(
       0,

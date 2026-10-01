@@ -67,7 +67,7 @@ function Greeting() {
   return (
     <p
       aria-label="Hey Goat, ready to rise?"
-      className="flex shrink-0 items-center gap-[0.3em] px-[8vw] font-logo text-[min(15vw,30svh)] leading-none font-extrabold tracking-[-0.04em] uppercase"
+      className="flex shrink-0 items-center gap-[0.3em] px-[8vw] font-logo text-(length:--word) leading-none font-extrabold tracking-[-0.04em] uppercase"
     >
       {GREETING.map((word) => (
         <Letters key={word} word={word} />
@@ -87,8 +87,9 @@ function Wordmark() {
         aria-label="GOAT RISE"
         className="intro-wordmark flex items-center font-logo text-(length:--word) leading-none font-extrabold uppercase"
       >
-        <Letters word="Goat" />
-        <Letters word="Rise" />
+        {/* chữ tĩnh, nằm sẵn trên dải (không trồi lên như câu chào) */}
+        <span aria-hidden>Goat</span>
+        <span aria-hidden>Rise</span>
       </h2>
     </div>
   );
