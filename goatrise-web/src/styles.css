@@ -136,6 +136,15 @@
   [role="button"]:not(:disabled) {
     cursor: pointer;
   }
+  /* Radix (dialog, drawer...) khóa cuộn bằng body { overflow: hidden }, cùng lúc
+     Lenis dừng và gắn html.lenis-stopped { overflow: clip }. html không còn
+     visible thì overflow của body không truyền lên viewport nữa mà biến body
+     thành khung cuộn riêng (scrollTop 0) => mọi phần tử sticky bám theo body,
+     nhảy về vị trí gốc. html đã khóa cuộn rồi nên trả body về visible.
+     (!important trong @layer thắng !important ngoài layer của Radix) */
+  html.lenis-stopped body[data-scroll-locked] {
+    overflow: visible !important;
+  }
 }
 /* ------------------------------------------------------------------ *
  * Motion primitives — dùng chung cho header và trang chủ.
@@ -158,11 +167,9 @@
     transform: none;
   }
 
-  /* Vỏ header. Tailwind v4 dựng -translate-y-* bằng property `translate`,
-     không phải `transform`, nên phải transition đúng `translate` thì mới chạy. */
+  /* Vỏ header: chỉ đổi màu nền / chữ khi rời hero */
   .header-shell {
     transition:
-      translate 1s var(--ease-smooth),
       background-color 0.55s var(--ease-smooth),
       border-color 0.55s var(--ease-smooth),
       color 0.55s var(--ease-smooth),

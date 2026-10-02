@@ -3,7 +3,7 @@ import Lenis from "lenis";
 
 const OPTIONS = {
   // thời gian con trỏ cuộn đuổi kịp vị trí đích — càng lớn càng trễ
-  duration: 0.8,
+  duration: 0.75,
   // easeOutExpo: bung gần hết quãng đường ngay lúc đầu rồi rê rất dài về đích
   easing: (t: number) => (t === 1 ? 1 : 1 - Math.pow(2, -10 * t)),
   smoothWheel: true,

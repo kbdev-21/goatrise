@@ -6,7 +6,15 @@ import "swiper/css";
 import "swiper/css/pagination";
 
 import type { ProductDetail } from "@/api/product/api";
+import { RollText } from "@/components/shared/roll-text";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { cn, formatPrice, getColorName } from "@/lib/utils";
 import { useCartStore } from "@/stores/cart.store";
 
@@ -107,13 +115,14 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
               {images.map((url, i) => (
                 <div
                   key={url}
-                  className="aspect-square w-full overflow-hidden bg-muted"
+                  className="group aspect-square w-full overflow-hidden bg-muted"
                 >
+                  {/* zoom nhẹ khi hover, cùng nhịp với ảnh featured collections */}
                   <img
                     src={url}
                     alt={`${product.title.vi} ${i + 1}`}
                     loading="lazy"
-                    className="size-full object-cover"
+                    className="size-full object-cover transition-transform duration-500 group-hover:scale-105"
                   />
                 </div>
               ))}
@@ -123,12 +132,6 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
 
         {/* Info: stick lại khi cột ảnh còn scroll */}
         <div className="lg:sticky lg:top-20 lg:self-start lg:pl-16">
-          {category ? (
-            <p className="text-xs font-semibold tracking-widest text-muted-foreground uppercase">
-              {category.title.vi}
-            </p>
-          ) : null}
-
           <h1 className="mt-2 text-2xl font-bold tracking-tight uppercase">
             {product.title.vi}
           </h1>
@@ -172,7 +175,7 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
                     onClick={() => setSelectedColor(color)}
                     style={{ backgroundColor: color }}
                     className={cn(
-                      "size-7 cursor-pointer rounded-full ring-1 ring-foreground/20 ring-inset transition-shadow",
+                      "size-7 cursor-pointer rounded-full ring-1 ring-foreground/20 ring-inset transition-[box-shadow,transform] duration-300 ease-smooth hover:scale-110",
                       selectedColor === color &&
                         "ring-2 ring-foreground ring-offset-2 ring-offset-background"
                     )}
@@ -189,12 +192,13 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
                 <p className="text-[11px] font-semibold tracking-widest uppercase">
                   Size
                 </p>
-                <button
-                  type="button"
-                  className="cursor-pointer text-xs tracking-wide text-muted-foreground uppercase hover:text-foreground"
-                >
-                  Bảng size
-                </button>
+                {/* chỉ hiện khi sản phẩm có ảnh bảng size */}
+                {product.sizeImgUrl ? (
+                  <SizeChartDialog
+                    imgUrl={product.sizeImgUrl}
+                    productTitle={product.title.vi}
+                  />
+                ) : null}
               </div>
               <div className="mt-3 flex flex-wrap gap-2">
                 {sizes.map((size) => (
@@ -203,7 +207,7 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
                     type="button"
                     onClick={() => setSelectedSize(size)}
                     className={cn(
-                      "flex h-9 min-w-11 cursor-pointer items-center justify-center border px-2.5 text-[11px] font-medium transition-colors",
+                      "flex h-9 min-w-11 cursor-pointer items-center justify-center border px-2.5 text-[11px] font-medium transition-colors duration-300",
                       selectedSize === size
                         ? "border-foreground bg-background text-foreground"
                         : "border-border hover:border-foreground"
@@ -225,7 +229,7 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
               <button
                 type="button"
                 onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                className="flex size-9 cursor-pointer items-center justify-center text-muted-foreground hover:text-foreground disabled:cursor-default disabled:opacity-40"
+                className="flex size-9 cursor-pointer items-center justify-center text-muted-foreground transition-colors duration-300 hover:text-foreground disabled:cursor-default disabled:opacity-40"
                 disabled={quantity <= 1}
               >
                 <Minus className="size-3" />
@@ -234,7 +238,7 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
               <button
                 type="button"
                 onClick={() => setQuantity((q) => q + 1)}
-                className="flex size-9 cursor-pointer items-center justify-center text-muted-foreground hover:text-foreground"
+                className="flex size-9 cursor-pointer items-center justify-center text-muted-foreground transition-colors duration-300 hover:text-foreground"
               >
                 <Plus className="size-3" />
               </button>
@@ -248,13 +252,14 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
               onClick={() =>
                 selectedItem && addLine(selectedItem, product, quantity)
               }
-              className="h-12 w-full rounded-none bg-foreground text-background text-xs font-bold tracking-widest uppercase hover:bg-foreground/90"
+              className="h-12 w-full rounded-none bg-foreground text-background text-xs font-bold tracking-widest uppercase duration-300 hover:bg-foreground/85"
             >
               {selectedItem ? "Thêm vào giỏ hàng" : "Hết hàng"}
             </Button>
+            {/* viền -> lấp nền khi hover, cùng kiểu nút hero / featured collections */}
             <Button
               variant="outline"
-              className="h-12 w-full rounded-none text-xs font-bold tracking-widest uppercase"
+              className="h-12 w-full rounded-none border-foreground/45 text-xs font-bold tracking-widest uppercase duration-300 hover:border-foreground hover:bg-foreground hover:text-background"
             >
               Mua ngay
             </Button>
@@ -278,6 +283,39 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
         </div>
       </div>
     </div>
+  );
+}
+
+function SizeChartDialog({
+  imgUrl,
+  productTitle,
+}: {
+  imgUrl: string;
+  productTitle: string;
+}) {
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <button
+          type="button"
+          className="group -my-2 cursor-pointer py-2 text-[11px] font-bold tracking-[0.08em] uppercase opacity-60 transition-opacity duration-300 hover:opacity-100 focus-visible:opacity-100"
+        >
+          <RollText label="Bảng size" />
+        </button>
+      </DialogTrigger>
+      <DialogContent>
+        <div className="border-b border-border px-6 py-5 pr-14">
+          <DialogTitle>Bảng size</DialogTitle>
+        </div>
+        <div className="p-4 sm:p-6">
+          <img
+            src={imgUrl}
+            alt={`Bảng size ${productTitle}`}
+            className="mx-auto h-auto w-full object-contain"
+          />
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 

@@ -1,5 +1,4 @@
 import { Link } from "@tanstack/react-router";
-import { Plus } from "lucide-react";
 
 import type { Product } from "@/api/product/api";
 import { cn, formatPrice } from "@/lib/utils";
@@ -49,13 +48,6 @@ export function ProductCard({
                 className="absolute inset-0 size-full object-cover opacity-0 transition-opacity duration-300 ease-in-out group-hover:opacity-100"
               />
             ) : null}
-
-            <span
-              aria-hidden
-              className="absolute right-3 bottom-3 flex size-8 items-center justify-center border-[0.5px] border-foreground/50 bg-background/90 text-foreground opacity-0 transition-[opacity,color,background-color] duration-200 ease-in-out group-hover:opacity-100 hover:bg-foreground hover:text-background"
-            >
-              <Plus className="size-3.5" />
-            </span>
           </>
         ) : (
           <div className="flex size-full items-center justify-center text-xs text-muted-foreground">

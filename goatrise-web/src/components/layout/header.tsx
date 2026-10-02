@@ -11,9 +11,6 @@ import { RollText } from "@/components/shared/roll-text";
 import { selectItemCount, useCartStore } from "@/stores/cart.store";
 import { useSearchStore } from "@/stores/search.store";
 
-// Bỏ qua rung lắc nhỏ của trackpad, chỉ đổi trạng thái khi thật sự đổi hướng
-const DIRECTION_DELTA = 6;
-
 const LABEL_CLASS =
   "text-[11px] font-bold tracking-[0.08em] whitespace-nowrap uppercase";
 // Nút icon trên mobile: ô chạm 44x44, icon cùng cỡ với nút Menu
@@ -26,11 +23,6 @@ const ACTION_CLASS = cn(
 );
 
 export function Header() {
-  const [inTransparentZone, setInTransparentZone] = useState(true);
-  const [hidden, setHidden] = useState(false);
-  // bản sao của hidden để đọc trong vòng cập nhật cuộn (effect chỉ chạy lại khi đổi trang)
-  const hiddenRef = useRef(false);
-  const lastY = useRef(0);
   const headerRef = useRef<HTMLElement>(null);
 
   const isHome = useRouterState({
@@ -39,6 +31,7 @@ export function Header() {
   // trang chủ mở ra là đang ở intro: giấu nội dung header ngay từ lần render đầu
   // (cả SSR), không để nó hiện ra rồi mới biến mất
   const [inIntro, setInIntro] = useState(isHome);
+  const [overHero, setOverHero] = useState(isHome);
   const openCart = useCartStore((s) => s.openCart);
   const openSearch = useSearchStore((s) => s.openSearch);
   const cartCount = useCartStore(selectItemCount);
@@ -46,56 +39,37 @@ export function Header() {
   const hasHydrated = useCartStore((s) => s.hasHydrated);
 
   useEffect(() => {
+    // ngoài trang chủ: không có intro, không có hero => luôn hiện, nền trắng
+    if (!isHome) {
+      setInIntro(false);
+      setOverHero(false);
+      return;
+    }
+
     let frame = 0;
-    // trình duyệt có thể khôi phục vị trí cuộn cũ; lấy mốc thật để lần chạy
-    // đầu tiên không bị hiểu nhầm là "đang cuộn xuống" rồi giấu header đi
-    lastY.current = window.scrollY;
 
     const update = () => {
       frame = 0;
-      const y = window.scrollY;
-      const delta = y - lastY.current;
 
-      // intro trang chủ [data-header-hide] còn ghim full màn hình (đáy chưa lên
-      // tới đáy viewport) thì giấu nội dung header (data-intro). Header vẫn đứng
-      // yên tại chỗ, không trượt đi: GOAT RISE của intro bay lên đúng chỗ logo
-      // rồi trao tay, header mà đang trượt thì logo lệch
+      // intro [data-header-hide] còn ghim (đáy section chưa lên tới đáy khung
+      // dính) thì giấu nội dung header. So với chính khung dính (100svh) chứ không
+      // so với innerHeight, để khớp đúng mốc intro nhả trên mobile.
+      // Vừa chuyển sang trang chủ, trang cũ có thể chưa nhả DOM => chưa thấy
+      // intro thì coi như đang ở intro (vào trang chủ luôn ở đầu trang)
       const intro = document.querySelector<HTMLElement>("[data-header-hide]");
-      const introActive =
-        intro !== null &&
-        intro.getBoundingClientRect().bottom > window.innerHeight + 1;
-      setInIntro(introActive);
-      if (introActive) {
-        hiddenRef.current = false;
-        setHidden(false);
-        lastY.current = y;
-        return;
-      }
+      const stage = intro?.querySelector<HTMLElement>("[data-intro-stage]");
+      setInIntro(
+        !intro ||
+          !stage ||
+          intro.getBoundingClientRect().bottom > stage.offsetHeight + 1
+      );
 
-      // hero trang chủ đánh dấu [data-header-zone]: header còn nằm trên hero thì
-      // luôn hiện và trong suốt, cuộn xuống cũng không giấu đi
+      // header còn nằm trên hero [data-header-zone] thì trong suốt
       const headerHeight = headerRef.current?.offsetHeight ?? 0;
       const zone = document.querySelector<HTMLElement>("[data-header-zone]");
-      if (zone && zone.getBoundingClientRect().bottom >= headerHeight) {
-        setInTransparentZone(true);
-        hiddenRef.current = false;
-        setHidden(false);
-        lastY.current = y;
-        return;
-      }
-
-      if (Math.abs(delta) < DIRECTION_DELTA) return;
-      // cuộn xuống thì header trượt lên giấu đi ngay, cuộn lên là trượt ra lại.
-      // y > 0: cú nảy cao su ở đỉnh trang (iOS) đi từ âm về 0 cũng là "delta > 0",
-      // không được tính là cuộn xuống
-      const hide = y > 0 && delta > 0;
-      // đã qua hero thì đổi sang nền trắng, trừ frame header vừa bắt đầu trượt
-      // lên (lúc đó nó đang hiện): giữ trong suốt để user chỉ thấy trượt đi,
-      // không thấy vừa đổi màu vừa trượt; lần cập nhật sau nó đã ẩn mới đổi
-      if (!hide || hiddenRef.current) setInTransparentZone(false);
-      hiddenRef.current = hide;
-      setHidden(hide);
-      lastY.current = y;
+      setOverHero(
+        zone !== null && zone.getBoundingClientRect().bottom >= headerHeight
+      );
     };
 
     const onScroll = () => {
@@ -115,29 +89,30 @@ export function Header() {
     // chạy lại để tính ngay có đang ở intro không
   }, [isHome]);
 
-  // Chỉ trong suốt khi header còn nằm trên hero tối của trang chủ
-  const transparent = isHome && inTransparentZone;
+  // state chỉ được effect cập nhật sau khi vẽ; chặn thêm bằng isHome để frame
+  // đầu tiên sau khi rời trang chủ không mang trạng thái cũ
+  const introHidden = isHome && inIntro;
+  // trong suốt khi còn ở intro hoặc header còn nằm trên hero tối của trang chủ
+  const transparent = isHome && (inIntro || overHero);
   const count = hasHydrated ? cartCount : 0;
   const cartLabel =
     count > 0 ? `Giỏ hàng, ${count} sản phẩm` : "Giỏ hàng, đang trống";
 
   return (
+    // right: Radix khóa cuộn thì scrollbar biến mất, body bù lại bằng margin-right
+    // và đặt --removed-body-scroll-bar-size; header fixed phải lùi theo, không
+    // thì giãn rộng ra làm logo / nút bên phải xô sang phải
     <header
       ref={headerRef}
       className={cn(
-        "header-shell fixed inset-x-0 top-0 z-40 border-b",
-        hidden ? "-translate-y-full" : "translate-y-0",
+        "header-shell fixed top-0 right-[var(--removed-body-scroll-bar-size,0px)] left-0 z-40 border-b",
         transparent
           ? "border-transparent bg-transparent text-white"
           : "border-border bg-background/100 text-foreground backdrop-blur-xl"
       )}
-      data-intro={inIntro ? "" : undefined}
+      data-intro={introHidden ? "" : undefined}
       // dùng bàn phím tab vào header thì luôn hiện ra, kể cả đang ở intro
-      onFocusCapture={() => {
-        hiddenRef.current = false;
-        setHidden(false);
-        setInIntro(false);
-      }}
+      onFocusCapture={() => setInIntro(false)}
     >
       <div
         data-header-bar
