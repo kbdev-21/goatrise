@@ -11,7 +11,6 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
@@ -22,8 +21,6 @@ const SIZE_ORDER = ["XS", "S", "M", "L", "XL", "XXL", "XXXL"];
 
 export function ProductDetailView({ product }: { product: ProductDetail }) {
   const images = product.imgUrls ?? [];
-
-  const category = product.collections.find((c) => c.type === "CATEGORY");
 
   const colors = useMemo(
     () =>
