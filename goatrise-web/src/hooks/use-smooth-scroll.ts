@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useRouter } from "@tanstack/react-router";
 import Lenis from "lenis";
 
 const OPTIONS = {
@@ -21,6 +22,8 @@ const OPTIONS = {
  * getBoundingClientRect (useScrollProgress, header ẩn/hiện) chạy nguyên si.
  */
 export function useSmoothScroll() {
+  const router = useRouter();
+
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
@@ -48,10 +51,32 @@ export function useSmoothScroll() {
     });
     syncLock();
 
+    // Router (scrollRestoration) về đầu trang / khôi phục vị trí khi back bằng
+    // window.scrollTo lúc trang mới render xong. Nhưng Lenis đang trôi dở (lăn
+    // chuột rồi bấm link ngay) thì bỏ qua sự kiện cuộn đó và kéo tiếp về đích
+    // cũ => trang mới nằm đúng mức cuộn của trang trước. Ghim Lenis về đúng chỗ
+    // đang đứng (immediate: bỏ quán tính; force: kể cả lúc drawer đang khóa)
+    const syncToNative = () =>
+      lenis.scrollTo(window.scrollY, { immediate: true, force: true });
+
+    // bấm link: cắt quán tính ngay, trang cũ không trôi tiếp trong lúc tải
+    const unsubscribeNavigate = router.subscribe(
+      "onBeforeNavigate",
+      syncToNative
+    );
+    // trang mới render: đồng bộ theo vị trí router vừa đặt. Đợi microtask để
+    // chắc chắn subscriber cuộn của router chạy xong trước, không phụ thuộc
+    // thứ tự đăng ký
+    const unsubscribeRendered = router.subscribe("onRendered", () =>
+      queueMicrotask(syncToNative)
+    );
+
     return () => {
       cancelAnimationFrame(frame);
       observer.disconnect();
+      unsubscribeNavigate();
+      unsubscribeRendered();
       lenis.destroy();
     };
-  }, []);
+  }, [router]);
 }
