@@ -131,6 +131,13 @@
   }
   html {
     @apply font-sans;
+    /* Ẩn thanh cuộn của trang, vẫn cuộn bình thường: intro trang chủ gập lại
+       làm trang ngắn đi đột ngột => thanh cuộn nhảy cỡ / vị trí rất lộ.
+       Chỉ áp cho trang, vùng cuộn riêng (sidebar lọc, drawer) vẫn có thanh cuộn */
+    scrollbar-width: none;
+  }
+  html::-webkit-scrollbar {
+    display: none;
   }
   button:not(:disabled),
   [role="button"]:not(:disabled) {
@@ -379,6 +386,22 @@
   /* hero lùi nhẹ về đúng cỡ khi lộ ra => có chiều sâu thay vì hiện phẳng */
   .intro-hero-inner {
     transform: scale(calc(1.12 - var(--k) * 0.12));
+  }
+
+  /* Đã xem xong intro (useIntroScroll gắn data-intro-done): gập lại chỉ còn hero,
+     cuộn ngược lên không gặp lại. Lúc gập (c = 1) màn đen / chữ đã ẩn hết nên
+     bỏ đi không thấy khác gì */
+  .intro-section[data-intro-done] {
+    height: auto;
+  }
+
+  .intro-section[data-intro-done] .intro-scene,
+  .intro-section[data-intro-done] .intro-curtain {
+    display: none;
+  }
+
+  .intro-section[data-intro-done] .intro-hero-inner {
+    transform: none;
   }
 }
 

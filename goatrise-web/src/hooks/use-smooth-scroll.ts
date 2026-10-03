@@ -14,6 +14,11 @@ const OPTIONS = {
   syncTouch: false,
 };
 
+let current: Lenis | null = null;
+
+/** Lenis đang chạy (null nếu tắt hiệu ứng): code tự đổi vị trí cuộn phải đồng bộ lại cho nó */
+export const getLenis = () => current;
+
 /**
  * Cuộn có quán tính (smooth / lerp scroll) như các site tham chiếu.
  *
@@ -28,6 +33,7 @@ export function useSmoothScroll() {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     const lenis = new Lenis(OPTIONS);
+    current = lenis;
 
     let frame = requestAnimationFrame(function raf(time) {
       lenis.raf(time);
@@ -51,8 +57,7 @@ export function useSmoothScroll() {
     });
     syncLock();
 
-    // Router (scrollRestoration) về đầu trang / khôi phục vị trí khi back bằng
-    // window.scrollTo lúc trang mới render xong. Nhưng Lenis đang trôi dở (lăn
+    // Router về đầu trang bằng window.scrollTo lúc trang mới render xong. Nhưng Lenis đang trôi dở (lăn
     // chuột rồi bấm link ngay) thì bỏ qua sự kiện cuộn đó và kéo tiếp về đích
     // cũ => trang mới nằm đúng mức cuộn của trang trước. Ghim Lenis về đúng chỗ
     // đang đứng (immediate: bỏ quán tính; force: kể cả lúc drawer đang khóa)
@@ -77,6 +82,7 @@ export function useSmoothScroll() {
       unsubscribeNavigate();
       unsubscribeRendered();
       lenis.destroy();
+      current = null;
     };
   }, [router]);
 }

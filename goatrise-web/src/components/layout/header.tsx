@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useRouter, useRouterState } from "@tanstack/react-router";
 import { Search, ShoppingCart } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -8,6 +8,7 @@ import { CartDrawer } from "@/components/layout/cart-drawer";
 import { SearchOverlay } from "@/components/layout/search-overlay";
 import { navItems } from "@/components/layout/nav-config";
 import { RollText } from "@/components/shared/roll-text";
+import { isIntroDone } from "@/hooks/use-intro-scroll";
 import { selectItemCount, useCartStore } from "@/stores/cart.store";
 import { useSearchStore } from "@/stores/search.store";
 
@@ -24,13 +25,15 @@ const ACTION_CLASS = cn(
 
 export function Header() {
   const headerRef = useRef<HTMLElement>(null);
+  const router = useRouter();
 
   const isHome = useRouterState({
     select: (s) => s.location.pathname === "/",
   });
   // trang chủ mở ra là đang ở intro: giấu nội dung header ngay từ lần render đầu
-  // (cả SSR), không để nó hiện ra rồi mới biến mất
-  const [inIntro, setInIntro] = useState(isHome);
+  // (cả SSR), không để nó hiện ra rồi mới biến mất. Intro chỉ chạy một lần mỗi
+  // lần tải trang: đã xem rồi thì quay lại trang chủ không giấu nữa
+  const [inIntro, setInIntro] = useState(isHome && !isIntroDone());
   const [overHero, setOverHero] = useState(isHome);
   const openCart = useCartStore((s) => s.openCart);
   const openSearch = useSearchStore((s) => s.openSearch);
@@ -55,13 +58,14 @@ export function Header() {
       // dính) thì giấu nội dung header. So với chính khung dính (100svh) chứ không
       // so với innerHeight, để khớp đúng mốc intro nhả trên mobile.
       // Vừa chuyển sang trang chủ, trang cũ có thể chưa nhả DOM => chưa thấy
-      // intro thì coi như đang ở intro (vào trang chủ luôn ở đầu trang)
+      // intro thì coi như đang ở intro (vào trang chủ luôn ở đầu trang), trừ khi
+      // intro đã xem xong (lúc đó nó gập lại chỉ còn hero)
       const intro = document.querySelector<HTMLElement>("[data-header-hide]");
       const stage = intro?.querySelector<HTMLElement>("[data-intro-stage]");
       setInIntro(
-        !intro ||
-          !stage ||
-          intro.getBoundingClientRect().bottom > stage.offsetHeight + 1
+        !intro || !stage
+          ? !isIntroDone()
+          : intro.getBoundingClientRect().bottom > stage.offsetHeight + 1
       );
 
       // header còn nằm trên hero [data-header-zone] thì trong suốt
@@ -80,14 +84,19 @@ export function Header() {
     window.addEventListener("scroll", onScroll, { passive: true });
     // chiều cao màn hình đổi thì mốc hết hero cũng đổi theo
     window.addEventListener("resize", onScroll, { passive: true });
+    // isHome đổi ngay khi bắt đầu chuyển trang, lúc loader trang chủ còn chạy và
+    // DOM vẫn là trang cũ => update() ở trên chưa thấy hero. Trang mới render
+    // xong (có thể không kèm sự kiện cuộn nào) thì tính lại
+    const unsubscribeRendered = router.subscribe("onRendered", onScroll);
     return () => {
       cancelAnimationFrame(frame);
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
+      unsubscribeRendered();
     };
     // đổi trang (vào / rời trang chủ) có thể không phát sinh sự kiện cuộn nào,
     // chạy lại để tính ngay có đang ở intro không
-  }, [isHome]);
+  }, [isHome, router]);
 
   // state chỉ được effect cập nhật sau khi vẽ; chặn thêm bằng isHome để frame
   // đầu tiên sau khi rời trang chủ không mang trạng thái cũ
@@ -108,7 +117,7 @@ export function Header() {
         "header-shell fixed top-0 right-[var(--removed-body-scroll-bar-size,0px)] left-0 z-40 border-b",
         transparent
           ? "border-transparent bg-transparent text-white"
-          : "border-border bg-background/100 text-foreground backdrop-blur-xl"
+          : "border-border bg-background/90 text-foreground backdrop-blur-xl"
       )}
       data-intro={introHidden ? "" : undefined}
       // dùng bàn phím tab vào header thì luôn hiện ra, kể cả đang ở intro

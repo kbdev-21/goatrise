@@ -10,7 +10,6 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ProductsRouteImport } from './routes/products'
-import { Route as ComingSoonRouteImport } from './routes/coming-soon'
 import { Route as CollectionsRouteImport } from './routes/collections'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as AboutRouteImport } from './routes/about'
@@ -21,11 +20,6 @@ import { Route as CollectionsIdRouteImport } from './routes/collections_.$id'
 const ProductsRoute = ProductsRouteImport.update({
   id: '/products',
   path: '/products',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ComingSoonRoute = ComingSoonRouteImport.update({
-  id: '/coming-soon',
-  path: '/coming-soon',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CollectionsRoute = CollectionsRouteImport.update({
@@ -64,7 +58,6 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/checkout': typeof CheckoutRoute
   '/collections': typeof CollectionsRoute
-  '/coming-soon': typeof ComingSoonRoute
   '/products': typeof ProductsRoute
   '/collections/$id': typeof CollectionsIdRoute
   '/products/$slug': typeof ProductsSlugRoute
@@ -74,7 +67,6 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/checkout': typeof CheckoutRoute
   '/collections': typeof CollectionsRoute
-  '/coming-soon': typeof ComingSoonRoute
   '/products': typeof ProductsRoute
   '/collections/$id': typeof CollectionsIdRoute
   '/products/$slug': typeof ProductsSlugRoute
@@ -85,7 +77,6 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/checkout': typeof CheckoutRoute
   '/collections': typeof CollectionsRoute
-  '/coming-soon': typeof ComingSoonRoute
   '/products': typeof ProductsRoute
   '/collections_/$id': typeof CollectionsIdRoute
   '/products_/$slug': typeof ProductsSlugRoute
@@ -97,7 +88,6 @@ export interface FileRouteTypes {
     | '/about'
     | '/checkout'
     | '/collections'
-    | '/coming-soon'
     | '/products'
     | '/collections/$id'
     | '/products/$slug'
@@ -107,7 +97,6 @@ export interface FileRouteTypes {
     | '/about'
     | '/checkout'
     | '/collections'
-    | '/coming-soon'
     | '/products'
     | '/collections/$id'
     | '/products/$slug'
@@ -117,7 +106,6 @@ export interface FileRouteTypes {
     | '/about'
     | '/checkout'
     | '/collections'
-    | '/coming-soon'
     | '/products'
     | '/collections_/$id'
     | '/products_/$slug'
@@ -128,7 +116,6 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   CheckoutRoute: typeof CheckoutRoute
   CollectionsRoute: typeof CollectionsRoute
-  ComingSoonRoute: typeof ComingSoonRoute
   ProductsRoute: typeof ProductsRoute
   CollectionsIdRoute: typeof CollectionsIdRoute
   ProductsSlugRoute: typeof ProductsSlugRoute
@@ -141,13 +128,6 @@ declare module '@tanstack/react-router' {
       path: '/products'
       fullPath: '/products'
       preLoaderRoute: typeof ProductsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/coming-soon': {
-      id: '/coming-soon'
-      path: '/coming-soon'
-      fullPath: '/coming-soon'
-      preLoaderRoute: typeof ComingSoonRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/collections': {
@@ -200,7 +180,6 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   CheckoutRoute: CheckoutRoute,
   CollectionsRoute: CollectionsRoute,
-  ComingSoonRoute: ComingSoonRoute,
   ProductsRoute: ProductsRoute,
   CollectionsIdRoute: CollectionsIdRoute,
   ProductsSlugRoute: ProductsSlugRoute,

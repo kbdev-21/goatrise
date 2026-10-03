@@ -10,7 +10,8 @@ export function getRouter() {
     routeTree,
     context: { queryClient },
 
-    scrollRestoration: true,
+    // không khôi phục vị trí cuộn (kể cả F5 / back): mọi trang luôn mở ở đầu trang
+    scrollRestoration: false,
     defaultPreload: "intent",
     defaultPreloadStaleTime: 0,
   })

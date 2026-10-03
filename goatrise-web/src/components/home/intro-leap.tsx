@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import { useIntroScroll } from "@/hooks/use-intro-scroll";
+import { isIntroDone, useIntroScroll } from "@/hooks/use-intro-scroll";
 
 const GREETING = ["Hey", "Goat,", "Ready", "to", "Rise?"];
 
@@ -20,6 +20,8 @@ export function IntroLeap({ children }: { children: ReactNode }) {
     <div
       ref={ref}
       data-header-hide
+      // quay lại trang chủ (SPA) sau khi đã xem intro: render sẵn bản gập, chỉ còn hero
+      data-intro-done={isIntroDone() ? "" : undefined}
       className="intro-section relative -mt-12 bg-black text-white md:-mt-14"
     >
       <div

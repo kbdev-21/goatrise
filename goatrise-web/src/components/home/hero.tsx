@@ -71,18 +71,6 @@ export function Hero({ collection }: { collection?: Collection }) {
               </Link>
             </div>
           </div>
-
-          {/* Gợi ý cuộn tĩnh, chỉ mờ dần khi người dùng bắt đầu cuộn */}
-          <div
-            aria-hidden
-            className="hidden shrink-0 flex-col items-center gap-3 md:flex"
-            style={{ opacity: "clamp(0, calc(1 - var(--p, 0) * 4), 1)" }}
-          >
-            <span className="text-[10px] font-bold tracking-[0.22em] text-white/60 uppercase">
-              Scroll
-            </span>
-            <span className="block h-14 w-px bg-white/30" />
-          </div>
         </div>
       </div>
     </section>

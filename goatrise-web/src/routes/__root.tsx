@@ -2,39 +2,22 @@ import {
   HeadContent,
   Scripts,
   createRootRouteWithContext,
-  redirect,
-  useRouterState,
 } from "@tanstack/react-router"
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools"
 import { TanStackDevtools } from "@tanstack/react-devtools"
 import type { QueryClient } from "@tanstack/react-query"
 import { useEffect } from "react"
-import { cn } from "@/lib/utils";
 import "@/core/auth";
 import { useAuthStore } from "@/stores/auth.store";
 import { useCartStore } from "@/stores/cart.store";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
+import { PageScrollbar } from "@/components/layout/page-scrollbar";
 import { useSmoothScroll } from "@/hooks/use-smooth-scroll";
 
 import appCss from "../styles.css?url"
 
-const COMING_SOON_PATH = "/coming-soon";
-// chỉ đóng site khi biến được set rõ ràng là "false"
-const isPublic = import.meta.env.VITE_IS_PUBLIC !== "false";
-
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  beforeLoad: ({ location }) => {
-    // guard SSR: localStorage chỉ tồn tại phía client
-    const hasPreviewAccess =
-      typeof window !== "undefined" && localStorage.getItem("isPublic") === "true";
-
-    if (isPublic || hasPreviewAccess || location.pathname === COMING_SOON_PATH) {
-      return;
-    }
-
-    throw redirect({ to: COMING_SOON_PATH });
-  },
   head: () => ({
     meta: [
       {
@@ -73,14 +56,17 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   const init = useAuthStore((s) => s.init);
 
   useSmoothScroll();
-  const isComingSoon = useRouterState({
-    select: (s) => s.location.pathname === COMING_SOON_PATH,
-  });
 
   useEffect(() => {
     const cleanup = init();
     return cleanup;
   }, [init]);
+
+  // F5 luôn về đầu trang: không cho trình duyệt tự khôi phục vị trí cuộn cũ
+  // (giá trị này lưu theo mục lịch sử nên lần tải lại sau đã có hiệu lực)
+  useEffect(() => {
+    history.scrollRestoration = "manual";
+  }, []);
 
   // rehydrate giỏ hàng sau khi mount để tránh lệch SSR (localStorage chỉ có ở client)
   useEffect(() => {
@@ -98,13 +84,12 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         <div className="flex min-h-svh flex-col">
-          {isComingSoon ? null : <Header />}
+          <Header />
           {/* header fixed nên main phải tự chừa đúng chiều cao của nó */}
-          <main className={cn("flex-1", isComingSoon ? null : "pt-12 md:pt-14")}>
-            {children}
-          </main>
-          {isComingSoon ? null : <Footer />}
+          <main className="flex-1 pt-12 md:pt-14">{children}</main>
+          <Footer />
         </div>
+        <PageScrollbar />
         <TanStackDevtools
           config={{
             position: "bottom-right",

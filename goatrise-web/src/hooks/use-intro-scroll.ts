@@ -1,10 +1,23 @@
 import { useEffect, useRef } from "react";
 
+import { getLenis } from "@/hooks/use-smooth-scroll";
+
 const clamp01 = (value: number) => Math.min(1, Math.max(0, value));
 
 // quãng cuộn (tính bằng màn hình) cho pha dê bay ra, sau khi dải dừng;
 // đổi thì chỉnh cả height của .intro-section
 const FLY_SCREENS = 0.5;
+
+// đã qua intro bao lâu không cuộn thì gập intro lại. Chờ dừng tay vì đổi vị trí
+// cuộn giữa chừng sẽ cắt mất quán tính (Lenis / momentum của mobile)
+const COLLAPSE_IDLE_MS = 200;
+
+// Intro chỉ chạy một lần mỗi lần tải trang: qua hết rồi thì gập lại, quay lại
+// trang chủ trong SPA cũng không hiện nữa, F5 mới có lại. Chỉ bật ở client nên
+// SSR / lần hydrate đầu luôn render intro đầy đủ
+let introDone = false;
+
+export const isIntroDone = () => introDone;
 
 let measureContext: CanvasRenderingContext2D | null = null;
 
@@ -40,6 +53,9 @@ const spaceWidthEm = (el: HTMLElement) => {
  * và lên mỗi [data-intro-letter]:
  *   --d  vị trí tâm chữ trên màn hình, tính bằng bề ngang màn hình
  *        (0 = mép trái, 1 = mép phải)
+ *
+ * Cuộn qua hết intro rồi dừng tay thì gắn [data-intro-done] lên section (CSS
+ * gập lại chỉ còn hero) và bù vị trí cuộn => cuộn ngược lên không gặp lại intro.
  */
 export function useIntroScroll<T extends HTMLElement>() {
   const ref = useRef<T>(null);
@@ -48,13 +64,14 @@ export function useIntroScroll<T extends HTMLElement>() {
     const section = ref.current;
     const stage = section?.querySelector<HTMLElement>("[data-intro-stage]");
     const track = section?.querySelector<HTMLElement>("[data-intro-track]");
-    if (!section || !stage || !track) return;
+    if (!section || !stage || !track || introDone) return;
     // tắt hiệu ứng: CSS bỏ ghim, khỏi theo dõi cuộn
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     let travel = 0;
     let letters: Array<{ el: HTMLElement; center: number }> = [];
     let frame = 0;
+    let idleTimer = 0;
     let visible = true;
 
     const update = () => {
@@ -129,8 +146,36 @@ export function useIntroScroll<T extends HTMLElement>() {
       if (gap !== null) section.style.setProperty("--wm-gap", gap.toFixed(4));
     };
 
+    const collapse = () => {
+      idleTimer = 0;
+      // còn ghim (chưa nhả, hoặc đã cuộn ngược vào lại) thì chưa gập
+      const before = section.getBoundingClientRect().bottom;
+      if (before > stage.offsetHeight + 1) return;
+
+      // tự bù vị trí bên dưới; tắt scroll anchoring để trình duyệt không bù chồng lên
+      const root = document.documentElement;
+      root.style.overflowAnchor = "none";
+      section.setAttribute("data-intro-done", "");
+      introDone = true;
+
+      // giữ đáy section (đáy hero) đứng yên trên màn hình => không thấy giật
+      const after = section.getBoundingClientRect().bottom;
+      window.scrollTo({
+        top: window.scrollY + after - before,
+        behavior: "instant",
+      });
+      const lenis = getLenis();
+      lenis?.resize();
+      lenis?.scrollTo(window.scrollY, { immediate: true, force: true });
+      root.style.overflowAnchor = "";
+
+      teardown();
+    };
+
     const schedule = () => {
       if (frame === 0 && visible) frame = requestAnimationFrame(update);
+      window.clearTimeout(idleTimer);
+      idleTimer = window.setTimeout(collapse, COLLAPSE_IDLE_MS);
     };
 
     // Ngoài tầm nhìn thì ngừng tính
@@ -150,13 +195,18 @@ export function useIntroScroll<T extends HTMLElement>() {
     observer.observe(section);
     measure();
     window.addEventListener("scroll", schedule, { passive: true });
+    // trang mở ra đã nằm sau intro (vd. link có #hash) => gập luôn
+    idleTimer = window.setTimeout(collapse, COLLAPSE_IDLE_MS);
 
-    return () => {
+    function teardown() {
       cancelAnimationFrame(frame);
+      window.clearTimeout(idleTimer);
       observer.disconnect();
       resizeObserver.disconnect();
       window.removeEventListener("scroll", schedule);
-    };
+    }
+
+    return teardown;
   }, []);
 
   return ref;
