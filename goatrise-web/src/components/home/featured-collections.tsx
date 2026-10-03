@@ -1,8 +1,10 @@
+import type { CSSProperties } from "react";
 import { Link } from "@tanstack/react-router";
 
 import { cn } from "@/lib/utils";
 import type { Collection } from "@/api/collection/api";
 import { RollText } from "@/components/shared/roll-text";
+import { useReveal } from "@/hooks/use-reveal";
 
 const CTA_LABEL = "Shop now";
 
@@ -11,6 +13,8 @@ export function FeaturedCollections({
 }: {
   collections: Collection[];
 }) {
+  const ref = useReveal<HTMLElement>();
+
   if (collections.length === 0) {
     return null;
   }
@@ -19,7 +23,7 @@ export function FeaturedCollections({
   const isSingle = collections.length === 1;
 
   return (
-    <section className="pb-20">
+    <section ref={ref} className="pb-20">
       <div
         className={cn(
           "grid grid-cols-1 gap-0",
@@ -27,10 +31,13 @@ export function FeaturedCollections({
           collections.length >= 3 && "md:grid-cols-3"
         )}
       >
-        {collections.map((collection) => (
+        {collections.map((collection, index) => (
           <Link
             key={collection.id}
             to="/products"
+            data-reveal
+            // thẻ sau hiện trễ hơn một nhịp, cùng kiểu so le với Featured Products
+            style={{ "--reveal-delay": `${index * 120}ms` } as CSSProperties}
             className={cn(
               "group relative block overflow-hidden bg-muted",
               isSingle ? "aspect-[16/9]" : "aspect-[4/5]"

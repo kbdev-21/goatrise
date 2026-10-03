@@ -8,6 +8,7 @@ import { collectionsQueryOptions } from "@/api/collection/query-hooks";
 import type { Product } from "@/api/product/api";
 import type { Collection } from "@/api/collection/api";
 import { ProductCard } from "@/components/shared/product-card";
+import { Reveal } from "@/components/shared/reveal";
 import { Select } from "@/components/ui/select";
 import { RangeSlider, type Range } from "@/components/ui/range-slider";
 import { Button } from "@/components/ui/button";
@@ -434,8 +435,11 @@ function ProductsPage() {
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-x-3 gap-y-10 md:grid-cols-3 md:gap-x-4 xl:grid-cols-4">
-              {visibleProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
+              {visibleProducts.map((product, index) => (
+                // so le theo cột (tối đa 4) để hàng nào cũng hiện lần lượt, không dồn delay
+                <Reveal key={product.id} delay={(index % 4) * 60}>
+                  <ProductCard product={product} />
+                </Reveal>
               ))}
             </div>
           )}

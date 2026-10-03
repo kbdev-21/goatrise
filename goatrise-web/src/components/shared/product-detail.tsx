@@ -14,6 +14,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { useReveal } from "@/hooks/use-reveal";
 import { cn, formatPrice, getColorName } from "@/lib/utils";
 import { useCartStore } from "@/stores/cart.store";
 
@@ -52,6 +53,7 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
   const [quantity, setQuantity] = useState(1);
 
   const addLine = useCartStore((s) => s.addLine);
+  const galleryRef = useReveal<HTMLDivElement>();
 
   // requiredAttributes là nguồn đúng cho biết biến thể cần khớp thuộc tính nào
   const selectedItem = useMemo(() => {
@@ -74,12 +76,13 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
     <div className="mx-auto max-w-6xl px-6 pt-0 pb-10 lg:pt-10">
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:items-start lg:gap-x-0">
         {/* Gallery */}
+        {/* màn đầu hiện bằng CSS animation lúc tải trang, không chờ JS */}
         {images.length === 0 ? (
-          <div className="flex aspect-square w-full items-center justify-center bg-muted text-sm text-muted-foreground">
+          <div className="rise-fade flex aspect-square w-full items-center justify-center bg-muted text-sm text-muted-foreground">
             Chưa có ảnh
           </div>
         ) : (
-          <div>
+          <div className="rise-fade">
             {/* Mobile: slider 1 ảnh/lần */}
             <div className="-mx-6 lg:mx-0 lg:hidden">
               <Swiper
@@ -108,10 +111,12 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
             </div>
 
             {/* Desktop: toàn bộ ảnh xếp dọc từ trên xuống */}
-            <div className="hidden flex-col gap-3 lg:flex">
+            <div ref={galleryRef} className="hidden flex-col gap-3 lg:flex">
               {images.map((url, i) => (
                 <div
                   key={url}
+                  // ảnh đầu đã hiện cùng cả cột, các ảnh sau hiện dần khi cuộn tới
+                  data-reveal={i > 0 || undefined}
                   className="group aspect-square w-full overflow-hidden bg-muted"
                 >
                   {/* zoom nhẹ khi hover, cùng nhịp với ảnh featured collections */}
@@ -128,7 +133,10 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
         )}
 
         {/* Info: stick lại khi cột ảnh còn scroll */}
-        <div className="lg:sticky lg:top-20 lg:self-start lg:pl-16">
+        <div
+          className="rise-fade lg:sticky lg:top-20 lg:self-start lg:pl-16"
+          style={{ "--rise-delay": "120ms" } as React.CSSProperties}
+        >
           <h1 className="mt-2 text-2xl font-bold tracking-tight uppercase">
             {product.title.vi}
           </h1>

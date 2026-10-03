@@ -54,7 +54,6 @@ function CollectionsPage() {
             <CollectionRow
               key={collection.id}
               collection={collection}
-              index={index}
               reversed={index % 2 === 1}
             />
           ))}
@@ -66,17 +65,14 @@ function CollectionsPage() {
 
 function CollectionRow({
   collection,
-  index,
   reversed,
 }: {
   collection: Collection;
-  index: number;
   reversed: boolean;
 }) {
   const rowRef = useReveal<HTMLAnchorElement>();
   // ảnh trôi chậm hơn trang khi cuộn, cùng kiểu với ảnh cuối BrandIntro
   const mediaRef = useScrollProgress<HTMLDivElement>();
-  const productCount = collection.products.length;
 
   return (
     <Link
@@ -106,17 +102,6 @@ function CollectionRow({
           aria-hidden
           className="absolute inset-0 bg-black/10 transition-colors duration-500 group-hover:bg-black/25"
         />
-
-        {/* số thứ tự cỡ lớn đè góc ảnh */}
-        <span
-          aria-hidden
-          className={cn(
-            "absolute top-4 font-logo text-[clamp(3rem,8vw,7rem)] leading-none font-extrabold tracking-[-0.05em] text-white tabular-nums mix-blend-difference lg:top-6",
-            reversed ? "right-5 lg:right-8" : "left-5 lg:left-8"
-          )}
-        >
-          {String(index + 1).padStart(2, "0")}
-        </span>
       </div>
 
       <div
@@ -127,12 +112,10 @@ function CollectionRow({
           reversed ? "lg:col-start-1" : "lg:col-start-9"
         )}
       >
-        {productCount > 0 ? (
-          <p className="flex items-center gap-3 text-[11px] font-bold tracking-[0.18em] uppercase tabular-nums opacity-55">
-            <span aria-hidden className="h-px w-10 bg-current" />
-            {productCount} sản phẩm
-          </p>
-        ) : null}
+        {/* năm lấy từ createdAt (collection chưa có trường year riêng) */}
+        <p className="text-base font-bold tracking-[0.14em] tabular-nums opacity-55 lg:text-lg">
+          {new Date(collection.createdAt).getFullYear()}
+        </p>
 
         <h2 className="font-logo text-[clamp(2rem,4.5vw,4rem)] leading-[0.9] font-extrabold tracking-[-0.04em] uppercase">
           {collection.title.vi}

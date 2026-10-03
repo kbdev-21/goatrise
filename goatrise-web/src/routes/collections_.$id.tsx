@@ -1,10 +1,12 @@
 import { useMemo } from "react";
+import type { CSSProperties } from "react";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
 
 import { collectionQueryOptions } from "@/api/collection/query-hooks";
 import { ProductCard } from "@/components/shared/product-card";
+import { Reveal } from "@/components/shared/reveal";
 
 export const Route = createFileRoute("/collections_/$id")({
   loader: async ({ context: { queryClient }, params: { id } }) => {
@@ -57,17 +59,25 @@ function CollectionDetailPage() {
         />
 
         <div className="relative z-10 mx-auto flex h-full w-full max-w-[1500px] flex-col justify-end px-5 pb-12 lg:px-10 lg:pb-16">
+          {/* nằm ngay màn đầu nên chạy bằng CSS animation lúc tải trang, không chờ JS */}
           <Link
             to="/collections"
-            className="w-fit text-[11px] font-bold tracking-[0.18em] text-white/70 uppercase transition-colors hover:text-white"
+            className="rise-fade w-fit text-[11px] font-bold tracking-[0.18em] text-white/70 uppercase transition-colors hover:text-white"
+            style={{ "--rise-delay": "100ms" } as CSSProperties}
           >
             Bộ sưu tập
           </Link>
-          <h1 className="mt-3 font-logo text-[clamp(2rem,5vw,3.75rem)] leading-[0.9] font-extrabold tracking-[-0.04em] uppercase">
+          <h1
+            className="rise-fade mt-3 font-logo text-[clamp(2rem,5vw,3.75rem)] leading-[0.9] font-extrabold tracking-[-0.04em] uppercase"
+            style={{ "--rise-delay": "200ms" } as CSSProperties}
+          >
             {collection.title.vi}
           </h1>
           {collection.shortDescription.vi ? (
-            <p className="mt-4 max-w-md text-sm leading-relaxed text-white/75">
+            <p
+              className="rise-fade mt-4 max-w-md text-sm leading-relaxed text-white/75"
+              style={{ "--rise-delay": "300ms" } as CSSProperties}
+            >
               {collection.shortDescription.vi}
             </p>
           ) : null}
@@ -76,18 +86,25 @@ function CollectionDetailPage() {
 
       {/* Sản phẩm của bộ sưu tập */}
       <section className="mx-auto max-w-[1500px] px-5 py-16 lg:px-10 lg:py-24">
-        <p className="text-[11px] font-bold tracking-[0.14em] uppercase tabular-nums opacity-55">
-          {products.length} sản phẩm
-        </p>
+        <Reveal>
+          <p className="text-[11px] font-bold tracking-[0.14em] uppercase tabular-nums opacity-55">
+            {products.length} sản phẩm
+          </p>
+        </Reveal>
 
         {products.length === 0 ? (
-          <p className="py-24 text-center text-sm text-muted-foreground">
-            Bộ sưu tập này chưa có sản phẩm nào.
-          </p>
+          <Reveal>
+            <p className="py-24 text-center text-sm text-muted-foreground">
+              Bộ sưu tập này chưa có sản phẩm nào.
+            </p>
+          </Reveal>
         ) : (
           <div className="mt-8 grid grid-cols-2 gap-x-3 gap-y-10 md:grid-cols-3 md:gap-x-4 lg:grid-cols-4">
-            {products.map((product) => (
-              <ProductCard key={product.id} product={product} />
+            {products.map((product, index) => (
+              // mỗi thẻ tự quan sát: đổi sang bộ sưu tập khác vẫn cùng route, lưới mới vẫn hiện được
+              <Reveal key={product.id} delay={(index % 4) * 60}>
+                <ProductCard product={product} />
+              </Reveal>
             ))}
           </div>
         )}

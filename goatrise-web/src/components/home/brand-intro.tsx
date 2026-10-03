@@ -4,6 +4,7 @@ import { FaInstagram } from "react-icons/fa6";
 
 import introImg from "@/assets/goatrise-introduce.webp";
 import { RollText } from "@/components/shared/roll-text";
+import { useReveal } from "@/hooks/use-reveal";
 import { useScrollProgress } from "@/hooks/use-scroll-progress";
 
 const INSTAGRAM_URL = "https://www.instagram.com/goatrise.vn/";
@@ -21,6 +22,7 @@ export function BrandIntro() {
     reducedValue: 1,
   });
   const mediaRef = useScrollProgress<HTMLDivElement>();
+  const ctaRef = useReveal<HTMLDivElement>();
 
   return (
     <section className="border-t border-border">
@@ -59,26 +61,44 @@ export function BrandIntro() {
         />
         <div aria-hidden className="absolute inset-0 bg-black/40" />
 
-        <div className="absolute inset-0 flex flex-col items-center justify-center px-5 text-center text-white">
-          <p className="text-[11px] font-bold tracking-[0.22em] text-white/70 uppercase">
+        {/* cụm chữ hiện lần lượt eyebrow → tagline → nút khi ảnh cuộn tới */}
+        <div
+          ref={ctaRef}
+          className="absolute inset-0 flex flex-col items-center justify-center px-5 text-center text-white"
+        >
+          <p
+            data-reveal
+            className="text-[11px] font-bold tracking-[0.22em] text-white/70 uppercase"
+          >
             Goat Rise · Est. 2026
           </p>
 
-          <p className="mt-5 text-[clamp(1.5rem,3.5vw,2.75rem)] leading-[0.95] font-extrabold tracking-[-0.03em] uppercase">
+          <p
+            data-reveal
+            style={{ "--reveal-delay": "120ms" } as CSSProperties}
+            className="mt-5 text-[clamp(1.5rem,3.5vw,2.75rem)] leading-[0.95] font-extrabold tracking-[-0.03em] uppercase"
+          >
             Real Improvement
             <br />
             Start Everyday
           </p>
 
-          <a
-            href={INSTAGRAM_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group mt-8 inline-flex h-11 items-center gap-3 border border-white/60 px-7 text-[11px] font-bold tracking-[0.18em] uppercase transition-colors duration-300 hover:border-white hover:bg-white hover:text-black"
+          {/* bọc riêng: transition-colors của nút sẽ đè transition của data-reveal */}
+          <div
+            data-reveal
+            style={{ "--reveal-delay": "240ms" } as CSSProperties}
+            className="mt-8"
           >
-            <FaInstagram aria-hidden className="size-4" />
-            <RollText label="Follow Us" />
-          </a>
+            <a
+              href={INSTAGRAM_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group inline-flex h-11 items-center gap-3 border border-white/60 px-7 text-[11px] font-bold tracking-[0.18em] uppercase transition-colors duration-300 hover:border-white hover:bg-white hover:text-black"
+            >
+              <FaInstagram aria-hidden className="size-4" />
+              <RollText label="Follow Us" />
+            </a>
+          </div>
         </div>
       </div>
     </section>
