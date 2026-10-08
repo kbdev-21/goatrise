@@ -35,6 +35,8 @@ export function FeaturedCollections({
           <Link
             key={collection.id}
             to="/products"
+            // mở /products với đúng danh mục này được chọn sẵn trên thanh danh mục
+            search={{ category: collection.slug }}
             data-reveal
             // thẻ sau hiện trễ hơn một nhịp, cùng kiểu so le với Featured Products
             style={{ "--reveal-delay": `${index * 120}ms` } as CSSProperties}
