@@ -73,16 +73,58 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
     product.comparePrice !== null && price !== null && product.comparePrice > price;
 
   return (
-    <div className="mx-auto max-w-6xl px-6 pt-0 pb-10 lg:pt-10">
-      <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:items-start lg:gap-x-0">
-        {/* Gallery */}
+    <div className="mx-auto max-w-[1500px] px-6 pt-0 pb-10 lg:px-10 lg:pt-10">
+      {/* desktop: 3 cột tên / ảnh / mua. mobile: 1 cột, sắp lại bằng order
+          để giữ thứ tự ảnh -> tên -> chọn mua -> thông tin chi tiết */}
+      <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)_minmax(0,1fr)] lg:items-start lg:gap-x-12 xl:gap-x-20">
+        {/* Trái: tên + mô tả. mobile là display:contents để 2 khối con tách
+            ra làm grid item riêng, đặt order được.
+            desktop: stick ngay dưới header (h-16), cao tối thiểu bằng phần
+            viewport còn lại và căn giữa dọc -> nội dung luôn nằm giữa màn.
+            -mt-8: grid bắt đầu ở 6rem (main pt-14 + pt-10 ở trên) trong khi
+            header chỉ cao 4rem, kéo lên 2rem để ngay đầu trang đã đúng vị trí
+            stick, không bị thấp hơn tâm màn */}
+        <div className="contents lg:sticky lg:top-16 lg:-mt-8 lg:flex lg:min-h-[calc(100svh-4rem)] lg:flex-col lg:justify-center lg:self-start lg:py-10">
+          <div
+            className="rise-fade order-2 lg:max-w-[360px]"
+            style={{ "--rise-delay": "120ms" } as React.CSSProperties}
+          >
+            <h1 className="text-2xl font-bold tracking-tight uppercase">
+              {product.title.vi}
+            </h1>
+            <p className="mt-5 text-sm font-light leading-relaxed">
+              {product.shortDescription.vi}
+            </p>
+          </div>
+
+          {/* Accordions */}
+          <div
+            className="rise-fade order-4 border-t border-border lg:mt-8 lg:max-w-[360px]"
+            style={{ "--rise-delay": "180ms" } as React.CSSProperties}
+          >
+            <Accordion title="Thông tin chi tiết">
+              {product.markdownDescription?.vi ? (
+                <p className="whitespace-pre-line">
+                  {product.markdownDescription.vi}
+                </p>
+              ) : (
+                <p className="text-muted-foreground">Đang cập nhật.</p>
+              )}
+            </Accordion>
+            <Accordion title="Chính sách">
+              <p className="text-muted-foreground">Đang cập nhật.</p>
+            </Accordion>
+          </div>
+        </div>
+
+        {/* Giữa: Gallery */}
         {/* màn đầu hiện bằng CSS animation lúc tải trang, không chờ JS */}
         {images.length === 0 ? (
-          <div className="rise-fade flex aspect-square w-full items-center justify-center bg-muted text-sm text-muted-foreground">
+          <div className="rise-fade order-1 flex aspect-square w-full items-center justify-center bg-muted text-sm text-muted-foreground lg:order-none">
             Chưa có ảnh
           </div>
         ) : (
-          <div className="rise-fade">
+          <div className="rise-fade order-1 lg:order-none">
             {/* Mobile: slider 1 ảnh/lần */}
             <div className="-mx-6 lg:mx-0 lg:hidden">
               <Swiper
@@ -132,16 +174,12 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
           </div>
         )}
 
-        {/* Info: stick lại khi cột ảnh còn scroll */}
+        {/* Phải: giá + chọn biến thể + nút mua, stick + căn giữa dọc như cột trái */}
         <div
-          className="rise-fade lg:sticky lg:top-20 lg:self-start lg:pl-16"
+          className="rise-fade order-3 lg:sticky lg:top-16 lg:-mt-8 lg:order-none lg:flex lg:min-h-[calc(100svh-4rem)] lg:w-full lg:max-w-[360px] lg:flex-col lg:justify-center lg:self-start lg:justify-self-end lg:py-10"
           style={{ "--rise-delay": "120ms" } as React.CSSProperties}
         >
-          <h1 className="mt-2 text-2xl font-bold tracking-tight uppercase">
-            {product.title.vi}
-          </h1>
-
-          <div className="mt-4 flex items-baseline gap-3">
+          <div className="flex items-baseline gap-3">
             {price === null ? (
               <span className="text-xl font-bold">Liên hệ</span>
             ) : (
@@ -155,10 +193,6 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
               </>
             )}
           </div>
-
-          <p className="mt-5 max-w-md text-sm font-light leading-relaxed">
-            {product.shortDescription.vi}
-          </p>
 
           {/* Color */}
           {colors.length > 0 ? (
@@ -261,29 +295,6 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
             >
               {selectedItem ? "Thêm vào giỏ hàng" : "Hết hàng"}
             </Button>
-            {/* viền -> lấp nền khi hover, cùng kiểu nút hero / featured collections */}
-            <Button
-              variant="outline"
-              className="h-12 w-full rounded-none border-foreground/45 text-xs font-bold tracking-widest uppercase duration-300 hover:border-foreground hover:bg-foreground hover:text-background"
-            >
-              Mua ngay
-            </Button>
-          </div>
-
-          {/* Accordions */}
-          <div className="mt-8 border-t border-border">
-            <Accordion title="Thông tin chi tiết">
-              {product.markdownDescription?.vi ? (
-                <p className="whitespace-pre-line">
-                  {product.markdownDescription.vi}
-                </p>
-              ) : (
-                <p className="text-muted-foreground">Đang cập nhật.</p>
-              )}
-            </Accordion>
-            <Accordion title="Chính sách">
-              <p className="text-muted-foreground">Đang cập nhật.</p>
-            </Accordion>
           </div>
         </div>
       </div>
