@@ -7,6 +7,7 @@ import { MobileMenu } from "@/components/layout/mobile-menu";
 import { CartDrawer } from "@/components/layout/cart-drawer";
 import { SearchOverlay } from "@/components/layout/search-overlay";
 import { navItems } from "@/components/layout/nav-config";
+import { BrandWordmark } from "@/components/shared/brand-wordmark";
 import { RollText } from "@/components/shared/roll-text";
 import { isIntroDone } from "@/hooks/use-intro-scroll";
 import { selectItemCount, useCartStore } from "@/stores/cart.store";
@@ -154,9 +155,9 @@ export function Header() {
           to="/"
           data-header-logo
           aria-label="GOAT RISE — về trang chủ"
-          className="-my-2 justify-self-center py-2 font-logo text-2xl font-extrabold uppercase md:text-3xl"
+          className="-my-2 justify-self-center py-2 font-logo text-[1.75rem] font-extrabold uppercase md:text-[2.125rem]"
         >
-          GOAT RISE
+          <BrandWordmark />
         </Link>
 
         <div className="flex items-center justify-self-end">
@@ -208,13 +209,9 @@ export function Header() {
               <RollText label="Tìm kiếm" />
             </button>
 
-            <button
-              type="button"
-              aria-label="Đăng nhập"
-              className={ACTION_CLASS}
-            >
-              <RollText label="Đăng nhập" />
-            </button>
+            <Link to="/account" className={ACTION_CLASS}>
+              <RollText label="Tài khoản" />
+            </Link>
 
             <button
               type="button"

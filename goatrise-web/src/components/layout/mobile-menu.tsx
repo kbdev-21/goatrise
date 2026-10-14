@@ -11,6 +11,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { navItems } from "@/components/layout/nav-config";
+import { BrandWordmark } from "@/components/shared/brand-wordmark";
 import { useCartStore } from "@/stores/cart.store";
 import { useSearchStore } from "@/stores/search.store";
 
@@ -20,7 +21,7 @@ export function MobileMenu({ triggerClassName }: { triggerClassName?: string }) 
 
   const actions = [
     { label: "Tìm kiếm", icon: Search, onClick: openSearch },
-    { label: "Đăng nhập", icon: User, onClick: undefined },
+    { label: "Tài khoản", icon: User, to: "/account" as const },
     { label: "Giỏ hàng", icon: ShoppingCart, onClick: openCart },
   ];
 
@@ -43,7 +44,7 @@ export function MobileMenu({ triggerClassName }: { triggerClassName?: string }) 
       >
         <SheetHeader className="border-b border-border p-6">
           <SheetTitle className="font-logo text-xl font-extrabold tracking-tight uppercase">
-            GOAT RISE
+            <BrandWordmark />
           </SheetTitle>
         </SheetHeader>
 
@@ -64,20 +65,31 @@ export function MobileMenu({ triggerClassName }: { triggerClassName?: string }) 
 
         {/* Các action từ header */}
         <div className="mt-auto flex flex-col border-t border-border">
-          {actions.map(({ label, icon: Icon, onClick }) => (
-            <SheetClose key={label} asChild>
-              <button
-                type="button"
-                onClick={onClick}
-                className={cn(
-                  "flex items-center gap-3 px-6 py-4 text-xs font-medium tracking-wide transition-colors hover:bg-muted"
-                )}
-              >
+          {actions.map(({ label, icon: Icon, onClick, to }) => {
+            const className = cn(
+              "flex items-center gap-3 px-6 py-4 text-xs font-medium tracking-wide transition-colors hover:bg-muted"
+            );
+            const content = (
+              <>
                 <Icon className="size-[1.15rem]" strokeWidth={1.75} />
                 {label}
-              </button>
-            </SheetClose>
-          ))}
+              </>
+            );
+
+            return (
+              <SheetClose key={label} asChild>
+                {to ? (
+                  <Link to={to} className={className}>
+                    {content}
+                  </Link>
+                ) : (
+                  <button type="button" onClick={onClick} className={className}>
+                    {content}
+                  </button>
+                )}
+              </SheetClose>
+            );
+          })}
         </div>
       </SheetContent>
     </Sheet>

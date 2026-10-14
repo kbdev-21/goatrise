@@ -1,5 +1,9 @@
 import type { ReactNode } from "react";
 
+import {
+  BrandWordmark,
+  WORDMARK_MODE,
+} from "@/components/shared/brand-wordmark";
 import { isIntroDone, useIntroScroll } from "@/hooks/use-intro-scroll";
 
 const GREETING = ["Hey", "Goat,", "Ready", "to", "Rise?"];
@@ -89,9 +93,16 @@ function Wordmark() {
         aria-label="GOAT RISE"
         className="intro-wordmark flex items-center font-logo text-(length:--word) leading-none font-extrabold uppercase"
       >
-        {/* chữ tĩnh, nằm sẵn trên dải (không trồi lên như câu chào) */}
-        <span aria-hidden>Goat</span>
-        <span aria-hidden>Rise</span>
+        {/* chữ tĩnh, nằm sẵn trên dải (không trồi lên như câu chào). Bản ảnh là
+            một khối liền nên gap / letter-spacing của .intro-wordmark không tác động */}
+        {WORDMARK_MODE === "image" ? (
+          <BrandWordmark />
+        ) : (
+          <>
+            <span aria-hidden>Goat</span>
+            <span aria-hidden>Rise</span>
+          </>
+        )}
       </h2>
     </div>
   );

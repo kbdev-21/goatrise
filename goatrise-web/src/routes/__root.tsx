@@ -2,6 +2,7 @@ import {
   HeadContent,
   Scripts,
   createRootRouteWithContext,
+  useRouterState,
 } from "@tanstack/react-router"
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools"
 import { TanStackDevtools } from "@tanstack/react-devtools"
@@ -54,6 +55,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   const init = useAuthStore((s) => s.init);
+  // trang tài khoản tự lo header riêng (đăng nhập: không header; đã đăng nhập: header tài khoản)
+  const hideSiteHeader = useRouterState({
+    select: (s) => s.location.pathname === "/account",
+  });
 
   useSmoothScroll();
 
@@ -84,9 +89,11 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         <div className="flex min-h-svh flex-col">
-          <Header />
+          {hideSiteHeader ? null : <Header />}
           {/* header fixed nên main phải tự chừa đúng chiều cao của nó */}
-          <main className="flex-1 pt-12 md:pt-14">{children}</main>
+          <main className={hideSiteHeader ? "flex-1" : "flex-1 pt-12 md:pt-14"}>
+            {children}
+          </main>
           <Footer />
         </div>
         <PageScrollbar />
