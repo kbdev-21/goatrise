@@ -39,6 +39,14 @@ export const UpdateCustomerRequestSchema = z.object({
 });
 export type UpdateCustomerRequest = z.infer<typeof UpdateCustomerRequestSchema>;
 
+// user tự sửa thông tin mua hàng: chỉ tên, SĐT, địa chỉ (email là khoá nối user <-> customer, không cho đổi)
+export const UpdateMyCustomerRequestSchema = UpdateCustomerRequestSchema.pick({
+  name: true,
+  phoneNum: true,
+  addresses: true
+});
+export type UpdateMyCustomerRequest = z.infer<typeof UpdateMyCustomerRequestSchema>;
+
 export const FindCustomersQuerySchema = z.object({
   search: z.string().optional(),
   sort: z.string().default("createdAt:DESC"),

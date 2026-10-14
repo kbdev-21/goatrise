@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
 
 import { CartLineItem } from "@/components/shared/cart-line-item";
@@ -8,7 +9,9 @@ import { Button } from "@/components/ui/button";
 import { Combobox } from "@/components/ui/combobox";
 import { cn, formatPrice } from "@/lib/utils";
 import { selectSubtotal, useCartStore } from "@/stores/cart.store";
+import { useAuthStore } from "@/stores/auth.store";
 import { useCalculateOrder, usePlaceOrder } from "@/api/order/query-hooks";
+import { meQueryOptions } from "@/api/user/query-hooks";
 import type {
   Order,
   OrderLineRequest,
@@ -52,6 +55,30 @@ function CheckoutPage() {
 
   const calculateMutation = useCalculateOrder();
   const placeMutation = usePlaceOrder();
+
+  // đã đăng nhập + có customer => điền sẵn thông tin liên hệ (dùng chung cache với trang /account)
+  const authUserId = useAuthStore((s) => s.session?.user.id);
+  const { data: me } = useQuery({
+    ...meQueryOptions(authUserId ?? ""),
+    enabled: !!authUserId,
+  });
+  const customer = authUserId ? (me?.customer ?? null) : null;
+
+  const nameInputRef = useRef<HTMLInputElement>(null);
+  const phoneInputRef = useRef<HTMLInputElement>(null);
+  const emailInputRef = useRef<HTMLInputElement>(null);
+  const hasForm = hasHydrated && !placedOrder && lines.length > 0;
+
+  // input không controlled (submit đọc FormData) => gán thẳng DOM. chỉ điền ô còn trống
+  // để không ghi đè thứ user đã gõ; chạy lại khi form vừa hiện (customer có thể về trước form)
+  useEffect(() => {
+    if (!customer || !hasForm) {
+      return;
+    }
+    fillIfEmpty(nameInputRef.current, customer.name);
+    fillIfEmpty(phoneInputRef.current, customer.phoneNum);
+    fillIfEmpty(emailInputRef.current, customer.email);
+  }, [customer, hasForm]);
 
   // chỉ gửi các dòng còn bán được cho backend (dòng đã gỡ sẽ khiến API trả lỗi)
   const orderLines = useMemo(
@@ -191,6 +218,7 @@ function CheckoutPage() {
           <Section title="Thông tin liên hệ">
             <Field label="Họ và tên" htmlFor="customerName">
               <input
+                ref={nameInputRef}
                 id="customerName"
                 name="customerName"
                 autoComplete="name"
@@ -201,6 +229,7 @@ function CheckoutPage() {
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
               <Field label="Số điện thoại" htmlFor="customerPhoneNum">
                 <input
+                  ref={phoneInputRef}
                   id="customerPhoneNum"
                   name="customerPhoneNum"
                   type="tel"
@@ -212,6 +241,7 @@ function CheckoutPage() {
               </Field>
               <Field label="Email" htmlFor="customerEmail" optional>
                 <input
+                  ref={emailInputRef}
                   id="customerEmail"
                   name="customerEmail"
                   type="email"
@@ -506,4 +536,10 @@ function SummaryRow({
       <dd className={cn("font-medium", muted && "text-muted-foreground")}>{value}</dd>
     </div>
   );
+}
+
+function fillIfEmpty(input: HTMLInputElement | null, value: string | null) {
+  if (input && !input.value && value) {
+    input.value = value;
+  }
 }

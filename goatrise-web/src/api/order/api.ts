@@ -16,6 +16,15 @@ export async function placeOrder(request: PlaceOrderRequest): Promise<Order> {
   return res.data;
 }
 
+// GET /api/orders/me: đơn của user hiện tại (user email -> customer -> orders), mới nhất trước.
+// backend trả [] khi không có customer hoặc có lỗi
+export async function findMyOrders(query: FindMyOrdersQuery): Promise<Order[]> {
+  const res = await axiosInstance.get<Order[]>("/api/orders/me", {
+    params: query,
+  });
+  return res.data;
+}
+
 // web tự dùng cho địa chỉ, không phụ thuộc core/types của backend
 export type LanguageString = { vi: string; en: string };
 
@@ -131,6 +140,13 @@ export type OrderBase = {
 export type Order = OrderBase & {
   lines: OrderLineBase[];
   coupon: Coupon | null;
+};
+
+// Mirror backend: domain/orders/validators.ts -> FindMyOrdersQuerySchema
+// (backend mặc định offset 0, limit 20; luôn sort createdAt desc)
+export type FindMyOrdersQuery = {
+  offset?: number;
+  limit?: number;
 };
 
 export type OrderLineRequest = {

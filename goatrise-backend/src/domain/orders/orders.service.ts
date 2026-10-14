@@ -11,9 +11,9 @@ import { applyCoupon, getCouponByCode, revokeCoupon } from "../promotion/coupons
 import { decrementCombosUsage, incrementCombosUsage } from "../promotion/combos.service.js";
 import { refundItems, soldItems } from "../inventory/inventory.service.js";
 import { getOrCreateOrSyncCustomer } from "../customers/customers-sync.service.js";
-import { updateCustomer } from "../customers/customers.service.js";
+import { findCustomerByEmail, updateCustomer } from "../customers/customers.service.js";
 import type { UpdateCustomerRequest } from "../customers/validators.js";
-import type { CalculateOrderRequest, CreateOrderRequest, FindOrdersQuery, PlaceOrderRequest, UpdateOrderRequest } from "./validators.js";
+import type { CalculateOrderRequest, CreateOrderRequest, FindMyOrdersQuery, FindOrdersQuery, PlaceOrderRequest, UpdateOrderRequest } from "./validators.js";
 import { ORDER_RELATIONS, type Order } from "./types.js";
 
 export async function getOrderById(db: DbExec, id: string): Promise<Order> {
@@ -57,6 +57,31 @@ export async function findOrders(db: DbExec, query: FindOrdersQuery): Promise<Or
       ? { totalAmount: direction }
       : { createdAt: direction }
   });
+}
+
+// đơn của user hiện tại: user email -> customer -> orders.
+// bất kỳ bước nào lỗi/không có -> trả list rỗng, không throw.
+export async function findOrdersByUserEmail(db: DbExec, email: string, query: FindMyOrdersQuery): Promise<Order[]> {
+  const { offset, limit } = query;
+
+  try {
+    const customer = await findCustomerByEmail(db, email);
+    if (!customer) {
+      return [];
+    }
+
+    return await db.query.orders.findMany({
+      where: {
+        customerId: customer.id
+      },
+      with: ORDER_RELATIONS,
+      offset: offset,
+      limit: limit,
+      orderBy: { createdAt: "desc" }
+    });
+  } catch (e) {
+    return [];
+  }
 }
 
 export async function createOrder(db: DbExec, actorId: string | null, createReq: CreateOrderRequest): Promise<Order> {

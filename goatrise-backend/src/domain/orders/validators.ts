@@ -96,6 +96,13 @@ export const FindOrdersQuerySchema = z.object({
 });
 export type FindOrdersQuery = z.infer<typeof FindOrdersQuerySchema>;
 
+// đơn của user hiện tại: chỉ phân trang, luôn sort createdAt desc
+export const FindMyOrdersQuerySchema = FindOrdersQuerySchema.pick({
+  offset: true,
+  limit: true
+});
+export type FindMyOrdersQuery = z.infer<typeof FindMyOrdersQuerySchema>;
+
 // update order: cho sửa mọi field như lúc create, ở mọi status.
 // quy ước: field vắng mặt (undefined) = giữ nguyên; field nullable gửi null = xóa về null.
 export const UpdateOrderRequestSchema = z.object({

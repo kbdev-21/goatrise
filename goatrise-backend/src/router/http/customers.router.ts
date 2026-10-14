@@ -4,8 +4,9 @@ import { requiredRolesMiddleware } from "../middlewares/required-roles.middlewar
 import type { ContextVariables } from "../../core/types.js";
 import { db } from "../../db/db.js";
 import { createCustomer, deleteCustomer, findCustomers, updateCustomer } from "../../domain/customers/customers.service.js";
+import { upsertCustomerByEmail } from "../../domain/customers/customers-sync.service.js";
 import { zValidator } from "@hono/zod-validator";
-import { CreateCustomerRequestSchema, UpdateCustomerRequestSchema, FindCustomersQuerySchema } from "../../domain/customers/validators.js";
+import { CreateCustomerRequestSchema, UpdateCustomerRequestSchema, UpdateMyCustomerRequestSchema, FindCustomersQuerySchema } from "../../domain/customers/validators.js";
 
 export const customersRouter = new Hono<{ Variables: ContextVariables }>();
 
@@ -33,6 +34,27 @@ customersRouter.post("/api/customers",
     const newCustomer = await createCustomer(db, currentUser.id, createReq);
 
     return c.json(newCustomer, 201);
+  }
+);
+
+// khai báo TRƯỚC /api/customers/:id để "me" không bị match thành :id
+customersRouter.patch("/api/customers/me",
+  authMiddleware,
+  zValidator("json", UpdateMyCustomerRequestSchema),
+  async (c) => {
+    const currentUser = c.get("currentUser");
+    const updateReq = c.req.valid("json");
+
+    // upsert theo email user: chưa có customer thì tạo (tên mặc định lấy từ user)
+    const customer = await upsertCustomerByEmail(
+      db,
+      currentUser.id,
+      currentUser.email,
+      currentUser.fullName || currentUser.email,
+      updateReq
+    );
+
+    return c.json(customer);
   }
 );
 

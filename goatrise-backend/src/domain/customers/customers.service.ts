@@ -22,6 +22,16 @@ export async function getCustomerById(db: DbExec, id: string): Promise<Customer>
   return customer;
 }
 
+export async function findCustomerByEmail(db: DbExec, email: string): Promise<Customer | null> {
+  const customer = await db.query.customers.findFirst({
+    where: {
+      email: email
+    }
+  });
+
+  return customer ?? null;
+}
+
 export async function findCustomers(db: DbExec, query: FindCustomersQuery): Promise<Customer[]> {
   const { search, sort, offset, limit } = query;
   const [sortField, sortDirection] = sort.split(":");

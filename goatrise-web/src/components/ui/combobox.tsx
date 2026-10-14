@@ -17,6 +17,7 @@ export function Combobox({
   placeholder = "Chọn",
   searchPlaceholder = "Tìm kiếm…",
   emptyText = "Không tìm thấy kết quả",
+  modal = false,
   className,
 }: {
   items: ComboboxItem[];
@@ -26,6 +27,9 @@ export function Combobox({
   placeholder?: string;
   searchPlaceholder?: string;
   emptyText?: string;
+  // true khi đặt trong Dialog: Dialog khóa cuộn mọi thứ ngoài nó (kể cả popover đã portal ra ngoài),
+  // popover modal thành lớp khóa trên cùng nên danh sách cuộn được
+  modal?: boolean;
   className?: string;
 }) {
   const [open, setOpen] = useState(false);
@@ -63,6 +67,7 @@ export function Combobox({
 
   return (
     <Popover.Root
+      modal={modal}
       open={open}
       onOpenChange={(next) => {
         setOpen(next);
@@ -88,7 +93,9 @@ export function Combobox({
       </Popover.Trigger>
 
       <Popover.Portal>
+        {/* data-lenis-prevent: Lenis không nuốt con lăn khi cuộn danh sách */}
         <Popover.Content
+          data-lenis-prevent
           align="start"
           sideOffset={-1}
           className="z-50 w-[var(--radix-popover-trigger-width)] border border-foreground bg-background shadow-lg"

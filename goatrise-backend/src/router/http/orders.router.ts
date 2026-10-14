@@ -4,9 +4,9 @@ import { requiredRolesMiddleware } from "../middlewares/required-roles.middlewar
 import type { ContextVariables } from "../../core/types.js";
 import { db } from "../../db/db.js";
 import { calculateOrder } from "../../domain/orders/order-calculation.service.js";
-import { calculateOrderUpdate, createOrder, findOrders, getOrderById, placeOrder, updateOrder } from "../../domain/orders/orders.service.js";
+import { calculateOrderUpdate, createOrder, findOrders, findOrdersByUserEmail, getOrderById, placeOrder, updateOrder } from "../../domain/orders/orders.service.js";
 import { zValidator } from "@hono/zod-validator";
-import { CalculateOrderRequestSchema, CreateOrderRequestSchema, FindOrdersQuerySchema, PlaceOrderRequestSchema, UpdateOrderRequestSchema } from "../../domain/orders/validators.js";
+import { CalculateOrderRequestSchema, CreateOrderRequestSchema, FindMyOrdersQuerySchema, FindOrdersQuerySchema, PlaceOrderRequestSchema, UpdateOrderRequestSchema } from "../../domain/orders/validators.js";
 
 export const ordersRouter = new Hono<{ Variables: ContextVariables }>();
 
@@ -17,6 +17,18 @@ ordersRouter.get("/api/orders",
   async (c) => {
     const query = c.req.valid("query");
     const orders = await findOrders(db, query);
+    return c.json(orders);
+  }
+);
+
+// khai báo TRƯỚC /api/orders/:id để "me" không bị match thành :id
+ordersRouter.get("/api/orders/me",
+  authMiddleware,
+  zValidator("query", FindMyOrdersQuerySchema),
+  async (c) => {
+    const currentUser = c.get("currentUser");
+    const query = c.req.valid("query");
+    const orders = await findOrdersByUserEmail(db, currentUser.email, query);
     return c.json(orders);
   }
 );

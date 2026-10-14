@@ -4,6 +4,8 @@ import { requiredRolesMiddleware } from "../middlewares/required-roles.middlewar
 import type { ContextVariables } from "../../core/types.js";
 import { db } from "../../db/db.js";
 import { createUser, findUsers, updateUserInfo, updateUserRole } from "../../domain/auth/users.service.js";
+import { findCustomerByEmail } from "../../domain/customers/customers.service.js";
+import type { UserDetail } from "../../domain/auth/types.js";
 import { zValidator } from "@hono/zod-validator";
 import { CreateUserRequestSchema, UpdateUserRequestSchema, UpdateUserRoleRequestSchema, FindUsersQuerySchema } from "../../domain/auth/validators.js";
 
@@ -11,9 +13,11 @@ export const usersRouter = new Hono<{ Variables: ContextVariables }>();
 
 usersRouter.get("/api/users/me",
   authMiddleware,
-  (c) => {
+  async (c) => {
     const currentUser = c.get("currentUser");
-    return c.json(currentUser);
+    const customer = await findCustomerByEmail(db, currentUser.email);
+    const userDetail: UserDetail = { ...currentUser, customer: customer };
+    return c.json(userDetail);
   }
 );
 
