@@ -48,8 +48,19 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
     [product.items]
   );
 
-  const [selectedColor, setSelectedColor] = useState(colors[0] ?? null);
-  const [selectedSize, setSelectedSize] = useState(sizes[0] ?? null);
+  // mặc định chọn màu / size đầu tiên còn hàng; hết sạch thì vẫn chọn ô đầu (nút báo Hết hàng)
+  const [selectedColor, setSelectedColor] = useState(
+    () =>
+      colors.find((color) => hasStock(product, color, null)) ??
+      colors.at(0) ??
+      null
+  );
+  const [selectedSize, setSelectedSize] = useState(
+    () =>
+      sizes.find((size) => hasStock(product, selectedColor, size)) ??
+      sizes.at(0) ??
+      null
+  );
   const [quantity, setQuantity] = useState(1);
 
   const addLine = useCartStore((s) => s.addLine);
@@ -67,6 +78,19 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
       ) ?? null
     );
   }, [product.items, product.requiredAttributes, selectedColor, selectedSize]);
+
+  // không có biến thể khớp hoặc biến thể đã hết tồn kho thì không cho thêm vào giỏ
+  const canAddToCart = selectedItem !== null && selectedItem.stock > 0;
+
+  function handleSelectColor(color: string) {
+    setSelectedColor(color);
+    // size đang chọn hết hàng ở màu mới => nhảy sang size đầu tiên còn hàng của màu đó
+    if (!hasStock(product, color, selectedSize)) {
+      setSelectedSize(
+        sizes.find((size) => hasStock(product, color, size)) ?? selectedSize
+      );
+    }
+  }
 
   const price = product.displayPrice ?? product.items[0]?.price ?? null;
   const hasDiscount =
@@ -211,10 +235,12 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
                     key={color}
                     type="button"
                     title={color}
-                    onClick={() => setSelectedColor(color)}
+                    // màu không còn size nào có hàng => mờ đi, không bấm được
+                    disabled={!hasStock(product, color, null)}
+                    onClick={() => handleSelectColor(color)}
                     style={{ backgroundColor: color }}
                     className={cn(
-                      "size-7 cursor-pointer rounded-full ring-1 ring-foreground/20 ring-inset transition-[box-shadow,transform] duration-300 ease-smooth hover:scale-110",
+                      "size-7 cursor-pointer rounded-full ring-1 ring-foreground/20 ring-inset transition-[box-shadow,transform] duration-300 ease-smooth enabled:hover:scale-110 disabled:cursor-default disabled:opacity-25",
                       selectedColor === color &&
                         "ring-2 ring-foreground ring-offset-2 ring-offset-background"
                     )}
@@ -244,12 +270,14 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
                   <button
                     key={size}
                     type="button"
+                    // size hết hàng ở màu đang chọn => mờ đi, không bấm được
+                    disabled={!hasStock(product, selectedColor, size)}
                     onClick={() => setSelectedSize(size)}
                     className={cn(
-                      "flex h-9 min-w-11 cursor-pointer items-center justify-center border px-2.5 text-[11px] font-medium transition-colors duration-300",
+                      "flex h-9 min-w-11 cursor-pointer items-center justify-center border px-2.5 text-[11px] font-medium transition-colors duration-300 disabled:cursor-default disabled:opacity-30",
                       selectedSize === size
                         ? "border-foreground bg-background text-foreground"
-                        : "border-border hover:border-foreground"
+                        : "border-border enabled:hover:border-foreground"
                     )}
                   >
                     {size}
@@ -287,13 +315,13 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
           {/* Actions */}
           <div className="mt-8 flex flex-col gap-3">
             <Button
-              disabled={!selectedItem}
+              disabled={!canAddToCart}
               onClick={() =>
-                selectedItem && addLine(selectedItem, product, quantity)
+                canAddToCart && addLine(selectedItem, product, quantity)
               }
               className="h-12 w-full rounded-none bg-foreground text-background text-xs font-bold tracking-widest uppercase duration-300 hover:bg-foreground/85"
             >
-              {selectedItem ? "Thêm vào giỏ hàng" : "Hết hàng"}
+              {canAddToCart ? "Thêm vào giỏ hàng" : "Hết hàng"}
             </Button>
           </div>
         </div>
@@ -376,5 +404,27 @@ function Accordion({
         </div>
       </div>
     </div>
+  );
+}
+
+// còn ít nhất 1 biến thể đang bán + còn hàng khớp màu / size.
+// null = không lọc theo thuộc tính đó; thuộc tính không nằm trong requiredAttributes cũng bỏ qua
+// (cùng quy tắc khớp với selectedItem)
+function hasStock(
+  product: ProductDetail,
+  color: string | null,
+  size: string | null
+): boolean {
+  const required = product.requiredAttributes;
+  return product.items.some(
+    (item) =>
+      item.isActive &&
+      item.stock > 0 &&
+      (color === null ||
+        !required.includes("COLOR") ||
+        item.attributeValues.COLOR === color) &&
+      (size === null ||
+        !required.includes("SIZE") ||
+        item.attributeValues.SIZE === size)
   );
 }

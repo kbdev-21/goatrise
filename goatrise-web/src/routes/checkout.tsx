@@ -2,9 +2,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
+import { X } from "lucide-react";
 
 import { CartLineItem } from "@/components/shared/cart-line-item";
 import { COUNTRIES } from "@/constant/countries";
+import { INSTAGRAM_URL } from "@/constant/social";
 import { Button } from "@/components/ui/button";
 import { Combobox } from "@/components/ui/combobox";
 import { cn, formatPrice } from "@/lib/utils";
@@ -50,6 +52,10 @@ function CheckoutPage() {
 
   const [couponInput, setCouponInput] = useState("");
   const [appliedCouponCode, setAppliedCouponCode] = useState("");
+  // backend ràng buộc coupon theo SĐT (thiếu SĐT là từ chối) => SĐT gửi kèm khi tính đơn,
+  // chốt lúc bấm áp dụng mã và mỗi lần rời ô SĐT (không tính lại theo từng phím gõ)
+  const [calcPhoneNum, setCalcPhoneNum] = useState("");
+  const [couponError, setCouponError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [placedOrder, setPlacedOrder] = useState<Order | null>(null);
 
@@ -89,8 +95,10 @@ function CheckoutPage() {
     [lines]
   );
   const orderLinesKey = JSON.stringify(orderLines);
+  // SĐT chỉ ảnh hưởng kết quả khi có coupon => không có coupon thì đổi SĐT không tính lại
+  const couponPhoneNum = appliedCouponCode ? calcPhoneNum : "";
 
-  // tính lại giá mỗi khi giỏ đổi hoặc coupon được áp dụng
+  // tính lại giá mỗi khi giỏ đổi, coupon được áp dụng hoặc SĐT dùng cho coupon đổi
   useEffect(() => {
     if (orderLines.length === 0) {
       calculateMutation.reset();
@@ -98,9 +106,23 @@ function CheckoutPage() {
     }
     calculateMutation.mutate({
       lines: orderLines,
+      customerPhoneNum: couponPhoneNum || undefined,
       couponCode: appliedCouponCode || undefined,
     });
-  }, [orderLinesKey, appliedCouponCode]);
+  }, [orderLinesKey, appliedCouponCode, couponPhoneNum]);
+
+  function handleApplyCoupon() {
+    const code = couponInput.trim();
+    const phoneNum = phoneInputRef.current?.value.trim() ?? "";
+    // thiếu SĐT thì backend chỉ trả "Coupon not applicable", báo rõ lý do ngay ở web
+    if (code && !phoneNum) {
+      setCouponError("Vui lòng nhập số điện thoại trước khi áp dụng mã giảm giá.");
+      return;
+    }
+    setCouponError(null);
+    setCalcPhoneNum(phoneNum);
+    setAppliedCouponCode(code);
+  }
 
   const calculation = calculateMutation.data ?? null;
 
@@ -116,6 +138,10 @@ function CheckoutPage() {
     event.preventDefault();
     setFormError(null);
 
+    // ngoài VN không có nút đặt hàng, chặn thêm phòng trường hợp submit bằng Enter
+    if (!isSupportedCountry) {
+      return;
+    }
     if (orderLines.length === 0) {
       setFormError("Giỏ hàng của bạn không có sản phẩm nào còn bán được.");
       return;
@@ -137,6 +163,10 @@ function CheckoutPage() {
       setFormError("Vui lòng nhập số điện thoại.");
       return;
     }
+    if (!customerEmail) {
+      setFormError("Vui lòng nhập email.");
+      return;
+    }
     if (provinces && !provinceCode) {
       setFormError("Vui lòng chọn tỉnh / thành phố.");
       return;
@@ -149,7 +179,7 @@ function CheckoutPage() {
     const request: PlaceOrderRequest = {
       customerName,
       customerPhoneNum,
-      customerEmail: customerEmail || undefined,
+      customerEmail,
       customerAddress: {
         countryCode,
         provinceCode: provinceCode || null,
@@ -237,9 +267,10 @@ function CheckoutPage() {
                   autoComplete="tel"
                   placeholder="0912 345 678"
                   className={inputClass}
+                  onBlur={(e) => setCalcPhoneNum(e.currentTarget.value.trim())}
                 />
               </Field>
-              <Field label="Email" htmlFor="customerEmail" optional>
+              <Field label="Email" htmlFor="customerEmail">
                 <input
                   ref={emailInputRef}
                   id="customerEmail"
@@ -351,24 +382,43 @@ function CheckoutPage() {
 
             <div className="border-b border-border px-5 py-4">
               <div className="flex gap-2">
-                <input
-                  value={couponInput}
-                  onChange={(e) => setCouponInput(e.target.value)}
-                  placeholder="Mã giảm giá"
-                  className={cn(inputClass, "h-10 flex-1")}
-                />
+                <div className="relative flex-1">
+                  <input
+                    value={couponInput}
+                    onChange={(e) => setCouponInput(e.target.value)}
+                    placeholder="Mã giảm giá"
+                    className={cn(inputClass, "h-10 pr-10")}
+                  />
+                  {couponInput || appliedCouponCode ? (
+                    // xoá cả mã đang áp dụng => effect tính lại đơn không kèm coupon
+                    <button
+                      type="button"
+                      aria-label="Xoá mã giảm giá"
+                      onClick={() => {
+                        setCouponInput("");
+                        setAppliedCouponCode("");
+                        setCouponError(null);
+                      }}
+                      className="absolute top-0 right-0 flex size-10 cursor-pointer items-center justify-center text-muted-foreground transition-colors hover:text-foreground"
+                    >
+                      <X aria-hidden className="size-3.5" />
+                    </button>
+                  ) : null}
+                </div>
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => setAppliedCouponCode(couponInput.trim())}
+                  onClick={handleApplyCoupon}
                   disabled={calculateMutation.isPending}
                   className="h-10 shrink-0 rounded-none px-4 text-[11px] font-bold tracking-widest uppercase"
                 >
                   Áp dụng
                 </Button>
               </div>
-              {calcErrorMessage ? (
-                <p className="mt-2 text-xs text-destructive">{calcErrorMessage}</p>
+              {couponError || calcErrorMessage ? (
+                <p className="mt-2 text-xs text-destructive">
+                  {couponError ?? calcErrorMessage}
+                </p>
               ) : null}
             </div>
 
@@ -413,8 +463,8 @@ function CheckoutPage() {
           </div>
 
           {!isSupportedCountry ? (
-            <p className="mt-5 text-xs text-destructive">
-              Hiện chưa hỗ trợ giao hàng ngoài Việt Nam.
+            <p className="mt-5 text-xs">
+              Vui lòng liên hệ chúng tôi cho đơn ngoài Việt Nam
             </p>
           ) : null}
 
@@ -422,17 +472,23 @@ function CheckoutPage() {
             <p className="mt-5 text-xs text-destructive">{formError}</p>
           ) : null}
 
-          <Button
-            type="submit"
-            form="checkout-form"
-            disabled={!isSupportedCountry || placeMutation.isPending}
-            className={cn(
-              "h-12 w-full rounded-none bg-foreground text-xs font-bold tracking-widest text-background uppercase hover:bg-foreground/90",
-              isSupportedCountry && !formError ? "mt-5" : "mt-3"
-            )}
-          >
-            {placeMutation.isPending ? "Đang đặt hàng…" : "Đặt hàng"}
-          </Button>
+          {isSupportedCountry ? (
+            <Button
+              type="submit"
+              form="checkout-form"
+              disabled={placeMutation.isPending}
+              className={cn(submitClass, formError ? "mt-3" : "mt-5")}
+            >
+              {placeMutation.isPending ? "Đang đặt hàng…" : "Đặt hàng"}
+            </Button>
+          ) : (
+            // ngoài VN chưa đặt online được: chuyển khách sang Instagram để tư vấn
+            <Button asChild className={cn(submitClass, "mt-3")}>
+              <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer">
+                Liên hệ chúng tôi
+              </a>
+            </Button>
+          )}
 
           <Link
             to="/products"
@@ -473,6 +529,9 @@ function OrderPlacedScreen({ order }: { order: Order }) {
     </div>
   );
 }
+
+const submitClass =
+  "h-12 w-full rounded-none bg-foreground text-xs font-bold tracking-widest text-background uppercase hover:bg-foreground/90";
 
 const inputClass =
   "h-11 w-full border border-border bg-background px-3 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-foreground";

@@ -4,10 +4,9 @@ import { FaInstagram } from "react-icons/fa6";
 
 import introImg from "@/assets/goatrise-introduce.webp";
 import { RollText } from "@/components/shared/roll-text";
+import { INSTAGRAM_URL } from "@/constant/social";
 import { useReveal } from "@/hooks/use-reveal";
 import { useScrollProgress } from "@/hooks/use-scroll-progress";
-
-const INSTAGRAM_URL = "https://www.instagram.com/goatrise.vn/";
 
 const MANIFESTO =
   "GOAT RISE tin rằng tiến bộ thật sự không đến từ một cú bứt phá, mà từ những gì bạn lặp lại mỗi ngày. Chúng tôi làm quần áo cho nhịp đó: bền bỉ, tối giản, và tốt hơn một chút sau mỗi lần mặc.";

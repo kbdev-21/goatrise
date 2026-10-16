@@ -166,10 +166,10 @@ export type CalculateOrderRequest = {
 };
 
 // Mirror backend: module/orders/domain/validators.ts -> PlaceOrderRequestSchema
-// đơn khách tự đặt (storefront): channel = WEBSITE do backend gán, SĐT + địa chỉ bắt buộc
+// đơn khách tự đặt (storefront): channel = WEBSITE do backend gán, SĐT + địa chỉ + email bắt buộc
 export type PlaceOrderRequest = {
   customerName: string;
-  customerEmail?: string;
+  customerEmail: string;
   customerPhoneNum: string;
   customerAddress: Address;
   couponCode?: string;
