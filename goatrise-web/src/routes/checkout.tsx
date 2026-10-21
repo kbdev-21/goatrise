@@ -9,6 +9,7 @@ import { COUNTRIES } from "@/constant/countries";
 import { INSTAGRAM_URL } from "@/constant/social";
 import { Button } from "@/components/ui/button";
 import { Combobox } from "@/components/ui/combobox";
+import { seo } from "@/lib/seo";
 import { cn, formatPrice } from "@/lib/utils";
 import { selectSubtotal, useCartStore } from "@/stores/cart.store";
 import { useAuthStore } from "@/stores/auth.store";
@@ -21,7 +22,10 @@ import type {
   PlaceOrderRequest,
 } from "@/api/order/api";
 
-export const Route = createFileRoute("/checkout")({ component: CheckoutPage });
+export const Route = createFileRoute("/checkout")({
+  head: () => seo({ title: "Thanh toán", path: "/checkout", noindex: true }),
+  component: CheckoutPage,
+});
 
 const COUNTRY_ITEMS = Object.entries(COUNTRIES).map(([code, country]) => ({
   value: code,

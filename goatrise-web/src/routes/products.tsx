@@ -19,6 +19,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { seo } from "@/lib/seo";
 import { cn, formatPrice, getColorName } from "@/lib/utils";
 
 // bước nhảy của thanh trượt giá (VND)
@@ -63,6 +64,34 @@ export const Route = createFileRoute("/products")({
       context.queryClient.ensureQueryData(productsQueryOptions()),
       context.queryClient.ensureQueryData(collectionsQueryOptions()),
     ]),
+  // mỗi danh mục là một trang riêng (giữ ?category trong canonical); màu / giá / sắp xếp
+  // chỉ là biến thể lọc của cùng trang nên canonical bỏ đi
+  head: ({ match, loaderData }) => {
+    const slug = match.search.category;
+    const category = slug
+      ? loaderData?.[1].find(
+          (collection) =>
+            collection.slug === slug &&
+            collection.isActive &&
+            collection.type === "CATEGORY"
+        )
+      : undefined;
+
+    if (!category) {
+      return seo({
+        title: "Sản phẩm",
+        description:
+          "Mua sắm hoạt phục và thời trang cổ điển GOAT RISE: áo, quần và phụ kiện được thiết kế để đồng hành cùng bạn mỗi ngày.",
+        path: "/products",
+      });
+    }
+    return seo({
+      title: category.title.vi,
+      description: category.shortDescription.vi,
+      path: `/products?category=${encodeURIComponent(category.slug)}`,
+      image: category.imgUrl,
+    });
+  },
   component: ProductsPage,
 });
 

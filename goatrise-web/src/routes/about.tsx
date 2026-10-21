@@ -1,6 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/about")({ component: AboutPage });
+import { seo } from "@/lib/seo";
+
+export const Route = createFileRoute("/about")({
+  head: () =>
+    seo({
+      title: "Về chúng tôi",
+      description:
+        "Câu chuyện của GOAT RISE - thương hiệu hoạt phục và thời trang cổ điển Việt Nam, làm quần áo cho nhịp sống bền bỉ mỗi ngày.",
+      path: "/about",
+    }),
+  component: AboutPage,
+});
 
 function AboutPage() {
   return (

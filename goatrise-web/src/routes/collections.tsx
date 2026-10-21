@@ -9,9 +9,17 @@ import type { Collection } from "@/api/collection/api";
 import { RollText } from "@/components/shared/roll-text";
 import { useReveal } from "@/hooks/use-reveal";
 import { useScrollProgress } from "@/hooks/use-scroll-progress";
+import { seo } from "@/lib/seo";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/collections")({
+  head: () =>
+    seo({
+      title: "Bộ sưu tập",
+      description:
+        "Khám phá các bộ sưu tập của GOAT RISE - hoạt phục và thời trang cổ điển được thiết kế để đồng hành cùng bạn mỗi ngày.",
+      path: "/collections",
+    }),
   loader: ({ context }) =>
     context.queryClient.ensureQueryData(collectionsQueryOptions()),
   component: CollectionsPage,

@@ -9,6 +9,7 @@ import { FeaturedCollections } from "@/components/home/featured-collections";
 import { FeaturedProducts } from "@/components/home/featured-products";
 import { CollectionStack } from "@/components/home/collection-stack";
 import { BrandIntro } from "@/components/home/brand-intro";
+import { seo } from "@/lib/seo";
 
 const FEATURED_PRODUCT_LIMIT = 8;
 const FEATURED_CATEGORY_LIMIT = 2;
@@ -16,6 +17,7 @@ const FEATURED_CATEGORY_LIMIT = 2;
 const COLLECTION_STACK_LIMIT = 4;
 
 export const Route = createFileRoute("/")({
+  head: () => seo({ path: "/" }),
   loader: ({ context }) =>
     Promise.all([
       context.queryClient.ensureQueryData(productsQueryOptions()),

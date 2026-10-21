@@ -15,8 +15,17 @@ import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { PageScrollbar } from "@/components/layout/page-scrollbar";
 import { useSmoothScroll } from "@/hooks/use-smooth-scroll";
+import {
+  DEFAULT_DESCRIPTION,
+  DEFAULT_IMAGE,
+  DEFAULT_TITLE,
+  SITE_NAME,
+  toAbsoluteUrl,
+} from "@/lib/seo";
 
 import appCss from "../styles.css?url"
+
+const defaultImageUrl = toAbsoluteUrl(DEFAULT_IMAGE)
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({
@@ -28,11 +37,24 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         name: "viewport",
         content: "width=device-width, initial-scale=1",
       },
+      // mặc định cho mọi trang; route con ghi đè theo name / property (xem lib/seo.ts)
       {
-        title: "GOAT RISE - Vietnam, Activewear & Classic For Life",
+        title: DEFAULT_TITLE,
       },
+      { name: "description", content: DEFAULT_DESCRIPTION },
+      { property: "og:site_name", content: SITE_NAME },
+      { property: "og:locale", content: "vi_VN" },
+      { property: "og:type", content: "website" },
+      ...(defaultImageUrl
+        ? [
+            { property: "og:image", content: defaultImageUrl },
+            { name: "twitter:image", content: defaultImageUrl },
+          ]
+        : []),
+      { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
+      { rel: "manifest", href: "/manifest.json" },
       {
         rel: "stylesheet",
         href: appCss,
@@ -79,7 +101,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <html lang="en">
+    <html lang="vi">
       <head>
         <HeadContent />
         {/* Không có JS thì bỏ qua hiệu ứng hiện dần, nội dung vẫn đọc được */}

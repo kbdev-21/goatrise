@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { COUNTRIES } from "@/constant/countries";
 import { auth } from "@/core/auth";
+import { seo } from "@/lib/seo";
 import { cn, formatPrice, getColorName } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth.store";
 import { meQueryOptions } from "@/api/user/query-hooks";
@@ -33,7 +34,10 @@ import type {
   OrderPaymentStatus,
 } from "@/api/order/api";
 
-export const Route = createFileRoute("/account")({ component: AccountPage });
+export const Route = createFileRoute("/account")({
+  head: () => seo({ title: "Tài khoản", path: "/account", noindex: true }),
+  component: AccountPage,
+});
 
 const HEADING_CLASS = "text-3xl font-extrabold tracking-[-0.03em] uppercase";
 

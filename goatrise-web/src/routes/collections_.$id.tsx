@@ -7,6 +7,7 @@ import { isAxiosError } from "axios";
 import { collectionQueryOptions } from "@/api/collection/query-hooks";
 import { ProductCard } from "@/components/shared/product-card";
 import { Reveal } from "@/components/shared/reveal";
+import { seo } from "@/lib/seo";
 
 export const Route = createFileRoute("/collections_/$id")({
   loader: async ({ context: { queryClient }, params: { id } }) => {
@@ -18,6 +19,8 @@ export const Route = createFileRoute("/collections_/$id")({
       if (!collection.isActive) {
         throw notFound();
       }
+      // trả về để head() dựng title / description / ảnh chia sẻ
+      return collection;
     } catch (error) {
       if (isAxiosError(error) && error.response?.status === 404) {
         throw notFound();
@@ -25,6 +28,15 @@ export const Route = createFileRoute("/collections_/$id")({
       throw error;
     }
   },
+  head: ({ loaderData: collection }) =>
+    collection
+      ? seo({
+          title: collection.title.vi,
+          description: collection.shortDescription.vi,
+          path: `/collections/${collection.id}`,
+          image: collection.imgUrl,
+        })
+      : {},
   component: CollectionDetailPage,
 });
 
