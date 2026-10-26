@@ -6,12 +6,14 @@ import type { Collection } from "@/api/collection/api";
 import { RollText } from "@/components/shared/roll-text";
 import { useReveal } from "@/hooks/use-reveal";
 import { useStackProgress } from "@/hooks/use-stack-progress";
+import { useLocalized, useT } from "@/i18n";
 
 export function CollectionStack({
   collections,
 }: {
   collections: Collection[];
 }) {
+  const t = useT();
   const headingRef = useReveal<HTMLDivElement>();
   const stackRef = useStackProgress<HTMLDivElement>();
 
@@ -27,14 +29,14 @@ export function CollectionStack({
         className="flex items-end justify-between gap-6"
       >
         <h2 className="font-logo text-[clamp(1.5rem,4vw,2.75rem)] leading-none font-extrabold tracking-[-0.03em] uppercase">
-          Collections
+          {t.home.collectionStack.title}
         </h2>
 
         <Link
           to="/collections"
           className="group shrink-0 pb-1 text-[11px] font-bold tracking-[0.14em] uppercase opacity-55 transition-opacity duration-300 hover:opacity-100 focus-visible:opacity-100"
         >
-          <RollText label="Xem tất cả" />
+          <RollText label={t.common.seeAll} />
         </Link>
       </div>
 
@@ -59,7 +61,9 @@ function CollectionCard({
   collection: Collection;
   index: number;
 }) {
-  const title = collection.title.vi;
+  const t = useT();
+  const l = useLocalized();
+  const title = l(collection.title);
 
   return (
     <div
@@ -98,7 +102,7 @@ function CollectionCard({
 
             {/* cùng kiểu nút với hero; cả thẻ là link nên hover đi theo group */}
             <span className="inline-flex h-11 w-fit shrink-0 items-center gap-3 border border-white/45 px-7 text-[11px] font-bold tracking-[0.18em] uppercase transition-colors duration-300 group-hover:border-white group-hover:bg-white group-hover:text-black group-focus-visible:border-white group-focus-visible:bg-white group-focus-visible:text-black">
-              <RollText label="Xem bộ sưu tập" />
+              <RollText label={t.collections.view} />
               <ArrowRight
                 aria-hidden
                 className="size-3.5 transition-transform duration-300 group-hover:translate-x-1"

@@ -5,14 +5,15 @@ import { cn } from "@/lib/utils";
 import type { Collection } from "@/api/collection/api";
 import { RollText } from "@/components/shared/roll-text";
 import { useReveal } from "@/hooks/use-reveal";
-
-const CTA_LABEL = "Shop now";
+import { useLocalized, useT } from "@/i18n";
 
 export function FeaturedCollections({
   collections,
 }: {
   collections: Collection[];
 }) {
+  const t = useT();
+  const l = useLocalized();
   const ref = useReveal<HTMLElement>();
 
   if (collections.length === 0) {
@@ -48,7 +49,7 @@ export function FeaturedCollections({
             {collection.imgUrl ? (
               <img
                 src={collection.imgUrl}
-                alt={collection.title.vi}
+                alt={l(collection.title)}
                 loading="lazy"
                 className="size-full object-cover transition-transform duration-500 group-hover:scale-105"
               />
@@ -57,11 +58,11 @@ export function FeaturedCollections({
 
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 p-8 text-white">
               <h3 className="font-logo text-2xl font-semibold tracking-tight uppercase lg:text-3xl">
-                {collection.title.vi}
+                {l(collection.title)}
               </h3>
               {/* cùng kiểu nút với hero; cả thẻ là link nên hover/focus đi theo group */}
               <span className="inline-flex h-11 items-center gap-3 border border-white/45 px-7 text-[11px] font-bold tracking-[0.18em] uppercase transition-colors duration-300 group-hover:border-white group-hover:bg-white group-hover:text-black group-focus-visible:border-white group-focus-visible:bg-white group-focus-visible:text-black">
-                <RollText label={CTA_LABEL} />
+                <RollText label={t.home.featuredCollections.cta} />
               </span>
             </div>
           </Link>

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Popover } from "radix-ui";
 import { Check, ChevronDown } from "lucide-react";
 
+import { useT } from "@/i18n";
 import { cn, normalizeText as normalize } from "@/lib/utils";
 
 export type ComboboxItem = {
@@ -14,9 +15,9 @@ export function Combobox({
   value,
   onChange,
   id,
-  placeholder = "Chọn",
-  searchPlaceholder = "Tìm kiếm…",
-  emptyText = "Không tìm thấy kết quả",
+  placeholder: placeholderProp,
+  searchPlaceholder: searchPlaceholderProp,
+  emptyText: emptyTextProp,
   modal = false,
   className,
 }: {
@@ -32,6 +33,13 @@ export function Combobox({
   modal?: boolean;
   className?: string;
 }) {
+  // không truyền thì dùng chữ mặc định theo ngôn ngữ hiện tại
+  const t = useT();
+  const placeholder = placeholderProp ?? t.ui.combobox.placeholder;
+  const searchPlaceholder =
+    searchPlaceholderProp ?? t.ui.combobox.searchPlaceholder;
+  const emptyText = emptyTextProp ?? t.ui.combobox.empty;
+
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);

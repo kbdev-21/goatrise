@@ -14,6 +14,7 @@ import {
   SheetDescription,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { useT } from "@/i18n";
 import { normalizeText } from "@/lib/utils";
 import { useSearchStore } from "@/stores/search.store";
 
@@ -24,6 +25,7 @@ const LABEL_CLASS =
   "text-[11px] font-bold tracking-[0.14em] uppercase tabular-nums opacity-55";
 
 export function SearchOverlay() {
+  const t = useT();
   const isOpen = useSearchStore((s) => s.isOpen);
   const setOpen = useSearchStore((s) => s.setOpen);
   const openSearch = useSearchStore((s) => s.openSearch);
@@ -56,6 +58,7 @@ export function SearchOverlay() {
             product.title.vi,
             product.title.en,
             product.shortDescription.vi,
+            product.shortDescription.en,
             ...product.items.flatMap((item) => [item.sku, item.name]),
           ].join(" ")
         ),
@@ -105,9 +108,9 @@ export function SearchOverlay() {
         showCloseButton={false}
         className="max-h-[90svh] gap-0 p-0"
       >
-        <SheetTitle className="sr-only">Tìm kiếm sản phẩm</SheetTitle>
+        <SheetTitle className="sr-only">{t.search.title}</SheetTitle>
         <SheetDescription className="sr-only">
-          Gõ tên sản phẩm để tìm, nhấn Enter để mở kết quả đầu tiên
+          {t.search.description}
         </SheetDescription>
 
         {/* Hàng nhập: cùng lưới ngang với header */}
@@ -129,8 +132,8 @@ export function SearchOverlay() {
               type="search"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Tìm sản phẩm"
-              aria-label="Tìm sản phẩm"
+              placeholder={t.search.placeholder}
+              aria-label={t.search.placeholder}
               autoComplete="off"
               spellCheck={false}
               enterKeyHint="search"
@@ -141,7 +144,7 @@ export function SearchOverlay() {
               <button
                 type="button"
                 onClick={() => setQuery("")}
-                aria-label="Xóa nội dung tìm kiếm"
+                aria-label={t.search.clear}
                 className="flex size-9 shrink-0 cursor-pointer items-center justify-center opacity-50 transition-opacity hover:opacity-100"
               >
                 <X className="size-4" strokeWidth={1.75} />
@@ -153,7 +156,7 @@ export function SearchOverlay() {
                 type="button"
                 className="group flex shrink-0 cursor-pointer items-center gap-2 text-[11px] font-bold tracking-[0.08em] uppercase opacity-60 transition-opacity hover:opacity-100"
               >
-                <RollText label="Đóng" />
+                <RollText label={t.common.close} />
                 <kbd className="hidden border border-border px-1.5 py-0.5 font-sans text-[10px] font-medium tracking-normal normal-case md:inline">
                   Esc
                 </kbd>
@@ -173,22 +176,21 @@ export function SearchOverlay() {
         >
           <div className="mx-auto w-full max-w-[1500px] px-5 py-8 lg:px-10 lg:py-10">
             {isPending ? (
-              <p className={LABEL_CLASS}>Đang tải…</p>
+              <p className={LABEL_CLASS}>{t.common.loading}</p>
             ) : trimmedQuery === "" ? (
-              <ResultSection title="Bán chạy" products={bestSellers} />
+              <ResultSection title={t.search.bestSellers} products={bestSellers} />
             ) : results.length > 0 ? (
               <ResultSection
-                title={`${results.length} kết quả cho “${trimmedQuery}”`}
+                title={t.search.resultsFor(results.length, trimmedQuery)}
                 products={results}
               />
             ) : (
               <>
                 <p className="text-sm text-muted-foreground">
-                  Không tìm thấy sản phẩm nào cho “{trimmedQuery}”. Thử từ khóa
-                  ngắn hơn hoặc gõ không dấu.
+                  {t.search.noResults(trimmedQuery)}
                 </p>
                 <div className="mt-10">
-                  <ResultSection title="Có thể bạn thích" products={bestSellers} />
+                  <ResultSection title={t.search.youMayLike} products={bestSellers} />
                 </div>
               </>
             )}

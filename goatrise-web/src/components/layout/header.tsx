@@ -10,6 +10,7 @@ import { navItems } from "@/components/layout/nav-config";
 import { BrandWordmark } from "@/components/shared/brand-wordmark";
 import { RollText } from "@/components/shared/roll-text";
 import { isIntroDone } from "@/hooks/use-intro-scroll";
+import { useT } from "@/i18n";
 import { selectItemCount, useCartStore } from "@/stores/cart.store";
 import { useSearchStore } from "@/stores/search.store";
 
@@ -25,6 +26,7 @@ const ACTION_CLASS = cn(
 );
 
 export function Header() {
+  const t = useT();
   const headerRef = useRef<HTMLElement>(null);
   const router = useRouter();
 
@@ -105,8 +107,7 @@ export function Header() {
   // trong suốt khi còn ở intro hoặc header còn nằm trên hero tối của trang chủ
   const transparent = isHome && (inIntro || overHero);
   const count = hasHydrated ? cartCount : 0;
-  const cartLabel =
-    count > 0 ? `Giỏ hàng, ${count} sản phẩm` : "Giỏ hàng, đang trống";
+  const cartLabel = t.header.cartAriaLabel(count);
 
   return (
     // right: Radix khóa cuộn thì scrollbar biến mất, body bù lại bằng margin-right
@@ -136,7 +137,7 @@ export function Header() {
           <nav className="hidden items-center gap-5 md:flex">
             {navItems.map((item) => (
               <Link
-                key={item.label}
+                key={item.to}
                 to={item.to}
                 activeOptions={{ exact: true }}
                 className={cn(
@@ -144,7 +145,7 @@ export function Header() {
                   "group -my-3 py-3 opacity-60 transition-opacity duration-300 hover:opacity-100 data-[status=active]:opacity-100"
                 )}
               >
-                <RollText label={item.label} />
+                <RollText label={t.nav[item.key]} />
               </Link>
             ))}
           </nav>
@@ -154,7 +155,7 @@ export function Header() {
         <Link
           to="/"
           data-header-logo
-          aria-label="GOAT RISE — về trang chủ"
+          aria-label={t.common.homeAriaLabel}
           className="-my-2 justify-self-center py-2 font-logo text-[1.75rem] font-extrabold uppercase md:text-[2.125rem]"
         >
           <BrandWordmark />
@@ -165,7 +166,7 @@ export function Header() {
           <div className="-mr-3 flex items-center md:hidden">
             <button
               type="button"
-              aria-label="Tìm kiếm"
+              aria-label={t.header.search}
               onClick={openSearch}
               className={ICON_CLASS}
             >
@@ -202,15 +203,15 @@ export function Header() {
           <div className="hidden items-center gap-6 md:flex">
             <button
               type="button"
-              aria-label="Tìm kiếm"
+              aria-label={t.header.search}
               onClick={openSearch}
               className={ACTION_CLASS}
             >
-              <RollText label="Tìm kiếm" />
+              <RollText label={t.header.search} />
             </button>
 
             <Link to="/account" className={ACTION_CLASS}>
-              <RollText label="Tài khoản" />
+              <RollText label={t.header.account} />
             </Link>
 
             <button
@@ -219,7 +220,7 @@ export function Header() {
               onClick={openCart}
               className={ACTION_CLASS}
             >
-              <RollText label="Giỏ hàng" />
+              <RollText label={t.header.cart} />
               {/* số lượng dạng (n), chặn ở 99+ cho gọn */}
               <span aria-hidden className="tabular-nums opacity-65">
                 ({count > 99 ? "99+" : count})

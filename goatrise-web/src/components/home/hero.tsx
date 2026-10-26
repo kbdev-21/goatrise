@@ -5,16 +5,19 @@ import { hero } from "./placeholder-data";
 import type { Collection } from "@/api/collection/api";
 import { RollText } from "@/components/shared/roll-text";
 import { useScrollProgress } from "@/hooks/use-scroll-progress";
+import { useLocalized, useT } from "@/i18n";
 
 export function Hero({ collection }: { collection?: Collection }) {
+  const t = useT();
+  const l = useLocalized();
   // --p chạy 0 → 1 trong một màn hình cuộn, tính từ lúc hero chạm đỉnh viewport
   const ref = useScrollProgress<HTMLElement>({ start: 0.5, end: 1 });
 
   // chưa có COLLECTION nào featured thì dùng tạm dữ liệu placeholder
-  const title = collection?.title.vi ?? hero.title;
+  const title = collection ? l(collection.title) : hero.title;
   const description = collection
-    ? collection.shortDescription.vi
-    : hero.description;
+    ? l(collection.shortDescription)
+    : t.home.hero.fallbackDescription;
   const image = collection?.imgUrl ?? hero.image;
 
   // hero nằm trong khung dính của intro (đã tự chui dưới header), không cần -mt
@@ -63,7 +66,7 @@ export function Hero({ collection }: { collection?: Collection }) {
                 to="/products"
                 className="group inline-flex h-11 items-center gap-3 border border-white/45 px-7 text-[11px] font-bold tracking-[0.18em] uppercase transition-colors duration-300 hover:border-white hover:bg-white hover:text-black"
               >
-                <RollText label={hero.ctaLabel} />
+                <RollText label={t.home.hero.cta} />
                 <ArrowRight
                   aria-hidden
                   className="size-3.5 transition-transform duration-300 group-hover:translate-x-1"

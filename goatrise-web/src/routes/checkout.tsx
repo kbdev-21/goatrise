@@ -9,8 +9,19 @@ import { COUNTRIES } from "@/constant/countries";
 import { INSTAGRAM_URL } from "@/constant/social";
 import { Button } from "@/components/ui/button";
 import { Combobox } from "@/components/ui/combobox";
+import {
+  CURRENCY,
+  LOCALES,
+  countryName,
+  formatPrice as formatPriceIn,
+  getMessages,
+  useFormatPrice,
+  useLocale,
+  useT,
+} from "@/i18n";
+import type { Locale } from "@/i18n";
 import { seo } from "@/lib/seo";
-import { cn, formatPrice } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { selectSubtotal, useCartStore } from "@/stores/cart.store";
 import { useAuthStore } from "@/stores/auth.store";
 import { useCalculateOrder, usePlaceOrder } from "@/api/order/query-hooks";
@@ -23,21 +34,51 @@ import type {
 } from "@/api/order/api";
 
 export const Route = createFileRoute("/checkout")({
-  head: () => seo({ title: "Thanh toán", path: "/checkout", noindex: true }),
+  head: ({ match }) =>
+    seo({
+      locale: match.context.locale,
+      title: getMessages(match.context.locale).seo.checkout.title,
+      path: "/checkout",
+      noindex: true,
+    }),
   component: CheckoutPage,
 });
 
-const COUNTRY_ITEMS = Object.entries(COUNTRIES).map(([code, country]) => ({
-  value: code,
-  label: country.viName,
-}));
+// danh sách quốc gia dựng sẵn cho từng ngôn ngữ
+const COUNTRY_ITEMS = Object.fromEntries(
+  LOCALES.map((locale) => [
+    locale,
+    Object.entries(COUNTRIES).map(([code, country]) => ({
+      value: code,
+      label: countryName(country, locale),
+    })),
+  ])
+) as Record<Locale, { value: string; label: string }[]>;
 
-const PAYMENT_METHODS = [
-  { value: "COD", label: "Thanh toán khi nhận hàng (COD)" },
+// đang hiển thị tiền quy đổi (USD) thì ghi rõ số tiền VND thực thu
+function ChargedInVndNote({ amount }: { amount: number }) {
+  const t = useT();
+  const locale = useLocale();
+  if (CURRENCY[locale] === "VND") {
+    return null;
+  }
+  return (
+    <p className="text-xs text-muted-foreground">
+      {t.checkout.chargedInVnd(formatPriceIn(amount, "vi"))}
+    </p>
+  );
+}
+
+// nhãn lấy theo t.order.paymentMethod[method]
+const PAYMENT_METHODS: OrderPaymentMethod[] = [
+  "COD",
   // tạm thời chỉ hỗ trợ COD
-] as const;
+];
 
 function CheckoutPage() {
+  const t = useT();
+  const locale = useLocale();
+  const formatPrice = useFormatPrice();
   const lines = useCartStore((s) => s.lines);
   const subtotal = useCartStore(selectSubtotal);
   const hasHydrated = useCartStore((s) => s.hasHydrated);
@@ -120,7 +161,7 @@ function CheckoutPage() {
     const phoneNum = phoneInputRef.current?.value.trim() ?? "";
     // thiếu SĐT thì backend chỉ trả "Coupon not applicable", báo rõ lý do ngay ở web
     if (code && !phoneNum) {
-      setCouponError("Vui lòng nhập số điện thoại trước khi áp dụng mã giảm giá.");
+      setCouponError(t.checkout.errors.couponNeedsPhone);
       return;
     }
     setCouponError(null);
@@ -135,7 +176,7 @@ function CheckoutPage() {
     ? isAxiosError(calculateMutation.error) &&
       typeof calculateMutation.error.response?.data === "string"
       ? calculateMutation.error.response.data
-      : "Không tính được đơn hàng."
+      : t.checkout.errors.calculateFailed
     : null;
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -147,7 +188,7 @@ function CheckoutPage() {
       return;
     }
     if (orderLines.length === 0) {
-      setFormError("Giỏ hàng của bạn không có sản phẩm nào còn bán được.");
+      setFormError(t.checkout.errors.noAvailableLines);
       return;
     }
 
@@ -160,23 +201,23 @@ function CheckoutPage() {
     const paymentMethod = formData.get("paymentMethod") as OrderPaymentMethod;
 
     if (!customerName) {
-      setFormError("Vui lòng nhập họ và tên.");
+      setFormError(t.form.nameRequired);
       return;
     }
     if (!customerPhoneNum) {
-      setFormError("Vui lòng nhập số điện thoại.");
+      setFormError(t.form.phoneRequired);
       return;
     }
     if (!customerEmail) {
-      setFormError("Vui lòng nhập email.");
+      setFormError(t.checkout.errors.emailRequired);
       return;
     }
     if (provinces && !provinceCode) {
-      setFormError("Vui lòng chọn tỉnh / thành phố.");
+      setFormError(t.checkout.errors.provinceRequired);
       return;
     }
     if (!address) {
-      setFormError("Vui lòng nhập địa chỉ chi tiết.");
+      setFormError(t.checkout.errors.addressRequired);
       return;
     }
 
@@ -205,7 +246,7 @@ function CheckoutPage() {
         setFormError(
           isAxiosError(error) && typeof error.response?.data === "string"
             ? error.response.data
-            : "Đặt hàng thất bại. Vui lòng thử lại."
+            : t.checkout.errors.placeFailed
         );
       },
     });
@@ -223,16 +264,16 @@ function CheckoutPage() {
   if (lines.length === 0) {
     return (
       <div className="mx-auto flex min-h-[60vh] max-w-6xl flex-col items-center justify-center gap-5 px-6 text-center">
-        <h1 className="text-xl font-bold tracking-widest uppercase">Thanh toán</h1>
+        <h1 className="text-xl font-bold tracking-widest uppercase">{t.checkout.title}</h1>
         <p className="text-sm text-muted-foreground">
-          Giỏ hàng của bạn đang trống nên chưa thể thanh toán.
+          {t.checkout.emptyCart}
         </p>
         <Button
           asChild
           variant="outline"
           className="h-12 rounded-none px-8 text-xs font-bold tracking-widest uppercase"
         >
-          <Link to="/products">Tiếp tục mua sắm</Link>
+          <Link to="/products">{t.common.continueShopping}</Link>
         </Button>
       </div>
     );
@@ -240,7 +281,7 @@ function CheckoutPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-10">
-      <h1 className="text-2xl font-bold tracking-tight uppercase">Thanh toán</h1>
+      <h1 className="text-2xl font-bold tracking-tight uppercase">{t.checkout.title}</h1>
 
       <div className="mt-8 grid grid-cols-1 gap-10 lg:grid-cols-[1fr_28rem] lg:gap-x-12">
         {/* Cột trái: thông tin người mua */}
@@ -249,19 +290,19 @@ function CheckoutPage() {
           onSubmit={handleSubmit}
           className="flex flex-col gap-10"
         >
-          <Section title="Thông tin liên hệ">
-            <Field label="Họ và tên" htmlFor="customerName">
+          <Section title={t.checkout.contactSection}>
+            <Field label={t.form.fullName} htmlFor="customerName">
               <input
                 ref={nameInputRef}
                 id="customerName"
                 name="customerName"
                 autoComplete="name"
-                placeholder="Nguyễn Văn A"
+                placeholder={t.form.namePlaceholder}
                 className={inputClass}
               />
             </Field>
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-              <Field label="Số điện thoại" htmlFor="customerPhoneNum">
+              <Field label={t.form.phone} htmlFor="customerPhoneNum">
                 <input
                   ref={phoneInputRef}
                   id="customerPhoneNum"
@@ -269,43 +310,43 @@ function CheckoutPage() {
                   type="tel"
                   inputMode="tel"
                   autoComplete="tel"
-                  placeholder="0912 345 678"
+                  placeholder={t.form.phonePlaceholder}
                   className={inputClass}
                   onBlur={(e) => setCalcPhoneNum(e.currentTarget.value.trim())}
                 />
               </Field>
-              <Field label="Email" htmlFor="customerEmail">
+              <Field label={t.form.email} htmlFor="customerEmail">
                 <input
                   ref={emailInputRef}
                   id="customerEmail"
                   name="customerEmail"
                   type="email"
                   autoComplete="email"
-                  placeholder="ban@email.com"
+                  placeholder={t.form.emailPlaceholder}
                   className={inputClass}
                 />
               </Field>
             </div>
           </Section>
 
-          <Section title="Địa chỉ giao hàng">
-            <Field label="Quốc gia" htmlFor="countryCode">
+          <Section title={t.checkout.shippingSection}>
+            <Field label={t.checkout.country} htmlFor="countryCode">
               <Combobox
                 id="countryCode"
-                items={COUNTRY_ITEMS}
+                items={COUNTRY_ITEMS[locale]}
                 value={countryCode}
                 onChange={(code) => {
                   setCountryCode(code as keyof typeof COUNTRIES);
                   setProvinceCode("");
                 }}
-                placeholder="Chọn quốc gia"
-                searchPlaceholder="Tìm quốc gia…"
+                placeholder={t.form.countryPlaceholder}
+                searchPlaceholder={t.form.countrySearch}
               />
               <input type="hidden" name="countryCode" value={countryCode} />
             </Field>
 
             {provinces ? (
-              <Field label="Tỉnh / Thành phố" htmlFor="provinceCode">
+              <Field label={t.checkout.province} htmlFor="provinceCode">
                 <Combobox
                   id="provinceCode"
                   items={Object.entries(provinces).map(([code, name]) => ({
@@ -314,8 +355,8 @@ function CheckoutPage() {
                   }))}
                   value={provinceCode}
                   onChange={setProvinceCode}
-                  placeholder="Chọn tỉnh / thành phố"
-                  searchPlaceholder="Tìm tỉnh / thành phố…"
+                  placeholder={t.form.provincePlaceholder}
+                  searchPlaceholder={t.form.provinceSearch}
                 />
                 <input type="hidden" name="provinceCode" value={provinceCode} />
                 <input
@@ -325,20 +366,20 @@ function CheckoutPage() {
                 />
               </Field>
             ) : null}
-            <Field label="Địa chỉ chi tiết" htmlFor="address">
+            <Field label={t.checkout.addressDetail} htmlFor="address">
               <input
                 id="address"
                 name="address"
                 autoComplete="street-address"
-                placeholder="Số nhà, tên đường, phường / xã, quận / huyện"
+                placeholder={t.form.addressPlaceholder}
                 className={inputClass}
               />
             </Field>
           </Section>
 
-          <Section title="Phương thức thanh toán">
+          <Section title={t.checkout.paymentSection}>
             <div className="flex flex-col">
-              {PAYMENT_METHODS.map(({ value, label }, index) => (
+              {PAYMENT_METHODS.map((value, index) => (
                 <label
                   key={value}
                   className="flex cursor-pointer items-center gap-3 border border-border px-4 py-4 text-sm not-first:border-t-0 has-checked:bg-muted"
@@ -350,19 +391,19 @@ function CheckoutPage() {
                     defaultChecked={index === 0}
                     className="size-3.5 accent-foreground"
                   />
-                  {label}
+                  {t.order.paymentMethod[value]}
                 </label>
               ))}
             </div>
           </Section>
 
-          <Section title="Ghi chú">
-            <Field label="Ghi chú cho đơn hàng" htmlFor="note" optional>
+          <Section title={t.checkout.noteSection}>
+            <Field label={t.checkout.noteLabel} htmlFor="note" optional>
               <textarea
                 id="note"
                 name="note"
                 rows={3}
-                placeholder="Thời gian nhận hàng, hướng dẫn giao hàng…"
+                placeholder={t.checkout.notePlaceholder}
                 className={cn(inputClass, "h-auto resize-none py-3")}
               />
             </Field>
@@ -373,7 +414,7 @@ function CheckoutPage() {
         <aside className="lg:sticky lg:top-24 lg:self-start">
           <div className="border border-border">
             <h2 className="border-b border-border px-5 py-4 text-xs font-bold tracking-widest uppercase">
-              Đơn hàng
+              {t.checkout.orderSection}
             </h2>
 
             <div className="max-h-[30rem] overflow-y-auto">
@@ -390,14 +431,14 @@ function CheckoutPage() {
                   <input
                     value={couponInput}
                     onChange={(e) => setCouponInput(e.target.value)}
-                    placeholder="Mã giảm giá"
+                    placeholder={t.checkout.couponPlaceholder}
                     className={cn(inputClass, "h-10 pr-10")}
                   />
                   {couponInput || appliedCouponCode ? (
                     // xoá cả mã đang áp dụng => effect tính lại đơn không kèm coupon
                     <button
                       type="button"
-                      aria-label="Xoá mã giảm giá"
+                      aria-label={t.checkout.clearCoupon}
                       onClick={() => {
                         setCouponInput("");
                         setAppliedCouponCode("");
@@ -416,7 +457,7 @@ function CheckoutPage() {
                   disabled={calculateMutation.isPending}
                   className="h-10 shrink-0 rounded-none px-4 text-[11px] font-bold tracking-widest uppercase"
                 >
-                  Áp dụng
+                  {t.checkout.apply}
                 </Button>
               </div>
               {couponError || calcErrorMessage ? (
@@ -428,29 +469,29 @@ function CheckoutPage() {
 
             <dl className="flex flex-col gap-2 border-b border-border px-5 py-4 text-xs">
               <SummaryRow
-                label="Tạm tính"
+                label={t.order.subtotal}
                 value={formatPrice(calculation?.subtotal ?? subtotal)}
               />
               {calculation && calculation.couponDiscount > 0 ? (
                 <SummaryRow
-                  label="Giảm giá (mã)"
+                  label={t.order.couponDiscount}
                   value={`-${formatPrice(calculation.couponDiscount)}`}
                 />
               ) : null}
               {calculation && calculation.comboDiscount > 0 ? (
                 <SummaryRow
-                  label="Giảm giá (combo)"
+                  label={t.order.comboDiscount}
                   value={`-${formatPrice(calculation.comboDiscount)}`}
                 />
               ) : null}
               <SummaryRow
-                label="Phí vận chuyển"
+                label={t.order.shipping}
                 value={
                   calculation
                     ? calculation.shipping > 0
                       ? formatPrice(calculation.shipping)
-                      : "Miễn phí"
-                    : "Tính khi xác nhận"
+                      : t.order.free
+                    : t.checkout.shippingPending
                 }
                 muted={!calculation || calculation.shipping === 0}
               />
@@ -458,17 +499,20 @@ function CheckoutPage() {
 
             <div className="flex items-baseline justify-between px-5 py-4">
               <span className="text-xs font-bold tracking-widest uppercase">
-                Tổng cộng
+                {t.order.total}
               </span>
               <span className="text-base font-medium">
                 {formatPrice(calculation?.total ?? subtotal)}
               </span>
             </div>
+            <div className="-mt-2 px-5 pb-4 text-right">
+              <ChargedInVndNote amount={calculation?.total ?? subtotal} />
+            </div>
           </div>
 
           {!isSupportedCountry ? (
             <p className="mt-5 text-xs">
-              Vui lòng liên hệ chúng tôi cho đơn ngoài Việt Nam
+              {t.checkout.internationalNote}
             </p>
           ) : null}
 
@@ -483,13 +527,15 @@ function CheckoutPage() {
               disabled={placeMutation.isPending}
               className={cn(submitClass, formError ? "mt-3" : "mt-5")}
             >
-              {placeMutation.isPending ? "Đang đặt hàng…" : "Đặt hàng"}
+              {placeMutation.isPending
+                ? t.checkout.placingOrder
+                : t.checkout.placeOrder}
             </Button>
           ) : (
             // ngoài VN chưa đặt online được: chuyển khách sang Instagram để tư vấn
             <Button asChild className={cn(submitClass, "mt-3")}>
               <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer">
-                Liên hệ chúng tôi
+                {t.common.contactUs}
               </a>
             </Button>
           )}
@@ -498,7 +544,7 @@ function CheckoutPage() {
             to="/products"
             className="mt-4 block text-center text-xs tracking-wide text-muted-foreground uppercase hover:text-foreground"
           >
-            Tiếp tục mua sắm
+            {t.common.continueShopping}
           </Link>
         </aside>
       </div>
@@ -507,28 +553,33 @@ function CheckoutPage() {
 }
 
 function OrderPlacedScreen({ order }: { order: Order }) {
+  const t = useT();
+  const formatPrice = useFormatPrice();
+
   return (
     <div className="mx-auto flex min-h-[60vh] max-w-6xl flex-col items-center justify-center gap-5 px-6 text-center">
       <h1 className="text-xl font-bold tracking-widest uppercase">
-        Đặt hàng thành công
+        {t.checkout.successTitle}
       </h1>
       <p className="text-sm text-muted-foreground">
-        Mã đơn của bạn là{" "}
-        <span className="font-semibold text-foreground">{order.code}</span>.
-        Hãy theo dõi email để nhận thông tin đơn hàng chi tiết.
+        {t.checkout.successCode(
+          <span className="font-semibold text-foreground">{order.code}</span>
+        )}
       </p>
       <p className="text-sm text-muted-foreground">
-        Tổng cộng:{" "}
-        <span className="font-semibold text-foreground">
-          {formatPrice(order.totalAmount)}
-        </span>
+        {t.checkout.successTotal(
+          <span className="font-semibold text-foreground">
+            {formatPrice(order.totalAmount)}
+          </span>
+        )}
       </p>
+      <ChargedInVndNote amount={order.totalAmount} />
       <Button
         asChild
         variant="outline"
         className="h-12 rounded-none px-8 text-xs font-bold tracking-widest uppercase"
       >
-        <Link to="/products">Tiếp tục mua sắm</Link>
+        <Link to="/products">{t.common.continueShopping}</Link>
       </Button>
     </div>
   );
@@ -566,6 +617,8 @@ function Field({
   optional?: boolean;
   children: React.ReactNode;
 }) {
+  const t = useT();
+
   return (
     <div className="flex flex-col gap-2">
       <label
@@ -575,7 +628,7 @@ function Field({
         {label}
         {optional ? (
           <span className="ml-1 font-normal text-muted-foreground normal-case">
-            (không bắt buộc)
+            {t.checkout.optional}
           </span>
         ) : null}
       </label>

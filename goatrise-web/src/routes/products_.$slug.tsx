@@ -5,6 +5,7 @@ import { isAxiosError } from "axios";
 import { productBySlugQueryOptions } from "@/api/product/query-hooks";
 import { ProductDetailView } from "@/components/shared/product-detail";
 import { RelatedProducts } from "@/components/shared/related-products";
+import { localizePath, localized } from "@/i18n";
 import { SITE_NAME, jsonLd, seo, toAbsoluteUrl } from "@/lib/seo";
 
 export const Route = createFileRoute("/products_/$slug")({
@@ -25,11 +26,14 @@ export const Route = createFileRoute("/products_/$slug")({
       throw error;
     }
   },
-  head: ({ loaderData: product }) => {
+  head: ({ match, loaderData: product }) => {
     if (!product) {
       return {};
     }
 
+    const { locale } = match.context;
+    const title = localized(product.title, locale);
+    const description = localized(product.shortDescription, locale);
     const path = `/products/${product.slug}`;
     const images = product.imgUrls ?? [];
     // cùng cách lấy giá hiển thị với trang chi tiết
@@ -37,15 +41,17 @@ export const Route = createFileRoute("/products_/$slug")({
     const inStock = product.items.some(
       (item) => item.isActive && item.stock > 0
     );
-    const url = toAbsoluteUrl(path);
+    const url = toAbsoluteUrl(localizePath(path, locale));
 
     return seo({
-      title: product.title.vi,
-      description: product.shortDescription.vi,
+      locale,
+      title,
+      description,
       path,
       image: images.at(0),
       type: "product",
       extraMeta: [
+        // giá khai báo cho máy tìm kiếm luôn là VND: đơn hàng thanh toán bằng VND, USD chỉ là giá quy đổi
         ...(price !== null
           ? [
               { property: "product:price:amount", content: String(price) },
@@ -56,8 +62,8 @@ export const Route = createFileRoute("/products_/$slug")({
         jsonLd({
           "@context": "https://schema.org",
           "@type": "Product",
-          name: product.title.vi,
-          description: product.shortDescription.vi,
+          name: title,
+          description,
           image: images,
           brand: { "@type": "Brand", name: SITE_NAME },
           ...(price !== null

@@ -3,20 +3,16 @@ import heroImg from "@/assets/hero.jpg";
 // Dữ liệu tạm cho trang home redesign — chưa gọi API.
 // Toàn bộ ảnh dùng tạm hero.jpg trong /src/assets làm placeholder.
 
+// mô tả dự phòng + nhãn nút của hero nằm trong messages (home.hero)
 export type Hero = {
   eyebrow: string;
   title: string;
-  description: string;
-  ctaLabel: string;
   image: string;
 };
 
 export const hero: Hero = {
   eyebrow: "1st Collection · Est. 2026",
   title: "D'1 GOAT",
-  description:
-    "Bộ sưu tập đầu tiên của GOAT RISE - hoạt phục và thời trang cổ điển được thiết kế để đồng hành cùng bạn mỗi ngày.",
-  ctaLabel: "Khám phá",
   image: heroImg,
 };
 

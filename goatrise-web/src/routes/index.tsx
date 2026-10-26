@@ -17,7 +17,7 @@ const FEATURED_CATEGORY_LIMIT = 2;
 const COLLECTION_STACK_LIMIT = 4;
 
 export const Route = createFileRoute("/")({
-  head: () => seo({ path: "/" }),
+  head: ({ match }) => seo({ locale: match.context.locale, path: "/" }),
   loader: ({ context }) =>
     Promise.all([
       context.queryClient.ensureQueryData(productsQueryOptions()),

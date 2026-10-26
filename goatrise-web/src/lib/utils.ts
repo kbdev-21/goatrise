@@ -26,7 +26,4 @@ export function normalizeText(text: string): string {
     .toLowerCase()
 }
 
-// Định dạng giá VND dùng chung cho card / trang chi tiết / giỏ hàng
-export function formatPrice(value: number): string {
-  return `${new Intl.NumberFormat("vi-VN").format(value)} đ`
-}
+// Định dạng giá đã chuyển sang i18n/currency (VND / USD theo ngôn ngữ): dùng useFormatPrice()

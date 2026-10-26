@@ -13,10 +13,12 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { CartLineItem } from "@/components/shared/cart-line-item";
-import { formatPrice } from "@/lib/utils";
+import { useFormatPrice, useT } from "@/i18n";
 import { selectItemCount, selectSubtotal, useCartStore } from "@/stores/cart.store";
 
 export function CartDrawer() {
+  const t = useT();
+  const formatPrice = useFormatPrice();
   const isOpen = useCartStore((s) => s.isOpen);
   const setOpen = useCartStore((s) => s.setOpen);
   const closeCart = useCartStore((s) => s.closeCart);
@@ -49,23 +51,23 @@ export function CartDrawer() {
       >
         <SheetHeader className="border-b border-border p-6">
           <SheetTitle className="text-sm font-bold tracking-widest uppercase">
-            Giỏ hàng{count > 0 ? ` (${count})` : ""}
+            {t.cart.title(count)}
           </SheetTitle>
           <SheetDescription className="sr-only">
-            Danh sách sản phẩm đang có trong giỏ hàng
+            {t.cart.description}
           </SheetDescription>
         </SheetHeader>
 
         {lines.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
             <ShoppingCart className="size-8 text-muted-foreground" strokeWidth={1.25} />
-            <p className="text-sm text-muted-foreground">Giỏ hàng của bạn đang trống.</p>
+            <p className="text-sm text-muted-foreground">{t.cart.empty}</p>
             <Button
               variant="outline"
               onClick={closeCart}
               className="h-11 rounded-none px-8 text-xs font-bold tracking-widest uppercase"
             >
-              Tiếp tục mua sắm
+              {t.common.continueShopping}
             </Button>
           </div>
         ) : (
@@ -85,19 +87,18 @@ export function CartDrawer() {
             <div className="border-t border-border p-6">
               {hasUnavailable ? (
                 <p className="mb-3 text-xs text-destructive">
-                  Một vài sản phẩm không còn khả dụng, vui lòng xoá khỏi giỏ trước khi
-                  thanh toán.
+                  {t.cart.unavailableWarning}
                 </p>
               ) : null}
 
               <div className="flex items-baseline justify-between">
                 <span className="text-xs font-semibold tracking-widest uppercase">
-                  Tạm tính
+                  {t.order.subtotal}
                 </span>
                 <span className="text-base font-medium">{formatPrice(subtotal)}</span>
               </div>
               <p className="mt-1 text-xs text-muted-foreground">
-                Phí vận chuyển được tính ở bước thanh toán.
+                {t.cart.shippingNote}
               </p>
 
               <Button
@@ -107,7 +108,7 @@ export function CartDrawer() {
                 }}
                 className="mt-5 h-12 w-full rounded-none bg-foreground text-xs font-bold tracking-widest text-background uppercase hover:bg-foreground/90"
               >
-                Thanh toán
+                {t.cart.checkout}
               </Button>
             </div>
           </>

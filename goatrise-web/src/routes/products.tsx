@@ -19,21 +19,29 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import {
+  getMessages,
+  localized,
+  useFormatPrice,
+  useLocalized,
+  useT,
+} from "@/i18n";
 import { seo } from "@/lib/seo";
-import { cn, formatPrice, getColorName } from "@/lib/utils";
+import { cn, getColorName } from "@/lib/utils";
 
 // bước nhảy của thanh trượt giá (VND)
 const PRICE_STEP = 10_000;
 
-const SORT_OPTIONS = [
-  { value: "featured", label: "Nổi bật" },
-  { value: "best-selling", label: "Bán chạy" },
-  { value: "newest", label: "Mới nhất" },
-  { value: "price-asc", label: "Giá tăng dần" },
-  { value: "price-desc", label: "Giá giảm dần" },
+// nhãn lấy theo t.products.sort[value]
+const SORT_VALUES = [
+  "featured",
+  "best-selling",
+  "newest",
+  "price-asc",
+  "price-desc",
 ] as const;
 
-type SortValue = (typeof SORT_OPTIONS)[number]["value"];
+type SortValue = (typeof SORT_VALUES)[number];
 
 type ProductsSearch = {
   // slug của một danh mục; không có = tất cả
@@ -55,7 +63,7 @@ export const Route = createFileRoute("/products")({
     color: asString(search.color),
     minPrice: asPrice(search.minPrice),
     maxPrice: asPrice(search.maxPrice),
-    sort: SORT_OPTIONS.some((option) => option.value === search.sort)
+    sort: SORT_VALUES.some((value) => value === search.sort)
       ? (search.sort as SortValue)
       : undefined,
   }),
@@ -67,6 +75,7 @@ export const Route = createFileRoute("/products")({
   // mỗi danh mục là một trang riêng (giữ ?category trong canonical); màu / giá / sắp xếp
   // chỉ là biến thể lọc của cùng trang nên canonical bỏ đi
   head: ({ match, loaderData }) => {
+    const { locale } = match.context;
     const slug = match.search.category;
     const category = slug
       ? loaderData?.[1].find(
@@ -78,16 +87,18 @@ export const Route = createFileRoute("/products")({
       : undefined;
 
     if (!category) {
+      const t = getMessages(locale);
       return seo({
-        title: "Sản phẩm",
-        description:
-          "Mua sắm hoạt phục và thời trang cổ điển GOAT RISE: áo, quần và phụ kiện được thiết kế để đồng hành cùng bạn mỗi ngày.",
+        locale,
+        title: t.seo.products.title,
+        description: t.seo.products.description,
         path: "/products",
       });
     }
     return seo({
-      title: category.title.vi,
-      description: category.shortDescription.vi,
+      locale,
+      title: localized(category.title, locale),
+      description: localized(category.shortDescription, locale),
       path: `/products?category=${encodeURIComponent(category.slug)}`,
       image: category.imgUrl,
     });
@@ -96,6 +107,9 @@ export const Route = createFileRoute("/products")({
 });
 
 function ProductsPage() {
+  const t = useT();
+  const l = useLocalized();
+  const formatPrice = useFormatPrice();
   const { data: products } = useSuspenseQuery(productsQueryOptions());
   const { data: collections } = useSuspenseQuery(collectionsQueryOptions());
   const search = Route.useSearch();
@@ -345,16 +359,16 @@ function ProductsPage() {
     <div className="mx-auto max-w-[1500px] px-5 pt-10 pb-20 lg:px-10 lg:pt-16 lg:pb-28">
       <div className="flex items-end justify-between gap-6">
         <h1 className="font-logo text-[clamp(1.75rem,5vw,3.5rem)] leading-none font-extrabold tracking-[-0.03em] uppercase">
-          Sản phẩm
+          {t.products.title}
         </h1>
         <p className="shrink-0 pb-1 text-[11px] font-bold tracking-[0.14em] uppercase tabular-nums opacity-55">
-          {visibleProducts.length} sản phẩm
+          {t.common.productCount(visibleProducts.length)}
         </p>
       </div>
 
       {/* Thanh công cụ: danh mục bên trái, sắp xếp + bộ lọc bên phải */}
       <div className="mt-8 flex flex-col gap-5 border-y border-border py-5 lg:flex-row lg:items-center lg:justify-between lg:gap-10">
-        <nav aria-label="Danh mục sản phẩm" className="min-w-0">
+        <nav aria-label={t.products.categoriesAriaLabel} className="min-w-0">
           {/* mobile: một dòng cuộn ngang, tràn ra sát mép màn hình */}
           <ul
             ref={categoryListRef}
@@ -362,7 +376,7 @@ function ProductsPage() {
           >
             <li>
               <CategoryLink
-                label="Tất cả"
+                label={t.products.all}
                 slug={undefined}
                 active={!activeTop}
               />
@@ -370,7 +384,7 @@ function ProductsPage() {
             {topCategories.map((category) => (
               <li key={category.id}>
                 <CategoryLink
-                  label={category.title.vi}
+                  label={l(category.title)}
                   slug={category.slug}
                   active={activeTop?.id === category.id}
                 />
@@ -401,7 +415,7 @@ function ProductsPage() {
                           : "opacity-45"
                       )}
                     >
-                      {isParent ? "Tất cả" : category.title.vi}
+                      {isParent ? t.products.all : l(category.title)}
                     </Link>
                   </li>
                 );
@@ -412,8 +426,11 @@ function ProductsPage() {
 
         <div className="flex shrink-0 items-center justify-between gap-8">
           <Select
-            label="Sắp xếp"
-            items={[...SORT_OPTIONS]}
+            label={t.products.sortLabel}
+            items={SORT_VALUES.map((value) => ({
+              value,
+              label: t.products.sort[value],
+            }))}
             value={search.sort ?? "featured"}
             onChange={setSort}
             // bỏ khung viền, chỉ còn chữ cho gọn cạnh nút Bộ lọc
@@ -430,7 +447,7 @@ function ProductsPage() {
                 )}
               >
                 <SlidersHorizontal className="size-3.5" strokeWidth={1.75} />
-                Bộ lọc
+                {t.products.filter}
                 {hasFilter ? (
                   <span className="tabular-nums opacity-55">
                     ({filterCount})
@@ -442,7 +459,7 @@ function ProductsPage() {
             {/* mobile tràn hết màn hình; từ sm trở lên Sheet tự giới hạn max-w-sm */}
             <SheetContent side="right" className="p-0 data-[side=right]:w-full">
               <SheetHeader className="border-b border-border px-6 py-5">
-                <SheetTitle className={LABEL_CLASS}>Bộ lọc</SheetTitle>
+                <SheetTitle className={LABEL_CLASS}>{t.products.filter}</SheetTitle>
               </SheetHeader>
 
               <div
@@ -451,7 +468,7 @@ function ProductsPage() {
                 className="flex flex-1 flex-col gap-10 overflow-y-auto p-6"
               >
                 {priceBounds && priceRange ? (
-                  <FilterSection title="Giá">
+                  <FilterSection title={t.products.price}>
                     <PriceFilter
                       bounds={priceBounds}
                       value={priceRange}
@@ -461,13 +478,7 @@ function ProductsPage() {
                 ) : null}
 
                 {colorOptions.length > 0 ? (
-                  <FilterSection
-                    title={
-                      selectedColors.length > 0
-                        ? `Màu sắc (${selectedColors.length})`
-                        : "Màu sắc"
-                    }
-                  >
+                  <FilterSection title={t.products.color(selectedColors.length)}>
                     <ul className="grid grid-cols-4 gap-x-2 gap-y-5">
                       {colorOptions.map(({ name, hex }) => {
                         const checked = selectedColors.includes(name);
@@ -517,7 +528,7 @@ function ProductsPage() {
                     "h-12 cursor-pointer border border-border transition-colors hover:border-foreground disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-border"
                   )}
                 >
-                  Xóa bộ lọc
+                  {t.products.clearFilters}
                 </button>
                 <SheetClose asChild>
                   <button
@@ -527,7 +538,7 @@ function ProductsPage() {
                       "h-12 cursor-pointer bg-foreground text-background tabular-nums transition-colors hover:bg-foreground/85"
                     )}
                   >
-                    Xem {visibleProducts.length} sản phẩm
+                    {t.products.showResults(visibleProducts.length)}
                   </button>
                 </SheetClose>
               </div>
@@ -561,7 +572,7 @@ function ProductsPage() {
               "ml-2 cursor-pointer underline decoration-1 underline-offset-4 opacity-55 transition-opacity hover:opacity-100"
             )}
           >
-            Xóa tất cả
+            {t.products.clearAll}
           </button>
         </div>
       ) : null}
@@ -570,9 +581,7 @@ function ProductsPage() {
         {visibleProducts.length === 0 ? (
           <div className="flex flex-col items-center gap-5 py-24 text-center">
             <p className="text-sm text-muted-foreground">
-              {hasFilter
-                ? "Không có sản phẩm nào phù hợp với bộ lọc."
-                : "Chưa có sản phẩm nào."}
+              {hasFilter ? t.products.noMatch : t.common.noProducts}
             </p>
             {hasFilter ? (
               <button
@@ -580,7 +589,7 @@ function ProductsPage() {
                 onClick={clearFilters}
                 className="h-12 cursor-pointer border border-border px-8 text-xs font-bold tracking-widest uppercase transition-colors hover:border-foreground"
               >
-                Xóa bộ lọc
+                {t.products.clearFilters}
               </button>
             ) : null}
           </div>
@@ -637,11 +646,13 @@ function FilterChip({
   swatch?: string;
   onRemove: () => void;
 }) {
+  const t = useT();
+
   return (
     <button
       type="button"
       onClick={onRemove}
-      aria-label={`Bỏ lọc ${label}`}
+      aria-label={t.products.removeFilter(label)}
       className="flex h-8 cursor-pointer items-center gap-2 border border-border px-3 text-xs capitalize tabular-nums transition-colors hover:border-foreground"
     >
       {swatch ? (
@@ -683,6 +694,8 @@ function PriceFilter({
   value: Range;
   onCommit: (value: Range) => void;
 }) {
+  const t = useT();
+  const formatPrice = useFormatPrice();
   // giá trị tạm lúc đang kéo; chỉ đẩy lên URL khi thả tay
   const [draft, setDraft] = useState<Range | null>(null);
   const [from, to] = draft ?? value;
@@ -701,7 +714,7 @@ function PriceFilter({
         value={[from, to]}
         onValueChange={setDraft}
         onValueCommit={onCommit}
-        thumbLabels={["Giá thấp nhất", "Giá cao nhất"]}
+        thumbLabels={[t.products.priceMin, t.products.priceMax]}
       />
       <div className="flex items-center justify-between text-xs tabular-nums">
         <span>{formatPrice(from)}</span>

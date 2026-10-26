@@ -7,13 +7,13 @@ import { RollText } from "@/components/shared/roll-text";
 import { INSTAGRAM_URL } from "@/constant/social";
 import { useReveal } from "@/hooks/use-reveal";
 import { useScrollProgress } from "@/hooks/use-scroll-progress";
-
-const MANIFESTO =
-  "GOAT RISE tin rằng tiến bộ thật sự không đến từ một cú bứt phá, mà từ những gì bạn lặp lại mỗi ngày. Chúng tôi làm quần áo cho nhịp đó: bền bỉ, tối giản, và tốt hơn một chút sau mỗi lần mặc.";
-
-const WORDS = MANIFESTO.split(" ");
+import { useT } from "@/i18n";
 
 export function BrandIntro() {
+  const t = useT();
+  // mỗi từ một span để sáng dần lần lượt theo cuộn
+  const words = t.home.brandIntro.manifesto.split(" ");
+
   // chữ sáng dần theo tiến độ cuộn; tắt hiệu ứng thì sáng hết ngay
   const textRef = useScrollProgress<HTMLDivElement>({
     start: 0.2,
@@ -31,9 +31,9 @@ export function BrandIntro() {
       >
         <p
           className="max-w-4xl text-[clamp(1.25rem,3.2vw,2.5rem)] leading-[1.3] font-extrabold tracking-[-0.02em]"
-          style={{ "--n": WORDS.length } as CSSProperties}
+          style={{ "--n": words.length } as CSSProperties}
         >
-          {WORDS.map((word, index) => (
+          {words.map((word, index) => (
             <Fragment key={`${word}-${index}`}>
               <span
                 className="manifesto-word"
@@ -69,7 +69,7 @@ export function BrandIntro() {
             data-reveal
             className="text-[11px] font-bold tracking-[0.22em] text-white/70 uppercase"
           >
-            Goat Rise · Est. 2026
+            {t.home.brandIntro.eyebrow}
           </p>
 
           <p
@@ -77,9 +77,12 @@ export function BrandIntro() {
             style={{ "--reveal-delay": "120ms" } as CSSProperties}
             className="mt-5 text-[clamp(1.5rem,3.5vw,2.75rem)] leading-[0.95] font-extrabold tracking-[-0.03em] uppercase"
           >
-            Real Improvement
-            <br />
-            Start Everyday
+            {t.home.brandIntro.tagline.map((line, index) => (
+              <Fragment key={line}>
+                {index > 0 ? <br /> : null}
+                {line}
+              </Fragment>
+            ))}
           </p>
 
           {/* bọc riêng: transition-colors của nút sẽ đè transition của data-reveal */}
@@ -95,7 +98,7 @@ export function BrandIntro() {
               className="group inline-flex h-11 items-center gap-3 border border-white/60 px-7 text-[11px] font-bold tracking-[0.18em] uppercase transition-colors duration-300 hover:border-white hover:bg-white hover:text-black"
             >
               <FaInstagram aria-hidden className="size-4" />
-              <RollText label="Follow Us" />
+              <RollText label={t.home.brandIntro.follow} />
             </a>
           </div>
         </div>

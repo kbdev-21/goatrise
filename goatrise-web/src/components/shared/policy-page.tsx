@@ -5,6 +5,7 @@ import { INSTAGRAM_URL } from "@/constant/social";
 import { Reveal } from "@/components/shared/reveal";
 import { RollText } from "@/components/shared/roll-text";
 import { getLenis } from "@/hooks/use-smooth-scroll";
+import { useT } from "@/i18n";
 
 // header cao 4rem + chừa thêm 2rem để tiêu đề mục không dính sát header
 // (khớp scroll-mt-24 dùng cho lúc nhảy anchor native, khi Lenis tắt)
@@ -34,6 +35,8 @@ export function PolicyPage({
   intro?: ReactNode;
   sections: PolicySection[];
 }) {
+  const t = useT();
+
   return (
     <div className="mx-auto max-w-[1500px] px-5 pt-10 pb-20 lg:px-10 lg:pt-16 lg:pb-28">
       {/* nằm ngay màn đầu nên chạy bằng CSS animation lúc tải trang, không chờ JS */}
@@ -56,14 +59,14 @@ export function PolicyPage({
           className="rise-fade shrink-0 pb-1 text-[11px] font-bold tracking-[0.14em] uppercase tabular-nums opacity-55"
           style={{ "--rise-delay": "300ms" } as CSSProperties}
         >
-          Cập nhật {updatedAt}
+          {t.policyPage.updated(updatedAt)}
         </p>
       </header>
 
       <div className="mt-8 grid grid-cols-1 gap-10 border-t border-border pt-10 lg:grid-cols-12 lg:pt-16">
         {/* Mục lục: chỉ desktop, ghim theo khi cuộn */}
         <nav
-          aria-label="Mục lục"
+          aria-label={t.policyPage.tableOfContents}
           className="hidden lg:sticky lg:top-24 lg:col-span-3 lg:block lg:self-start"
         >
           <ol className="flex flex-col">
@@ -127,11 +130,10 @@ export function PolicyPage({
               <span aria-hidden />
               <div>
                 <h2 className="text-sm font-bold tracking-[0.08em] uppercase">
-                  Cần hỗ trợ thêm?
+                  {t.policyPage.helpTitle}
                 </h2>
                 <p className="mt-5 max-w-2xl text-sm leading-relaxed font-light">
-                  Nhắn cho GOAT RISE qua Instagram, chúng tôi sẽ phản hồi trong
-                  giờ làm việc.
+                  {t.policyPage.helpBody}
                 </p>
                 <a
                   href={INSTAGRAM_URL}
@@ -140,7 +142,7 @@ export function PolicyPage({
                   className="group mt-6 inline-flex h-11 items-center gap-3 border border-border px-7 text-[11px] font-bold tracking-[0.18em] uppercase transition-colors duration-300 hover:border-foreground hover:bg-foreground hover:text-background"
                 >
                   <FaInstagram aria-hidden className="size-4" />
-                  <RollText label="Liên hệ chúng tôi" />
+                  <RollText label={t.common.contactUs} />
                 </a>
               </div>
             </div>

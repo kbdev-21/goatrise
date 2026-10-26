@@ -5,8 +5,10 @@ import type { Product } from "@/api/product/api";
 import { ProductCard } from "@/components/shared/product-card";
 import { RollText } from "@/components/shared/roll-text";
 import { useReveal } from "@/hooks/use-reveal";
+import { useT } from "@/i18n";
 
 export function FeaturedProducts({ products }: { products: Product[] }) {
+  const t = useT();
   const ref = useReveal<HTMLElement>();
 
   return (
@@ -16,20 +18,20 @@ export function FeaturedProducts({ products }: { products: Product[] }) {
     >
       <div data-reveal className="flex items-end justify-between gap-6">
         <h2 className="font-logo text-[clamp(1.5rem,4vw,2.75rem)] leading-none font-extrabold tracking-[-0.03em] uppercase">
-          Featured Products
+          {t.home.featuredProducts.title}
         </h2>
 
         <Link
           to="/products"
           className="group shrink-0 pb-1 text-[11px] font-bold tracking-[0.14em] uppercase opacity-55 transition-opacity duration-300 hover:opacity-100 focus-visible:opacity-100"
         >
-          <RollText label="Xem tất cả" />
+          <RollText label={t.common.seeAll} />
         </Link>
       </div>
 
       {products.length === 0 ? (
         <p data-reveal className="mt-10 text-sm text-muted-foreground">
-          Chưa có sản phẩm nào.
+          {t.common.noProducts}
         </p>
       ) : (
         <div className="mt-10 grid grid-cols-2 gap-x-3 gap-y-10 md:grid-cols-3 md:gap-x-4 lg:grid-cols-4">

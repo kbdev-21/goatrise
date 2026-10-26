@@ -15,12 +15,16 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useReveal } from "@/hooks/use-reveal";
-import { cn, formatPrice, getColorName } from "@/lib/utils";
+import { useFormatPrice, useLocalized, useT } from "@/i18n";
+import { cn, getColorName } from "@/lib/utils";
 import { useCartStore } from "@/stores/cart.store";
 
 const SIZE_ORDER = ["XS", "S", "M", "L", "XL", "XXL", "XXXL"];
 
 export function ProductDetailView({ product }: { product: ProductDetail }) {
+  const t = useT();
+  const l = useLocalized();
+  const formatPrice = useFormatPrice();
   const images = product.imgUrls ?? [];
 
   const colors = useMemo(
@@ -114,10 +118,10 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
             style={{ "--rise-delay": "120ms" } as React.CSSProperties}
           >
             <h1 className="text-2xl font-bold tracking-tight uppercase">
-              {product.title.vi}
+              {l(product.title)}
             </h1>
             <p className="mt-5 text-sm font-light leading-relaxed">
-              {product.shortDescription.vi}
+              {l(product.shortDescription)}
             </p>
           </div>
 
@@ -126,17 +130,17 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
             className="rise-fade order-4 border-t border-border lg:mt-8 lg:max-w-[360px]"
             style={{ "--rise-delay": "180ms" } as React.CSSProperties}
           >
-            <Accordion title="Thông tin chi tiết">
-              {product.markdownDescription?.vi ? (
+            <Accordion title={t.product.details}>
+              {l(product.markdownDescription) ? (
                 <p className="whitespace-pre-line">
-                  {product.markdownDescription.vi}
+                  {l(product.markdownDescription)}
                 </p>
               ) : (
-                <p className="text-muted-foreground">Đang cập nhật.</p>
+                <p className="text-muted-foreground">{t.product.updating}</p>
               )}
             </Accordion>
-            <Accordion title="Chính sách">
-              <p className="text-muted-foreground">Đang cập nhật.</p>
+            <Accordion title={t.product.policy}>
+              <p className="text-muted-foreground">{t.product.updating}</p>
             </Accordion>
           </div>
         </div>
@@ -145,7 +149,7 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
         {/* màn đầu hiện bằng CSS animation lúc tải trang, không chờ JS */}
         {images.length === 0 ? (
           <div className="rise-fade order-1 flex aspect-square w-full items-center justify-center bg-muted text-sm text-muted-foreground lg:order-none">
-            Chưa có ảnh
+            {t.common.noImage}
           </div>
         ) : (
           <div className="rise-fade order-1 lg:order-none">
@@ -167,7 +171,7 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
                     <div className="aspect-square w-full overflow-hidden bg-muted">
                       <img
                         src={url}
-                        alt={`${product.title.vi} ${i + 1}`}
+                        alt={t.product.imageAlt(l(product.title), i + 1)}
                         className="size-full object-cover"
                       />
                     </div>
@@ -188,7 +192,7 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
                   {/* zoom nhẹ khi hover, cùng nhịp với ảnh featured collections */}
                   <img
                     src={url}
-                    alt={`${product.title.vi} ${i + 1}`}
+                    alt={t.product.imageAlt(l(product.title), i + 1)}
                     loading="lazy"
                     className="size-full object-cover transition-transform duration-500 group-hover:scale-105"
                   />
@@ -205,7 +209,7 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
         >
           <div className="flex items-baseline gap-3">
             {price === null ? (
-              <span className="text-xl font-bold">Liên hệ</span>
+              <span className="text-xl font-bold">{t.common.contactForPrice}</span>
             ) : (
               <>
                 <span className="text-lg font-medium">{formatPrice(price)}</span>
@@ -222,7 +226,7 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
           {colors.length > 0 ? (
             <div className="mt-8">
               <p className="text-[11px] font-semibold tracking-widest uppercase">
-                Màu sắc
+                {t.product.color}
                 {selectedColor ? (
                   <span className="text-muted-foreground">
                     : {getColorName(selectedColor)}
@@ -255,13 +259,13 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
             <div className="mt-6">
               <div className="flex items-center justify-between">
                 <p className="text-[11px] font-semibold tracking-widest uppercase">
-                  Size
+                  {t.product.size}
                 </p>
                 {/* chỉ hiện khi sản phẩm có ảnh bảng size */}
                 {product.sizeImgUrl ? (
                   <SizeChartDialog
                     imgUrl={product.sizeImgUrl}
-                    productTitle={product.title.vi}
+                    productTitle={l(product.title)}
                   />
                 ) : null}
               </div>
@@ -290,7 +294,7 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
           {/* Quantity */}
           <div className="mt-6">
             <p className="text-[11px] font-semibold tracking-widest uppercase">
-              Số lượng
+              {t.product.quantity}
             </p>
             <div className="mt-3 flex h-9 w-24 items-center justify-between border border-border">
               <button
@@ -321,7 +325,7 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
               }
               className="h-12 w-full rounded-none bg-foreground text-background text-xs font-bold tracking-widest uppercase duration-300 hover:bg-foreground/85"
             >
-              {canAddToCart ? "Thêm vào giỏ hàng" : "Hết hàng"}
+              {canAddToCart ? t.product.addToCart : t.product.outOfStock}
             </Button>
           </div>
         </div>
@@ -337,6 +341,8 @@ function SizeChartDialog({
   imgUrl: string;
   productTitle: string;
 }) {
+  const t = useT();
+
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -344,17 +350,17 @@ function SizeChartDialog({
           type="button"
           className="group -my-2 cursor-pointer py-2 text-[11px] font-bold tracking-[0.08em] uppercase opacity-60 transition-opacity duration-300 hover:opacity-100 focus-visible:opacity-100"
         >
-          <RollText label="Bảng size" />
+          <RollText label={t.product.sizeChart} />
         </button>
       </DialogTrigger>
       <DialogContent>
         <div className="border-b border-border px-6 py-5 pr-14">
-          <DialogTitle>Bảng size</DialogTitle>
+          <DialogTitle>{t.product.sizeChart}</DialogTitle>
         </div>
         <div className="p-4 sm:p-6">
           <img
             src={imgUrl}
-            alt={`Bảng size ${productTitle}`}
+            alt={t.product.sizeChartAlt(productTitle)}
             className="mx-auto h-auto w-full object-contain"
           />
         </div>

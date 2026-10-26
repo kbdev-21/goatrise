@@ -9,23 +9,28 @@ import type { Collection } from "@/api/collection/api";
 import { RollText } from "@/components/shared/roll-text";
 import { useReveal } from "@/hooks/use-reveal";
 import { useScrollProgress } from "@/hooks/use-scroll-progress";
+import { getMessages, useLocalized, useT } from "@/i18n";
 import { seo } from "@/lib/seo";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/collections")({
-  head: () =>
-    seo({
-      title: "Bộ sưu tập",
-      description:
-        "Khám phá các bộ sưu tập của GOAT RISE - hoạt phục và thời trang cổ điển được thiết kế để đồng hành cùng bạn mỗi ngày.",
+  head: ({ match }) => {
+    const { locale } = match.context;
+    const t = getMessages(locale);
+    return seo({
+      locale,
+      title: t.seo.collections.title,
+      description: t.seo.collections.description,
       path: "/collections",
-    }),
+    });
+  },
   loader: ({ context }) =>
     context.queryClient.ensureQueryData(collectionsQueryOptions()),
   component: CollectionsPage,
 });
 
 function CollectionsPage() {
+  const t = useT();
   const { data: collections } = useSuspenseQuery(collectionsQueryOptions());
 
   // chỉ bộ sưu tập thật (type COLLECTION) đang bật, priority cao lên trước
@@ -44,16 +49,16 @@ function CollectionsPage() {
     <div className="mx-auto max-w-[1500px] px-5 pt-10 pb-20 lg:px-10 lg:pt-16 lg:pb-28">
       <div className="flex items-end justify-between gap-6">
         <h1 className="font-logo text-[clamp(1.75rem,5vw,3.5rem)] leading-none font-extrabold tracking-[-0.03em] uppercase">
-          Bộ sưu tập
+          {t.collections.title}
         </h1>
         <p className="shrink-0 pb-1 text-[11px] font-bold tracking-[0.14em] uppercase tabular-nums opacity-55">
-          {visibleCollections.length} bộ sưu tập
+          {t.collections.count(visibleCollections.length)}
         </p>
       </div>
 
       {visibleCollections.length === 0 ? (
         <p className="mt-8 border-t border-border py-24 text-center text-sm text-muted-foreground">
-          Chưa có bộ sưu tập nào.
+          {t.collections.empty}
         </p>
       ) : (
         // kiểu editorial: ảnh lớn xen kẽ trái / phải, chữ bám đáy ở cột còn lại
@@ -78,6 +83,8 @@ function CollectionRow({
   collection: Collection;
   reversed: boolean;
 }) {
+  const t = useT();
+  const l = useLocalized();
   const rowRef = useReveal<HTMLAnchorElement>();
   // ảnh trôi chậm hơn trang khi cuộn, cùng kiểu với ảnh cuối BrandIntro
   const mediaRef = useScrollProgress<HTMLDivElement>();
@@ -100,7 +107,7 @@ function CollectionRow({
         {collection.imgUrl ? (
           <img
             src={collection.imgUrl}
-            alt={collection.title.vi}
+            alt={l(collection.title)}
             loading="lazy"
             className="absolute inset-0 size-full scale-[1.14] object-cover transition-[scale] duration-700 ease-out group-hover:scale-[1.2]"
             style={{ translate: "0 calc((var(--p, 0.5) - 0.5) * -8%)" }}
@@ -126,18 +133,18 @@ function CollectionRow({
         </p>
 
         <h2 className="font-logo text-[clamp(2rem,4.5vw,4rem)] leading-[0.9] font-extrabold tracking-[-0.04em] uppercase">
-          {collection.title.vi}
+          {l(collection.title)}
         </h2>
 
-        {collection.shortDescription.vi ? (
+        {l(collection.shortDescription) ? (
           <p className="max-w-sm text-sm leading-relaxed text-muted-foreground">
-            {collection.shortDescription.vi}
+            {l(collection.shortDescription)}
           </p>
         ) : null}
 
         {/* cùng kiểu nút với hero, bản nền sáng; cả hàng là link nên hover đi theo group */}
         <span className="mt-2 inline-flex h-11 w-fit items-center gap-3 border border-border px-7 text-[11px] font-bold tracking-[0.18em] uppercase transition-colors duration-300 group-hover:border-foreground group-hover:bg-foreground group-hover:text-background group-focus-visible:border-foreground group-focus-visible:bg-foreground group-focus-visible:text-background">
-          <RollText label="Xem bộ sưu tập" />
+          <RollText label={t.collections.view} />
           <ArrowRight
             aria-hidden
             className="size-3.5 transition-transform duration-300 group-hover:translate-x-1"

@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { ItemBase, Product, ProductBase } from "@/api/product/api";
+import type { LocalizedText } from "@/i18n";
 
 // Snapshot mirror OrderLineSnapItem của backend để sau này map sang payload checkout không phải đổi shape.
 export type CartLineSnapshot = {
@@ -14,7 +15,9 @@ export type CartLineSnapshot = {
   product: {
     id: string;
     slug: string;
-    title: string;
+    // song ngữ, hiển thị qua localized(); chuỗi thường là giỏ lưu từ trước khi có đa ngôn ngữ
+    // (tự thành song ngữ sau lần syncFromProducts kế tiếp)
+    title: LocalizedText | string;
     imgUrls: string[] | null;
   } | null;
 };
@@ -58,7 +61,7 @@ function toSnapshot(item: ItemBase, product: ProductBase | null): CartLineSnapsh
       ? {
           id: product.id,
           slug: product.slug,
-          title: product.title.vi,
+          title: product.title,
           imgUrls: product.imgUrls,
         }
       : null,

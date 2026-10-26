@@ -1,9 +1,10 @@
-import { useEffect, useRef } from "react";
+import { Fragment, useEffect, useRef } from "react";
 
 import goatImg from "@/assets/d1-goat.jpg";
 import introImg from "@/assets/goatrise-introduce.webp";
 import menImg from "@/assets/men.jpg";
 import womenImg from "@/assets/women.jpg";
+import { useT } from "@/i18n";
 
 /** Mỗi làn chạy một hướng và một tốc độ khác nhau => cảm giác lệch tầng. */
 const LANES = [
@@ -12,8 +13,6 @@ const LANES = [
   { dir: -1, speed: 0.6 },
 ] as const;
 
-const MARQUEE_TOP = ["Real Improvement", "Start Everyday"];
-const MARQUEE_BOTTOM = ["Bền bỉ", "Tối giản", "Tốt hơn mỗi ngày"];
 const SHOTS = [goatImg, menImg, womenImg, introImg];
 
 const IDLE_DRIFT = 0.02; // px mỗi ms, để làn không bao giờ chết cứng
@@ -22,6 +21,7 @@ const SHEAR_PER_PX = 0.4;
 const SHEAR_MAX = 9; // độ
 
 export function ScrollManifesto() {
+  const t = useT();
   const sectionRef = useRef<HTMLElement>(null);
   const shearRef = useRef<HTMLDivElement>(null);
   const stripRefs = useRef<Array<HTMLDivElement | null>>([]);
@@ -115,7 +115,7 @@ export function ScrollManifesto() {
         className="flex flex-col gap-4 will-change-transform md:gap-6"
       >
         <Lane ref={(el) => void (stripRefs.current[0] = el)}>
-          <MarqueeText words={MARQUEE_TOP} />
+          <MarqueeText words={t.home.scrollManifesto.marqueeTop} />
         </Lane>
 
         <Lane ref={(el) => void (stripRefs.current[1] = el)}>
@@ -123,7 +123,7 @@ export function ScrollManifesto() {
         </Lane>
 
         <Lane ref={(el) => void (stripRefs.current[2] = el)}>
-          <MarqueeText words={MARQUEE_BOTTOM} outlined />
+          <MarqueeText words={t.home.scrollManifesto.marqueeBottom} outlined />
         </Lane>
       </div>
 
@@ -131,15 +131,18 @@ export function ScrollManifesto() {
       <div className="pointer-events-none absolute inset-0 grid place-items-center">
         <div className="pointer-events-auto max-w-xs bg-background px-8 py-7 text-center text-foreground shadow-[0_0_0_1px_var(--color-foreground)]">
           <p className="text-[0.6rem] font-medium tracking-[0.3em] text-muted-foreground uppercase">
-            Goat Rise · Est. 2026
+            {t.home.scrollManifesto.eyebrow}
           </p>
           <p className="mt-4 text-lg leading-[1.15] font-extrabold tracking-tight uppercase">
-            Mọi thứ đều
-            <br />
-            chuyển động
+            {t.home.scrollManifesto.headline.map((line, index) => (
+              <Fragment key={line}>
+                {index > 0 ? <br /> : null}
+                {line}
+              </Fragment>
+            ))}
           </p>
           <p className="mt-3 font-serif text-sm leading-relaxed text-foreground/70">
-            Trừ tiêu chuẩn của chúng tôi.
+            {t.home.scrollManifesto.subline}
           </p>
         </div>
       </div>

@@ -7,6 +7,7 @@ import { isAxiosError } from "axios";
 import { collectionQueryOptions } from "@/api/collection/query-hooks";
 import { ProductCard } from "@/components/shared/product-card";
 import { Reveal } from "@/components/shared/reveal";
+import { localized, useLocalized, useT } from "@/i18n";
 import { seo } from "@/lib/seo";
 
 export const Route = createFileRoute("/collections_/$id")({
@@ -28,11 +29,15 @@ export const Route = createFileRoute("/collections_/$id")({
       throw error;
     }
   },
-  head: ({ loaderData: collection }) =>
+  head: ({ match, loaderData: collection }) =>
     collection
       ? seo({
-          title: collection.title.vi,
-          description: collection.shortDescription.vi,
+          locale: match.context.locale,
+          title: localized(collection.title, match.context.locale),
+          description: localized(
+            collection.shortDescription,
+            match.context.locale
+          ),
           path: `/collections/${collection.id}`,
           image: collection.imgUrl,
         })
@@ -41,6 +46,8 @@ export const Route = createFileRoute("/collections_/$id")({
 });
 
 function CollectionDetailPage() {
+  const t = useT();
+  const l = useLocalized();
   const { id } = Route.useParams();
   const { data: collection } = useSuspenseQuery(collectionQueryOptions(id));
 
@@ -77,20 +84,20 @@ function CollectionDetailPage() {
             className="rise-fade w-fit text-[11px] font-bold tracking-[0.18em] text-white/70 uppercase transition-colors hover:text-white"
             style={{ "--rise-delay": "100ms" } as CSSProperties}
           >
-            Bộ sưu tập
+            {t.collections.title}
           </Link>
           <h1
             className="rise-fade mt-3 font-logo text-[clamp(2rem,5vw,3.75rem)] leading-[0.9] font-extrabold tracking-[-0.04em] uppercase"
             style={{ "--rise-delay": "200ms" } as CSSProperties}
           >
-            {collection.title.vi}
+            {l(collection.title)}
           </h1>
-          {collection.shortDescription.vi ? (
+          {l(collection.shortDescription) ? (
             <p
               className="rise-fade mt-4 max-w-md text-sm leading-relaxed text-white/75"
               style={{ "--rise-delay": "300ms" } as CSSProperties}
             >
-              {collection.shortDescription.vi}
+              {l(collection.shortDescription)}
             </p>
           ) : null}
         </div>
@@ -100,14 +107,14 @@ function CollectionDetailPage() {
       <section className="mx-auto max-w-[1500px] px-5 py-16 lg:px-10 lg:py-24">
         <Reveal>
           <p className="text-[11px] font-bold tracking-[0.14em] uppercase tabular-nums opacity-55">
-            {products.length} sản phẩm
+            {t.common.productCount(products.length)}
           </p>
         </Reveal>
 
         {products.length === 0 ? (
           <Reveal>
             <p className="py-24 text-center text-sm text-muted-foreground">
-              Bộ sưu tập này chưa có sản phẩm nào.
+              {t.collections.noProducts}
             </p>
           </Reveal>
         ) : (

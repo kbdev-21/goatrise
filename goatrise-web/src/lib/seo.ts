@@ -1,8 +1,8 @@
+import { DEFAULT_LOCALE, LOCALES, getMessages, localizePath } from "@/i18n";
+import type { Locale } from "@/i18n";
+
 export const SITE_NAME = "GOAT RISE";
-export const DEFAULT_TITLE =
-  "GOAT RISE - Vietnam, Activewear & Classic For Life";
-export const DEFAULT_DESCRIPTION =
-  "GOAT RISE - thương hiệu hoạt phục và thời trang cổ điển Việt Nam, được thiết kế để đồng hành cùng bạn mỗi ngày: bền bỉ, tối giản, tốt hơn một chút sau mỗi lần mặc.";
+// title / description mặc định nằm trong messages (seo.defaultTitle, seo.defaultDescription)
 // logo vuông trong /public: ảnh chia sẻ mặc định khi trang không có ảnh riêng
 export const DEFAULT_IMAGE = "/goatrise-bg-logo.png";
 
@@ -19,10 +19,13 @@ type MetaTag = React.JSX.IntrinsicElements["meta"];
 type LinkTag = React.JSX.IntrinsicElements["link"];
 
 export type SeoOptions = {
+  // ngôn ngữ của trang (match.context.locale): chọn chữ mặc định + gắn tiền tố /en vào URL
+  locale: Locale;
   // bỏ trống => title mặc định của site (trang chủ)
   title?: string;
   description?: string | null;
-  // pathname (+ search nếu là trang riêng, vd danh mục), dùng cho canonical / og:url
+  // pathname nội bộ, KHÔNG có tiền tố ngôn ngữ (+ search nếu là trang riêng, vd danh mục),
+  // dùng cho canonical / og:url / hreflang
   path: string;
   // URL tuyệt đối hoặc đường dẫn trong /public
   image?: string | null;
@@ -40,6 +43,7 @@ export type SeoOptions = {
  * Link KHÔNG được gộp (cộng dồn qua mọi route) => canonical chỉ đặt ở route lá.
  */
 export function seo({
+  locale,
   title,
   description,
   path,
@@ -48,9 +52,10 @@ export function seo({
   noindex = false,
   extraMeta = [],
 }: SeoOptions): { meta: MetaTag[]; links: LinkTag[] } {
-  const fullTitle = title ? `${title} - ${SITE_NAME}` : DEFAULT_TITLE;
-  const desc = toMetaDescription(description) ?? DEFAULT_DESCRIPTION;
-  const url = toAbsoluteUrl(path);
+  const t = getMessages(locale);
+  const fullTitle = title ? `${title} - ${SITE_NAME}` : t.seo.defaultTitle;
+  const desc = toMetaDescription(description) ?? t.seo.defaultDescription;
+  const url = toAbsoluteUrl(localizePath(path, locale));
   const imageUrl = toAbsoluteUrl(image ?? DEFAULT_IMAGE);
 
   const meta: MetaTag[] = [
@@ -78,9 +83,25 @@ export function seo({
 
   return {
     meta: [...meta, ...extraMeta],
-    // trang noindex thì canonical không có ý nghĩa
-    links: url && !noindex ? [{ rel: "canonical", href: url }] : [],
+    // trang noindex thì canonical / hreflang không có ý nghĩa
+    links: url && !noindex ? [{ rel: "canonical", href: url }, ...alternateLinks(path)] : [],
   };
+}
+
+// hreflang: báo cho Google các bản ngôn ngữ của cùng một trang; x-default = bản tiếng Việt
+function alternateLinks(path: string): LinkTag[] {
+  const links: LinkTag[] = [];
+  for (const locale of LOCALES) {
+    const href = toAbsoluteUrl(localizePath(path, locale));
+    if (href) {
+      links.push({ rel: "alternate", hrefLang: locale, href });
+    }
+  }
+  const defaultHref = toAbsoluteUrl(localizePath(path, DEFAULT_LOCALE));
+  if (defaultHref) {
+    links.push({ rel: "alternate", hrefLang: "x-default", href: defaultHref });
+  }
+  return links;
 }
 
 // HeadContent render { "script:ld+json": data } thành <script type="application/ld+json">,

@@ -1,7 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import { Minus, Plus, X } from "lucide-react";
 
-import { cn, formatPrice, getColorName } from "@/lib/utils";
+import { useFormatPrice, useLocalized, useT } from "@/i18n";
+import { cn, getColorName } from "@/lib/utils";
 import { useCartStore } from "@/stores/cart.store";
 import type { CartLine } from "@/stores/cart.store";
 
@@ -32,6 +33,9 @@ export function CartLineItem({
   onNavigate?: () => void;
   className?: string;
 }) {
+  const t = useT();
+  const l = useLocalized();
+  const formatPrice = useFormatPrice();
   const setQuantity = useCartStore((s) => s.setQuantity);
   const removeLine = useCartStore((s) => s.removeLine);
 
@@ -74,7 +78,7 @@ export function CartLineItem({
                   styles.title
                 )}
               >
-                {snapshot.product.title}
+                {l(snapshot.product.title)}
               </Link>
             ) : (
               <p
@@ -91,7 +95,7 @@ export function CartLineItem({
 
           <button
             type="button"
-            aria-label="Xoá khỏi giỏ hàng"
+            aria-label={t.cart.remove}
             onClick={() => removeLine(line.itemId)}
             className="shrink-0 cursor-pointer text-muted-foreground transition-colors hover:text-foreground"
           >
@@ -100,10 +104,10 @@ export function CartLineItem({
         </div>
 
         {!line.isAvailable ? (
-          <p className="mt-2 text-xs text-destructive">Sản phẩm không còn khả dụng</p>
+          <p className="mt-2 text-xs text-destructive">{t.cart.unavailable}</p>
         ) : lowStock ? (
           <p className="mt-2 text-xs text-destructive">
-            Chỉ còn {snapshot.stock} sản phẩm
+            {t.cart.lowStock(snapshot.stock)}
           </p>
         ) : null}
 
@@ -111,7 +115,7 @@ export function CartLineItem({
           <div className="flex h-8 w-[5.5rem] shrink-0 items-center justify-between border border-border">
             <button
               type="button"
-              aria-label="Giảm số lượng"
+              aria-label={t.cart.decrease}
               onClick={() => setQuantity(line.itemId, line.quantity - 1)}
               className="flex size-8 cursor-pointer items-center justify-center text-muted-foreground hover:text-foreground"
             >
@@ -120,7 +124,7 @@ export function CartLineItem({
             <span className="text-[11px] font-medium">{line.quantity}</span>
             <button
               type="button"
-              aria-label="Tăng số lượng"
+              aria-label={t.cart.increase}
               onClick={() => setQuantity(line.itemId, line.quantity + 1)}
               className="flex size-8 cursor-pointer items-center justify-center text-muted-foreground hover:text-foreground"
             >

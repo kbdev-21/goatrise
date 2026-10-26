@@ -5,8 +5,7 @@ import {
   WORDMARK_MODE,
 } from "@/components/shared/brand-wordmark";
 import { isIntroDone, useIntroScroll } from "@/hooks/use-intro-scroll";
-
-const GREETING = ["Hey", "Goat,", "Ready", "to", "Rise?"];
+import { useT } from "@/i18n";
 
 /**
  * Màn mở đầu trang chủ: khung được ghim full màn hình (nội dung header ẩn), cuộn
@@ -18,6 +17,7 @@ const GREETING = ["Hey", "Goat,", "Ready", "to", "Rise?"];
  * sẵn bên dưới; khung nhả ra thì logo header hiện đúng chỗ đó, trao tay liền mạch.
  */
 export function IntroLeap({ children }: { children: ReactNode }) {
+  const t = useT();
   const ref = useIntroScroll<HTMLDivElement>();
 
   return (
@@ -40,7 +40,7 @@ export function IntroLeap({ children }: { children: ReactNode }) {
 
         {/* intro không có gì để bấm: bỏ bắt chuột để hero bên dưới bấm được */}
         <section
-          aria-label="Giới thiệu GOAT RISE"
+          aria-label={t.home.intro.ariaLabel}
           className="intro-scene pointer-events-none relative size-full"
         >
           <div data-intro-track className="intro-track flex h-full w-max">
@@ -70,12 +70,14 @@ export function IntroLeap({ children }: { children: ReactNode }) {
 }
 
 function Greeting() {
+  const t = useT();
+
   return (
     <p
-      aria-label="Hey Goat, ready to rise?"
+      aria-label={t.home.intro.greetingAriaLabel}
       className="flex shrink-0 items-center gap-[0.3em] px-[8vw] font-logo text-(length:--word) leading-none font-extrabold tracking-[-0.04em] uppercase"
     >
-      {GREETING.map((word) => (
+      {t.home.intro.greeting.map((word) => (
         <Letters key={word} word={word} />
       ))}
     </p>

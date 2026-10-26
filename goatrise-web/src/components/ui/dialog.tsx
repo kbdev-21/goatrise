@@ -2,6 +2,7 @@ import * as React from "react"
 import { Dialog as DialogPrimitive } from "radix-ui"
 import { XIcon } from "lucide-react"
 
+import { useT } from "@/i18n"
 import { cn } from "@/lib/utils"
 
 function Dialog({ ...props }: React.ComponentProps<typeof DialogPrimitive.Root>) {
@@ -47,6 +48,8 @@ function DialogContent({
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   showCloseButton?: boolean
 }) {
+  const t = useT()
+
   return (
     <DialogPrimitive.Portal data-slot="dialog-portal">
       <DialogOverlay />
@@ -66,7 +69,7 @@ function DialogContent({
             className="absolute top-3 right-3 flex size-9 items-center justify-center opacity-60 transition-[opacity,transform] duration-300 ease-smooth hover:rotate-90 hover:opacity-100 focus-visible:opacity-100"
           >
             <XIcon className="size-4" strokeWidth={1.75} />
-            <span className="sr-only">Đóng</span>
+            <span className="sr-only">{t.common.close}</span>
           </DialogPrimitive.Close>
         )}
       </DialogPrimitive.Content>

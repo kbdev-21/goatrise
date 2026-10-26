@@ -2,9 +2,11 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { findAllCollections } from "@/api/collection/api";
 import { findAllProducts } from "@/api/product/api";
+import { DEFAULT_LOCALE, LOCALES, localizePath } from "@/i18n";
 import { SITE_URL } from "@/lib/seo";
 
 type SitemapEntry = {
+  // đường dẫn nội bộ, chưa có tiền tố ngôn ngữ
   path: string;
   // ISO date (yyyy-mm-dd); bỏ trống với trang tĩnh
   lastmod?: string;
@@ -57,17 +59,36 @@ export const Route = createFileRoute("/sitemap.xml")({
             }),
         ];
 
+        // mỗi trang một <url> cho từng ngôn ngữ, kèm xhtml:link trỏ tới đủ các bản (hreflang)
         const urls = entries
-          .map(
-            ({ path, lastmod }) =>
-              `  <url><loc>${escapeXml(`${origin}${path}`)}</loc>${
-                lastmod ? `<lastmod>${lastmod}</lastmod>` : ""
-              }</url>`
-          )
+          .flatMap(({ path, lastmod }) => {
+            const alternates = [
+              ...LOCALES.map((locale) => ({
+                hreflang: locale,
+                href: `${origin}${localizePath(path, locale)}`,
+              })),
+              {
+                hreflang: "x-default",
+                href: `${origin}${localizePath(path, DEFAULT_LOCALE)}`,
+              },
+            ]
+              .map(
+                ({ hreflang, href }) =>
+                  `<xhtml:link rel="alternate" hreflang="${hreflang}" href="${escapeXml(href)}"/>`
+              )
+              .join("");
+
+            return LOCALES.map(
+              (locale) =>
+                `  <url><loc>${escapeXml(`${origin}${localizePath(path, locale)}`)}</loc>${
+                  lastmod ? `<lastmod>${lastmod}</lastmod>` : ""
+                }${alternates}</url>`
+            );
+          })
           .join("\n");
 
         const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
 ${urls}
 </urlset>
 `;

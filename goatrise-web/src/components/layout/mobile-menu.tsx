@@ -12,23 +12,25 @@ import {
 } from "@/components/ui/sheet";
 import { navItems } from "@/components/layout/nav-config";
 import { BrandWordmark } from "@/components/shared/brand-wordmark";
+import { useT } from "@/i18n";
 import { useCartStore } from "@/stores/cart.store";
 import { useSearchStore } from "@/stores/search.store";
 
 export function MobileMenu({ triggerClassName }: { triggerClassName?: string }) {
+  const t = useT();
   const openCart = useCartStore((s) => s.openCart);
   const openSearch = useSearchStore((s) => s.openSearch);
 
   const actions = [
-    { label: "Tìm kiếm", icon: Search, onClick: openSearch },
-    { label: "Tài khoản", icon: User, to: "/account" as const },
-    { label: "Giỏ hàng", icon: ShoppingCart, onClick: openCart },
+    { label: t.header.search, icon: Search, onClick: openSearch },
+    { label: t.header.account, icon: User, to: "/account" as const },
+    { label: t.header.cart, icon: ShoppingCart, onClick: openCart },
   ];
 
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <button type="button" aria-label="Menu" className={triggerClassName}>
+        <button type="button" aria-label={t.header.menu} className={triggerClassName}>
           <Menu className="size-[1.15rem]" strokeWidth={1.75} />
         </button>
       </SheetTrigger>
@@ -51,13 +53,13 @@ export function MobileMenu({ triggerClassName }: { triggerClassName?: string }) 
         {/* Nav chính */}
         <nav className="flex flex-col">
           {navItems.map((item) => (
-            <SheetClose key={item.label} asChild>
+            <SheetClose key={item.to} asChild>
               <Link
                 to={item.to}
                 activeOptions={{ exact: true }}
                 className="border-b border-border px-6 py-4 text-sm font-medium tracking-wide uppercase transition-colors hover:bg-muted data-[status=active]:text-foreground"
               >
-                {item.label}
+                {t.nav[item.key]}
               </Link>
             </SheetClose>
           ))}

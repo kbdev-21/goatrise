@@ -1,5 +1,6 @@
+// nhãn lấy theo key trong messages: t.nav[item.key]
 export const navItems = [
-  { label: "Sản phẩm", to: "/products" },
-  { label: "Bộ sưu tập", to: "/collections" },
-  { label: "Về chúng tôi", to: "/about" },
+  { key: "products", to: "/products" },
+  { key: "collections", to: "/collections" },
+  { key: "about", to: "/about" },
 ] as const;

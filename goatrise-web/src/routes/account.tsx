@@ -18,24 +18,36 @@ import {
 } from "@/components/ui/dialog";
 import { COUNTRIES } from "@/constant/countries";
 import { auth } from "@/core/auth";
+import {
+  LOCALES,
+  countryName,
+  formatDate,
+  getMessages,
+  localizePath,
+  useFormatPrice,
+  useLocale,
+  useLocalized,
+  useT,
+} from "@/i18n";
+import type { Locale } from "@/i18n";
 import { seo } from "@/lib/seo";
-import { cn, formatPrice, getColorName } from "@/lib/utils";
+import { cn, getColorName } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth.store";
 import { meQueryOptions } from "@/api/user/query-hooks";
 import { myOrdersInfiniteQueryOptions } from "@/api/order/query-hooks";
 import { useUpdateMyCustomer } from "@/api/customer/query-hooks";
 import type { UserDetail } from "@/api/user/api";
 import type { Customer } from "@/api/customer/api";
-import type {
-  Address,
-  Order,
-  OrderLineBase,
-  OrderPaymentMethod,
-  OrderPaymentStatus,
-} from "@/api/order/api";
+import type { Address, Order, OrderLineBase } from "@/api/order/api";
 
 export const Route = createFileRoute("/account")({
-  head: () => seo({ title: "Tài khoản", path: "/account", noindex: true }),
+  head: ({ match }) =>
+    seo({
+      locale: match.context.locale,
+      title: getMessages(match.context.locale).seo.account.title,
+      path: "/account",
+      noindex: true,
+    }),
   component: AccountPage,
 });
 
@@ -65,40 +77,19 @@ const INPUT_CLASS =
 
 const FIELD_LABEL_CLASS = "text-[11px] font-semibold tracking-widest uppercase";
 
-const COUNTRY_ITEMS = Object.entries(COUNTRIES).map(([code, country]) => ({
-  value: code,
-  label: country.viName,
-}));
+// danh sách quốc gia dựng sẵn cho từng ngôn ngữ
+const COUNTRY_ITEMS = Object.fromEntries(
+  LOCALES.map((locale) => [
+    locale,
+    Object.entries(COUNTRIES).map(([code, country]) => ({
+      value: code,
+      label: countryName(country, locale),
+    })),
+  ])
+) as Record<Locale, { value: string; label: string }[]>;
 
 const RETRY_CLASS =
   "cursor-pointer font-semibold text-foreground underline underline-offset-2 hover:opacity-70";
-
-const DATE_FORMAT = new Intl.DateTimeFormat("vi-VN", {
-  day: "2-digit",
-  month: "2-digit",
-  year: "numeric",
-});
-
-const DELIVERY_STATUS_LABELS: Record<Order["deliveryStatus"], string> = {
-  PENDING: "Đang chuẩn bị",
-  SHIPPING: "Đang giao",
-  DELIVERED: "Đã giao",
-  RETURNED: "Đã hoàn trả",
-};
-
-const PAYMENT_METHOD_LABELS: Record<OrderPaymentMethod, string> = {
-  COD: "Thanh toán khi nhận hàng (COD)",
-  MANUAL_TRANSFER: "Chuyển khoản",
-  MOMO: "MoMo",
-  VNPAY: "VNPay",
-  STRIPE: "Thẻ quốc tế",
-};
-
-const PAYMENT_STATUS_LABELS: Record<OrderPaymentStatus, string> = {
-  UNPAID: "Chưa thanh toán",
-  PAID: "Đã thanh toán",
-  REFUNDED: "Đã hoàn tiền",
-};
 
 function GoogleIcon({ className }: { className?: string }) {
   return (
@@ -136,6 +127,7 @@ function AccountPage() {
 // Header riêng của trang tài khoản (header chung của site đã ẩn ở __root),
 // cùng khung / cỡ chữ với header chung để chuyển trang không bị giật
 function AccountHeader() {
+  const t = useT();
   const [isPending, setIsPending] = useState(false);
 
   async function handleSignOut() {
@@ -150,7 +142,7 @@ function AccountHeader() {
       <div className="mx-auto flex h-14 w-full max-w-[1500px] items-center justify-between gap-4 px-5 md:h-16 lg:px-10">
         <Link
           to="/"
-          aria-label="GOAT RISE — về trang chủ"
+          aria-label={t.common.homeAriaLabel}
           className="-my-2 py-2 font-logo text-[1.75rem] font-extrabold uppercase md:text-[2.125rem]"
         >
           <BrandWordmark />
@@ -158,7 +150,7 @@ function AccountHeader() {
 
         <nav className="flex items-center gap-6">
           <Link to="/products" className={HEADER_ACTION_CLASS}>
-            <RollText label="Cửa hàng" />
+            <RollText label={t.account.shop} />
           </Link>
           <button
             type="button"
@@ -166,7 +158,9 @@ function AccountHeader() {
             disabled={isPending}
             className={HEADER_ACTION_CLASS}
           >
-            <RollText label={isPending ? "Đang đăng xuất…" : "Đăng xuất"} />
+            <RollText
+              label={isPending ? t.account.signingOut : t.account.signOut}
+            />
           </button>
         </nav>
       </div>
@@ -175,6 +169,8 @@ function AccountHeader() {
 }
 
 function SignInPanel() {
+  const t = useT();
+  const locale = useLocale();
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -186,13 +182,15 @@ function SignInPanel() {
     const { error: signInError } = await auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/account`,
+        // giữ ngôn ngữ: đăng nhập từ /en/account thì quay về /en/account
+        // (Supabase phải cho phép URL này trong danh sách Redirect URLs)
+        redirectTo: `${window.location.origin}${localizePath("/account", locale)}`,
       },
     });
 
     // thành công thì trình duyệt đã chuyển sang Google, chỉ lỗi mới quay lại đây
     if (signInError) {
-      setError("Không thể kết nối tới Google. Vui lòng thử lại.");
+      setError(t.account.googleError);
       setIsPending(false);
     }
   }
@@ -212,7 +210,7 @@ function SignInPanel() {
             aria-hidden
             className="size-3.5 transition-transform duration-300 group-hover:-translate-x-1"
           />
-          <RollText label="Về trang chủ" />
+          <RollText label={t.account.backHome} />
         </Link>
 
         <div className="mt-12 flex flex-col items-center">
@@ -227,10 +225,10 @@ function SignInPanel() {
         </div>
 
         <h1 className="mt-12 text-xl font-extrabold tracking-[-0.02em] uppercase">
-          Đăng nhập
+          {t.account.signIn}
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Trở thành thành viên của GOAT RISE
+          {t.account.signInSubtitle}
         </p>
 
         <button
@@ -242,7 +240,9 @@ function SignInPanel() {
           <GoogleIcon className="size-4" />
           <RollText
             label={
-              isPending ? "Đang chuyển tới Google…" : "Tiếp tục với Google"
+              isPending
+                ? t.account.redirectingToGoogle
+                : t.account.continueWithGoogle
             }
           />
         </button>
@@ -258,6 +258,7 @@ function SignInPanel() {
 }
 
 function SignedInPanel({ authUser }: { authUser: AuthUser }) {
+  const t = useT();
   // key theo id tài khoản Supabase: đổi tài khoản không dùng nhầm cache của người trước
   const meQuery = useQuery(meQueryOptions(authUser.id));
   const ordersQuery = useInfiniteQuery(
@@ -269,7 +270,7 @@ function SignedInPanel({ authUser }: { authUser: AuthUser }) {
       <AccountHeader />
 
       <section className="rise-fade mx-auto w-full max-w-[1500px] px-5 py-12 lg:px-10 lg:py-16">
-        <h1 className={HEADING_CLASS}>Tài khoản</h1>
+        <h1 className={HEADING_CLASS}>{t.account.title}</h1>
 
         <div className="mt-10 grid gap-12 lg:mt-12 lg:grid-cols-[20rem_minmax(0,1fr)] lg:gap-16">
           <ProfilePanel
@@ -307,6 +308,9 @@ function ProfilePanel({
   isError: boolean;
   onRetry: () => void;
 }) {
+  const t = useT();
+  const locale = useLocale();
+  const formatPrice = useFormatPrice();
   // backend chưa trả về thì tạm dùng thông tin Google trong session để không nháy trống
   const fullName: string | undefined =
     me?.fullName ||
@@ -347,7 +351,7 @@ function ProfilePanel({
       {/* thông tin mua hàng: lấy từ customer, sửa qua dialog */}
       <div className="mt-8 border-t border-border pt-5">
         <div className="flex items-center justify-between gap-4">
-          <h2 className={SECTION_TITLE_CLASS}>Thông tin mua hàng</h2>
+          <h2 className={SECTION_TITLE_CLASS}>{t.account.purchaseInfo}</h2>
           {/* chưa có customer vẫn cho cập nhật: backend upsert, tạo customer theo email */}
           {me ? (
             <CustomerInfoDialog
@@ -367,16 +371,16 @@ function ProfilePanel({
         ) : customer ? (
           <>
             <dl className="mt-4 flex flex-col gap-2.5 text-xs">
-              <InfoRow label="Họ và tên" value={customer.name} />
+              <InfoRow label={t.form.fullName} value={customer.name} />
               <InfoRow
-                label="Số điện thoại"
-                value={customer.phoneNum ?? "Chưa cập nhật"}
+                label={t.form.phone}
+                value={customer.phoneNum ?? t.account.notUpdated}
                 muted={!customer.phoneNum}
               />
             </dl>
 
             <div className="mt-4 text-xs">
-              <p className="text-muted-foreground">Địa chỉ</p>
+              <p className="text-muted-foreground">{t.account.address}</p>
               {customer.addresses.length > 0 ? (
                 <ul className="mt-2 flex flex-col gap-2">
                   {customer.addresses.map((address, index) => (
@@ -384,21 +388,20 @@ function ProfilePanel({
                       key={index}
                       className="border border-border px-3 py-2.5 leading-relaxed"
                     >
-                      {formatAddress(address)}
+                      {formatAddress(address, locale)}
                     </li>
                   ))}
                 </ul>
               ) : (
                 <p className="mt-1.5 text-muted-foreground">
-                  Chưa có địa chỉ nào.
+                  {t.account.noAddress}
                 </p>
               )}
             </div>
           </>
         ) : me ? (
           <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
-            Bạn chưa có thông tin mua hàng. Bấm cập nhật để thêm tên, số điện
-            thoại và địa chỉ nhận hàng.
+            {t.account.noPurchaseInfo}
           </p>
         ) : null}
       </div>
@@ -406,11 +409,11 @@ function ProfilePanel({
       {customer ? (
         <dl className="mt-8 flex flex-col gap-2.5 border-t border-border pt-5 text-xs">
           <InfoRow
-            label="Tổng đơn hàng"
+            label={t.account.totalOrders}
             value={String(customer.totalOrders)}
           />
           <InfoRow
-            label="Tổng chi tiêu"
+            label={t.account.totalSpent}
             value={formatPrice(customer.totalSpent)}
           />
         </dl>
@@ -418,9 +421,9 @@ function ProfilePanel({
 
       {isError ? (
         <p role="alert" className="mt-5 text-xs text-destructive">
-          Không tải được thông tin tài khoản.{" "}
+          {t.account.loadProfileError}{" "}
           <button type="button" onClick={onRetry} className={RETRY_CLASS}>
-            Thử lại
+            {t.common.retry}
           </button>
         </p>
       ) : null}
@@ -437,13 +440,14 @@ function CustomerInfoDialog({
   customer: Customer | null;
   defaultName: string;
 }) {
+  const t = useT();
   const [isOpen, setIsOpen] = useState(false);
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <button type="button" className={HEADER_ACTION_CLASS}>
-          <RollText label="Cập nhật" />
+          <RollText label={t.common.update} />
         </button>
       </DialogTrigger>
       {/* Radix chỉ mount nội dung khi mở => form khởi tạo lại từ customer mới nhất mỗi lần mở */}
@@ -480,6 +484,8 @@ function CustomerInfoForm({
   defaultName: string;
   onDone: () => void;
 }) {
+  const t = useT();
+  const locale = useLocale();
   const nextKey = useRef(0);
   const [name, setName] = useState(customer?.name ?? defaultName);
   const [phoneNum, setPhoneNum] = useState(customer?.phoneNum ?? "");
@@ -527,16 +533,16 @@ function CustomerInfoForm({
     const trimmedPhoneNum = phoneNum.trim();
 
     if (!trimmedName) {
-      setFormError("Vui lòng nhập họ và tên.");
+      setFormError(t.form.nameRequired);
       return;
     }
     // backend không cho xoá SĐT (chỉ sửa): đã có rồi thì không được để trống
     if (!trimmedPhoneNum && customer?.phoneNum) {
-      setFormError("Vui lòng nhập số điện thoại.");
+      setFormError(t.form.phoneRequired);
       return;
     }
     if (trimmedPhoneNum.length > 20) {
-      setFormError("Số điện thoại không hợp lệ.");
+      setFormError(t.account.errors.phoneInvalid);
       return;
     }
 
@@ -544,11 +550,11 @@ function CustomerInfoForm({
     for (const [index, draft] of addresses.entries()) {
       const provinces = getProvinces(draft.countryCode);
       if (provinces && !draft.provinceCode) {
-        setFormError(`Địa chỉ ${index + 1}: vui lòng chọn tỉnh / thành phố.`);
+        setFormError(t.account.errors.provinceRequired(index + 1));
         return;
       }
       if (!draft.address.trim()) {
-        setFormError(`Địa chỉ ${index + 1}: vui lòng nhập địa chỉ chi tiết.`);
+        setFormError(t.account.errors.addressRequired(index + 1));
         return;
       }
       nextAddresses.push({
@@ -571,7 +577,7 @@ function CustomerInfoForm({
           setFormError(
             isAxiosError(error) && typeof error.response?.data === "string"
               ? error.response.data
-              : "Cập nhật thất bại. Vui lòng thử lại."
+              : t.account.errors.updateFailed
           );
         },
       }
@@ -581,9 +587,9 @@ function CustomerInfoForm({
   return (
     <form onSubmit={handleSubmit} noValidate className="flex flex-col">
       <div className="border-b border-border px-6 py-5 pr-14">
-        <DialogTitle>Thông tin mua hàng</DialogTitle>
+        <DialogTitle>{t.account.purchaseInfo}</DialogTitle>
         <DialogDescription className="mt-1.5">
-          Tên, số điện thoại và địa chỉ nhận hàng của bạn.
+          {t.account.purchaseInfoDescription}
         </DialogDescription>
       </div>
 
@@ -591,19 +597,19 @@ function CustomerInfoForm({
         disabled={updateMutation.isPending}
         className="flex flex-col gap-5 px-6 py-6"
       >
-        <FormField label="Họ và tên" htmlFor="customer-name">
+        <FormField label={t.form.fullName} htmlFor="customer-name">
           <input
             id="customer-name"
             value={name}
             onChange={(e) => setName(e.target.value)}
             autoComplete="name"
             maxLength={100}
-            placeholder="Nguyễn Văn A"
+            placeholder={t.form.namePlaceholder}
             className={INPUT_CLASS}
           />
         </FormField>
 
-        <FormField label="Số điện thoại" htmlFor="customer-phone">
+        <FormField label={t.form.phone} htmlFor="customer-phone">
           <input
             id="customer-phone"
             type="tel"
@@ -612,13 +618,13 @@ function CustomerInfoForm({
             onChange={(e) => setPhoneNum(e.target.value)}
             autoComplete="tel"
             maxLength={20}
-            placeholder="0912 345 678"
+            placeholder={t.form.phonePlaceholder}
             className={INPUT_CLASS}
           />
         </FormField>
 
         <div className="flex flex-col gap-3">
-          <p className={FIELD_LABEL_CLASS}>Địa chỉ</p>
+          <p className={FIELD_LABEL_CLASS}>{t.account.address}</p>
 
           {addresses.map((draft, index) => {
             const provinces = getProvinces(draft.countryCode);
@@ -631,12 +637,12 @@ function CustomerInfoForm({
               >
                 <div className="flex items-center justify-between gap-3">
                   <span className="text-[11px] font-semibold tracking-widest text-muted-foreground uppercase">
-                    Địa chỉ {index + 1}
+                    {t.account.addressN(index + 1)}
                   </span>
                   <button
                     type="button"
                     onClick={() => removeAddress(draft.key)}
-                    aria-label={`Xoá địa chỉ ${index + 1}`}
+                    aria-label={t.account.removeAddressN(index + 1)}
                     className="-m-1.5 cursor-pointer p-1.5 text-muted-foreground transition-colors hover:text-foreground"
                   >
                     <X className="size-3.5" />
@@ -646,7 +652,7 @@ function CustomerInfoForm({
                 <Combobox
                   id={`${idPrefix}-country`}
                   modal
-                  items={COUNTRY_ITEMS}
+                  items={COUNTRY_ITEMS[locale]}
                   value={draft.countryCode}
                   onChange={(code) =>
                     updateAddress(draft.key, {
@@ -655,8 +661,8 @@ function CustomerInfoForm({
                       provinceName: "",
                     })
                   }
-                  placeholder="Chọn quốc gia"
-                  searchPlaceholder="Tìm quốc gia…"
+                  placeholder={t.form.countryPlaceholder}
+                  searchPlaceholder={t.form.countrySearch}
                 />
 
                 {provinces ? (
@@ -674,20 +680,20 @@ function CustomerInfoForm({
                         provinceName: provinces[code] ?? "",
                       })
                     }
-                    placeholder="Chọn tỉnh / thành phố"
-                    searchPlaceholder="Tìm tỉnh / thành phố…"
+                    placeholder={t.form.provincePlaceholder}
+                    searchPlaceholder={t.form.provinceSearch}
                   />
                 ) : null}
 
                 <input
                   id={`${idPrefix}-detail`}
-                  aria-label={`Địa chỉ chi tiết ${index + 1}`}
+                  aria-label={t.account.addressDetailN(index + 1)}
                   value={draft.address}
                   onChange={(e) =>
                     updateAddress(draft.key, { address: e.target.value })
                   }
                   autoComplete="street-address"
-                  placeholder="Số nhà, tên đường, phường / xã, quận / huyện"
+                  placeholder={t.form.addressPlaceholder}
                   className={INPUT_CLASS}
                 />
               </div>
@@ -700,7 +706,7 @@ function CustomerInfoForm({
             className="flex h-11 cursor-pointer items-center justify-center gap-2 border border-dashed border-border text-[10px] font-bold tracking-[0.18em] text-muted-foreground uppercase transition-colors duration-300 hover:border-foreground hover:text-foreground"
           >
             <Plus className="size-3.5" />
-            Thêm địa chỉ
+            {t.account.addAddress}
           </button>
         </div>
       </fieldset>
@@ -719,7 +725,7 @@ function CustomerInfoForm({
               disabled={updateMutation.isPending}
               className={cn(SECONDARY_CLASS, "flex-1")}
             >
-              <RollText label="Huỷ" />
+              <RollText label={t.common.cancel} />
             </button>
           </DialogClose>
           <button
@@ -728,7 +734,7 @@ function CustomerInfoForm({
             className={cn(PRIMARY_CLASS, "flex-1")}
           >
             <RollText
-              label={updateMutation.isPending ? "Đang lưu…" : "Lưu"}
+              label={updateMutation.isPending ? t.common.saving : t.common.save}
             />
           </button>
         </div>
@@ -773,10 +779,12 @@ function OrdersPanel({
   isLoadMoreError: boolean;
   onLoadMore: () => void;
 }) {
+  const t = useT();
+
   return (
     <div className="min-w-0">
       <div className="border-b border-border pb-4">
-        <h2 className={SECTION_TITLE_CLASS}>Đơn hàng của tôi</h2>
+        <h2 className={SECTION_TITLE_CLASS}>{t.account.myOrders}</h2>
       </div>
 
       {isPending ? (
@@ -789,18 +797,18 @@ function OrdersPanel({
         // lỗi ở lần tải đầu (chưa có trang nào); lỗi khi tải thêm thì giữ list, báo ở dưới
 
         <p role="alert" className="mt-6 text-xs text-destructive">
-          Không tải được đơn hàng.{" "}
+          {t.account.loadOrdersError}{" "}
           <button type="button" onClick={onRetry} className={RETRY_CLASS}>
-            Thử lại
+            {t.common.retry}
           </button>
         </p>
       ) : orders.length === 0 ? (
         <div className="mt-6 flex flex-col items-center gap-6 border border-border px-6 py-14 text-center">
           <p className="text-sm text-muted-foreground">
-            Bạn chưa có đơn hàng nào.
+            {t.account.noOrders}
           </p>
           <Link to="/products" className={cn(PRIMARY_CLASS, "w-auto px-8")}>
-            <RollText label="Mua sắm ngay" />
+            <RollText label={t.account.shopNow} />
           </Link>
         </div>
       ) : (
@@ -817,7 +825,7 @@ function OrdersPanel({
             <div className="mt-6 flex flex-col items-center gap-3">
               {isLoadMoreError ? (
                 <p role="alert" className="text-xs text-destructive">
-                  Không tải thêm được đơn hàng.
+                  {t.account.loadMoreError}
                 </p>
               ) : null}
               <button
@@ -829,10 +837,10 @@ function OrdersPanel({
                 <RollText
                   label={
                     isLoadingMore
-                      ? "Đang tải…"
+                      ? t.common.loading
                       : isLoadMoreError
-                        ? "Thử lại"
-                        : "Xem thêm"
+                        ? t.common.retry
+                        : t.account.loadMore
                   }
                 />
               </button>
@@ -845,6 +853,9 @@ function OrdersPanel({
 }
 
 function OrderCard({ order }: { order: Order }) {
+  const t = useT();
+  const locale = useLocale();
+  const formatPrice = useFormatPrice();
   const [isOpen, setIsOpen] = useState(false);
 
   const itemCount = order.lines.reduce((sum, line) => sum + line.quantity, 0);
@@ -861,7 +872,7 @@ function OrderCard({ order }: { order: Order }) {
         className="grid w-full cursor-pointer grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-x-4 gap-y-1.5 px-5 py-4 text-left transition-colors duration-300 hover:bg-muted/40"
       >
         <span className="truncate text-xs font-bold tracking-widest uppercase">
-          Đơn {order.code}
+          {t.order.code(order.code)}
         </span>
         <OrderStatusBadge order={order} />
         <ChevronDown
@@ -872,8 +883,8 @@ function OrderCard({ order }: { order: Order }) {
           )}
         />
         <span className="truncate text-xs text-muted-foreground">
-          {DATE_FORMAT.format(new Date(order.createdAt))} · {itemCount} sản
-          phẩm
+          {formatDate(order.createdAt, locale)} ·{" "}
+          {t.common.productCount(itemCount)}
         </span>
         <span className="justify-self-end text-sm font-medium whitespace-nowrap">
           {formatPrice(order.totalAmount)}
@@ -890,7 +901,7 @@ function OrderCard({ order }: { order: Order }) {
 
           <div className="grid gap-6 border-t border-border px-5 py-5 md:grid-cols-2 md:gap-10">
             <div className="flex flex-col gap-5 text-xs">
-              <InfoBlock title="Người nhận">
+              <InfoBlock title={t.account.recipient}>
                 <p className="font-medium">{order.customerName}</p>
                 {order.customerPhoneNum ? (
                   <p className="text-muted-foreground">
@@ -899,62 +910,62 @@ function OrderCard({ order }: { order: Order }) {
                 ) : null}
                 {order.customerAddress ? (
                   <p className="text-muted-foreground">
-                    {formatAddress(order.customerAddress)}
+                    {formatAddress(order.customerAddress, locale)}
                   </p>
                 ) : null}
               </InfoBlock>
-              <InfoBlock title="Thanh toán">
+              <InfoBlock title={t.account.payment}>
                 <p className="font-medium">
-                  {PAYMENT_METHOD_LABELS[order.paymentMethod]}
+                  {t.order.paymentMethod[order.paymentMethod]}
                 </p>
                 <p className="text-muted-foreground">
-                  {PAYMENT_STATUS_LABELS[order.paymentStatus]}
+                  {t.order.paymentStatus[order.paymentStatus]}
                 </p>
               </InfoBlock>
             </div>
 
             <dl className="flex flex-col gap-2 text-xs">
               <InfoRow
-                label="Tạm tính"
+                label={t.order.subtotal}
                 value={formatPrice(order.subtotalAmount)}
               />
               {order.couponDiscountAmount > 0 ? (
                 <InfoRow
                   label={
                     order.coupon
-                      ? `Giảm giá (mã ${order.coupon.code})`
-                      : "Giảm giá (mã)"
+                      ? t.order.couponDiscountWithCode(order.coupon.code)
+                      : t.order.couponDiscount
                   }
                   value={`-${formatPrice(order.couponDiscountAmount)}`}
                 />
               ) : null}
               {order.comboDiscountAmount > 0 ? (
                 <InfoRow
-                  label="Giảm giá (combo)"
+                  label={t.order.comboDiscount}
                   value={`-${formatPrice(order.comboDiscountAmount)}`}
                 />
               ) : null}
               {order.manualDiscountAmount > 0 ? (
                 <InfoRow
-                  label="Giảm giá khác"
+                  label={t.order.otherDiscount}
                   value={`-${formatPrice(order.manualDiscountAmount)}`}
                 />
               ) : null}
               <InfoRow
-                label="Phí vận chuyển"
+                label={t.order.shipping}
                 value={
                   order.shippingAmount > 0
                     ? formatPrice(order.shippingAmount)
-                    : "Miễn phí"
+                    : t.order.free
                 }
                 muted={order.shippingAmount === 0}
               />
               {order.taxAmount > 0 ? (
-                <InfoRow label="Thuế" value={formatPrice(order.taxAmount)} />
+                <InfoRow label={t.order.tax} value={formatPrice(order.taxAmount)} />
               ) : null}
               <div className="mt-2 flex items-baseline justify-between border-t border-border pt-3">
                 <dt className="font-bold tracking-widest uppercase">
-                  Tổng cộng
+                  {t.order.total}
                 </dt>
                 <dd className="text-sm font-medium">
                   {formatPrice(order.totalAmount)}
@@ -969,9 +980,11 @@ function OrderCard({ order }: { order: Order }) {
 }
 
 function OrderLineRow({ line }: { line: OrderLineBase }) {
+  const l = useLocalized();
+  const formatPrice = useFormatPrice();
   const { snapItem } = line;
   const image = snapItem.imgUrl ?? snapItem.product?.imgUrls?.[0] ?? null;
-  const title = snapItem.product?.title.vi ?? snapItem.name;
+  const title = snapItem.product ? l(snapItem.product.title) : snapItem.name;
   const color = snapItem.attributeValues.COLOR;
   const variant =
     [color ? getColorName(color) : null, snapItem.attributeValues.SIZE]
@@ -1016,15 +1029,16 @@ function OrderLineRow({ line }: { line: OrderLineBase }) {
 }
 
 function OrderStatusBadge({ order }: { order: Order }) {
+  const t = useT();
   // huỷ / chờ xác nhận ưu tiên hơn tình trạng giao hàng
   const isCancelled = order.status === "CANCELLED";
   const isDelivered =
     order.status === "CONFIRMED" && order.deliveryStatus === "DELIVERED";
   const label = isCancelled
-    ? "Đã huỷ"
+    ? t.order.status.cancelled
     : order.status === "PENDING"
-      ? "Chờ xác nhận"
-      : DELIVERY_STATUS_LABELS[order.deliveryStatus];
+      ? t.order.status.pending
+      : t.order.deliveryStatus[order.deliveryStatus];
 
   return (
     <span
@@ -1091,12 +1105,15 @@ function getProvinces(countryCode: string): Record<string, string> | undefined {
   return countries[countryCode]?.provinces;
 }
 
-function formatAddress(address: Address): string {
-  const countries: Partial<Record<string, { viName: string }>> = COUNTRIES;
+function formatAddress(address: Address, locale: Locale): string {
+  const countries: Partial<
+    Record<string, { viName: string; enName: string }>
+  > = COUNTRIES;
+  const country = countries[address.countryCode];
   return [
     address.address,
     address.provinceName,
-    countries[address.countryCode]?.viName,
+    country ? countryName(country, locale) : undefined,
   ]
     .filter(Boolean)
     .join(", ");

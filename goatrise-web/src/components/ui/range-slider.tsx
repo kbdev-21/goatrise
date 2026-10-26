@@ -1,5 +1,6 @@
 import { Slider as SliderPrimitive } from "radix-ui";
 
+import { useT } from "@/i18n";
 import { cn } from "@/lib/utils";
 
 export type Range = [number, number];
@@ -12,7 +13,7 @@ export function RangeSlider({
   step = 1,
   onValueChange,
   onValueCommit,
-  thumbLabels = ["Giá trị nhỏ nhất", "Giá trị lớn nhất"],
+  thumbLabels: thumbLabelsProp,
   className,
 }: {
   value: Range;
@@ -26,6 +27,12 @@ export function RangeSlider({
   thumbLabels?: [string, string];
   className?: string;
 }) {
+  const t = useT();
+  const thumbLabels = thumbLabelsProp ?? [
+    t.ui.rangeSlider.min,
+    t.ui.rangeSlider.max,
+  ];
+
   return (
     <SliderPrimitive.Root
       value={value}

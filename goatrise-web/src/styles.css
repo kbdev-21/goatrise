@@ -202,6 +202,21 @@
     opacity: 0;
   }
 
+  /* Nút chuyển ngôn ngữ / tiền tệ ẩn cùng lúc với nội dung header khi đang ở intro
+     (bám theo data-intro của header nên SSR, focus bàn phím... đều khớp với header).
+     visibility để không tab trúng nút đang ẩn */
+  .locale-switcher {
+    transition:
+      opacity 0.6s var(--ease-smooth),
+      visibility 0.6s var(--ease-smooth);
+  }
+
+  body:has(.header-shell[data-intro]) .locale-switcher {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
   /* Chữ trượt lên từ sau một mặt nạ — dùng cho tiêu đề hero, logo */
   .rise-mask {
     display: inline-block;
@@ -451,7 +466,8 @@
   }
 
   .header-shell,
-  .header-shell [data-header-bar] > * {
+  .header-shell [data-header-bar] > *,
+  .locale-switcher {
     transition: none;
   }
 

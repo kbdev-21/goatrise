@@ -1,7 +1,8 @@
 import { Link } from "@tanstack/react-router";
 
 import type { Product } from "@/api/product/api";
-import { cn, formatPrice } from "@/lib/utils";
+import { useFormatPrice, useLocalized, useT } from "@/i18n";
+import { cn } from "@/lib/utils";
 
 export function ProductCard({
   product,
@@ -10,6 +11,9 @@ export function ProductCard({
   product: Product;
   className?: string;
 }) {
+  const t = useT();
+  const l = useLocalized();
+  const formatPrice = useFormatPrice();
   const images = product.imgUrls ?? [];
   const hoverImage = images[1]; // ảnh thứ 2 fade lên khi hover (nếu có)
 
@@ -35,7 +39,7 @@ export function ProductCard({
             {/* lớp nền: ảnh đầu, cố định, luôn đục 100% */}
             <img
               src={images[0]}
-              alt={product.title.vi}
+              alt={l(product.title)}
               loading="lazy"
               className="absolute inset-0 size-full object-cover"
             />
@@ -43,7 +47,7 @@ export function ProductCard({
             {hoverImage ? (
               <img
                 src={hoverImage}
-                alt={product.title.vi}
+                alt={l(product.title)}
                 loading="lazy"
                 className="absolute inset-0 size-full object-cover opacity-0 transition-opacity duration-300 ease-in-out group-hover:opacity-100"
               />
@@ -51,17 +55,17 @@ export function ProductCard({
           </>
         ) : (
           <div className="flex size-full items-center justify-center text-xs text-muted-foreground">
-            Chưa có ảnh
+            {t.common.noImage}
           </div>
         )}
       </div>
 
       <div className="mt-3 space-y-1.5">
         <h3 className="truncate text-[13px] font-bold tracking-[0.04em] uppercase opacity-80 transition-opacity duration-300 group-hover:opacity-100">
-          {product.title.vi}
+          {l(product.title)}
         </h3>
         <p className="text-sm text-muted-foreground">
-          {price === null ? "Liên hệ" : formatPrice(price)}
+          {price === null ? t.common.contactForPrice : formatPrice(price)}
         </p>
         {colors.length > 0 ? (
           <div className="flex items-center gap-1.5 pt-0.5">

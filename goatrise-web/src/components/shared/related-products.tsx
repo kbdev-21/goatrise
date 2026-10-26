@@ -9,6 +9,7 @@ import { collectionQueryOptions } from "@/api/collection/query-hooks";
 import { ProductCard } from "@/components/shared/product-card";
 import { RollText } from "@/components/shared/roll-text";
 import { useReveal } from "@/hooks/use-reveal";
+import { useT } from "@/i18n";
 
 const RELATED_LIMIT = 4;
 
@@ -53,6 +54,7 @@ function RelatedGrid({
   products: Product[];
   source: CollectionBase;
 }) {
+  const t = useT();
   const ref = useReveal<HTMLElement>();
 
   return (
@@ -62,7 +64,7 @@ function RelatedGrid({
     >
       <div data-reveal className="flex items-end justify-between gap-6">
         <h2 className="font-logo text-[clamp(1.5rem,4vw,2.75rem)] leading-none font-extrabold tracking-[-0.03em] uppercase">
-          Có thể bạn cũng thích
+          {t.product.related}
         </h2>
 
         <Link
@@ -70,7 +72,7 @@ function RelatedGrid({
           params={{ id: source.id }}
           className="group shrink-0 pb-1 text-[11px] font-bold tracking-[0.14em] uppercase opacity-55 transition-opacity duration-300 hover:opacity-100 focus-visible:opacity-100"
         >
-          <RollText label="Xem tất cả" />
+          <RollText label={t.common.seeAll} />
         </Link>
       </div>
 
