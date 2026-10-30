@@ -169,7 +169,18 @@ export const en: Messages = {
   },
 
   about: {
+    eyebrow: "Goat Rise · Est. 2026",
     title: "About us",
+    heading: ["Activewear", "& Classic", "For Life"],
+    story: [
+      "GOAT RISE is a Vietnamese activewear and classic fashion brand, born from a simple idea: training clothes shouldn't only look good on the court, and everyday clothes shouldn't be afraid to move.",
+      "We take our cues from classic sportswear, the tipped polos and clean-cut shorts of the tennis court, and rework them in fabrics and fits made for life today: breathable, durable, easy to style, from a morning session to an evening out.",
+    ],
+    imageAlt: ["GOAT RISE on the tennis court", "GOAT RISE polo and skirt"],
+    closingEyebrow: "Hey Goat,",
+    closingTitle: "Ready to rise?",
+    shop: "Shop products",
+    follow: "Follow on Instagram",
   },
 
   form: {

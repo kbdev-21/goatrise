@@ -162,7 +162,20 @@ export const vi = {
   },
 
   about: {
+    eyebrow: "Goat Rise · Est. 2026",
     title: "Về chúng tôi",
+    // mỗi phần tử là một dòng
+    heading: ["Activewear", "& Classic", "For Life"],
+    // mỗi phần tử là một đoạn
+    story: [
+      "GOAT RISE là thương hiệu hoạt phục và thời trang cổ điển Việt Nam, bắt đầu từ một ý nghĩ đơn giản: đồ tập không nên chỉ đẹp trên sân, và đồ mặc hằng ngày không nên ngại vận động.",
+      "Chúng tôi lấy cảm hứng từ tinh thần thể thao cổ điển, những chiếc polo viền cổ và quần short gọn gàng của sân quần vợt, rồi làm lại bằng chất liệu và phom dáng hợp với nhịp sống hôm nay: thoáng, bền, dễ phối, mặc được từ buổi tập sáng đến cuộc hẹn tối.",
+    ],
+    imageAlt: ["GOAT RISE trên sân quần vợt", "Polo và chân váy GOAT RISE"],
+    closingEyebrow: "Hey Goat,",
+    closingTitle: "Ready to rise?",
+    shop: "Xem sản phẩm",
+    follow: "Theo dõi Instagram",
   },
 
   // ô nhập dùng chung cho form thanh toán và form thông tin mua hàng (tài khoản)
@@ -333,13 +346,13 @@ export const vi = {
         "Bộ sưu tập đầu tiên của GOAT RISE - hoạt phục và thời trang cổ điển được thiết kế để đồng hành cùng bạn mỗi ngày.",
     },
     featuredProducts: {
-      title: "Featured Products",
+      title: "Sản phẩm nổi bật",
     },
     featuredCollections: {
       cta: "Shop now",
     },
     collectionStack: {
-      title: "Collections",
+      title: "Bộ sưu tập",
     },
     brandIntro: {
       manifesto:
