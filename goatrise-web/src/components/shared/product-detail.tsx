@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { Minus, Plus } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { ChevronRight, Minus, Plus } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination } from "swiper/modules";
 import "swiper/css";
@@ -140,7 +141,17 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
               )}
             </Accordion>
             <Accordion title={t.product.policy}>
-              <p className="text-muted-foreground">{t.product.updating}</p>
+              <ul className="list-disc space-y-3 pl-4">
+                {t.product.policySummary.map((summary) => (
+                  <li key={summary}>{summary}</li>
+                ))}
+              </ul>
+              <Link
+                to="/policies"
+                className="mt-4 inline-block font-medium underline underline-offset-4 transition-opacity hover:opacity-60"
+              >
+                {t.product.fullPolicy}
+              </Link>
             </Accordion>
           </div>
         </div>
@@ -389,15 +400,13 @@ function Accordion({
         <span className="text-xs font-bold tracking-widest uppercase">
           {title}
         </span>
-        <span className="relative size-2.5 shrink-0">
-          <span className="absolute top-1/2 left-1/2 h-0.5 w-2.5 -translate-x-1/2 -translate-y-1/2 bg-current" />
-          <span
-            className={cn(
-              "absolute top-1/2 left-1/2 h-2.5 w-0.5 -translate-x-1/2 -translate-y-1/2 bg-current transition-transform duration-300 ease-out",
-              open ? "scale-y-0" : "scale-y-100"
-            )}
-          />
-        </span>
+        <ChevronRight
+          aria-hidden="true"
+          className={cn(
+            "size-4 shrink-0 transition-transform duration-300 ease-smooth motion-reduce:transition-none",
+            open ? "rotate-90" : "rotate-0"
+          )}
+        />
       </button>
       <div
         className={cn(

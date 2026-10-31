@@ -116,6 +116,12 @@ export const vi = {
   product: {
     details: "Thông tin chi tiết",
     policy: "Chính sách",
+    policySummary: [
+      "Hỗ trợ đổi kích cỡ hoặc sản phẩm cùng mẫu trong 3 ngày kể từ ngày mua, với sản phẩm chưa sử dụng, chưa giặt và còn nguyên tem mác. Không áp dụng hoàn tiền khi đổi hàng.",
+      "Hỗ trợ trả hàng trong 3 ngày kể từ ngày mua đối với sản phẩm có lỗi từ GOAT RISE.",
+      "Giao hàng toàn quốc, thanh toán khi nhận hàng (COD). Phí vận chuyển được hiển thị tại bước thanh toán.",
+    ],
+    fullPolicy: "Xem chính sách đầy đủ",
     updating: "Đang cập nhật.",
     color: "Màu sắc",
     size: "Size",

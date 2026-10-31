@@ -121,6 +121,12 @@ export const en: Messages = {
   product: {
     details: "Details",
     policy: "Policies",
+    policySummary: [
+      "We offer exchanges for another size or the same style within 3 days of purchase. Please keep items unused, unwashed and with original tags attached. Refunds are not available for exchanges.",
+      "We accept returns within 3 days of purchase for items with defects caused by GOAT RISE.",
+      "Delivery is available throughout Vietnam with cash on delivery (COD). Shipping fees are shown at checkout.",
+    ],
+    fullPolicy: "View full policies",
     updating: "Coming soon.",
     color: "Color",
     size: "Size",
