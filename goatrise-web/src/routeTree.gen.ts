@@ -19,6 +19,9 @@ import { Route as AccountRouteImport } from './routes/account'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProductsSlugRouteImport } from './routes/products_.$slug'
+import { Route as PoliciesWarrantyRouteImport } from './routes/policies_.warranty'
+import { Route as PoliciesReturnsRouteImport } from './routes/policies_.returns'
+import { Route as PoliciesPaymentRouteImport } from './routes/policies_.payment'
 import { Route as CollectionsIdRouteImport } from './routes/collections_.$id'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -71,6 +74,21 @@ const ProductsSlugRoute = ProductsSlugRouteImport.update({
   path: '/products/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PoliciesWarrantyRoute = PoliciesWarrantyRouteImport.update({
+  id: '/policies_/warranty',
+  path: '/policies/warranty',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PoliciesReturnsRoute = PoliciesReturnsRouteImport.update({
+  id: '/policies_/returns',
+  path: '/policies/returns',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PoliciesPaymentRoute = PoliciesPaymentRouteImport.update({
+  id: '/policies_/payment',
+  path: '/policies/payment',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CollectionsIdRoute = CollectionsIdRouteImport.update({
   id: '/collections_/$id',
   path: '/collections/$id',
@@ -88,6 +106,9 @@ export interface FileRoutesByFullPath {
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/collections/$id': typeof CollectionsIdRoute
+  '/policies/payment': typeof PoliciesPaymentRoute
+  '/policies/returns': typeof PoliciesReturnsRoute
+  '/policies/warranty': typeof PoliciesWarrantyRoute
   '/products/$slug': typeof ProductsSlugRoute
 }
 export interface FileRoutesByTo {
@@ -101,6 +122,9 @@ export interface FileRoutesByTo {
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/collections/$id': typeof CollectionsIdRoute
+  '/policies/payment': typeof PoliciesPaymentRoute
+  '/policies/returns': typeof PoliciesReturnsRoute
+  '/policies/warranty': typeof PoliciesWarrantyRoute
   '/products/$slug': typeof ProductsSlugRoute
 }
 export interface FileRoutesById {
@@ -115,6 +139,9 @@ export interface FileRoutesById {
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/collections_/$id': typeof CollectionsIdRoute
+  '/policies_/payment': typeof PoliciesPaymentRoute
+  '/policies_/returns': typeof PoliciesReturnsRoute
+  '/policies_/warranty': typeof PoliciesWarrantyRoute
   '/products_/$slug': typeof ProductsSlugRoute
 }
 export interface FileRouteTypes {
@@ -130,6 +157,9 @@ export interface FileRouteTypes {
     | '/robots.txt'
     | '/sitemap.xml'
     | '/collections/$id'
+    | '/policies/payment'
+    | '/policies/returns'
+    | '/policies/warranty'
     | '/products/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -143,6 +173,9 @@ export interface FileRouteTypes {
     | '/robots.txt'
     | '/sitemap.xml'
     | '/collections/$id'
+    | '/policies/payment'
+    | '/policies/returns'
+    | '/policies/warranty'
     | '/products/$slug'
   id:
     | '__root__'
@@ -156,6 +189,9 @@ export interface FileRouteTypes {
     | '/robots.txt'
     | '/sitemap.xml'
     | '/collections_/$id'
+    | '/policies_/payment'
+    | '/policies_/returns'
+    | '/policies_/warranty'
     | '/products_/$slug'
   fileRoutesById: FileRoutesById
 }
@@ -170,6 +206,9 @@ export interface RootRouteChildren {
   RobotsDottxtRoute: typeof RobotsDottxtRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   CollectionsIdRoute: typeof CollectionsIdRoute
+  PoliciesPaymentRoute: typeof PoliciesPaymentRoute
+  PoliciesReturnsRoute: typeof PoliciesReturnsRoute
+  PoliciesWarrantyRoute: typeof PoliciesWarrantyRoute
   ProductsSlugRoute: typeof ProductsSlugRoute
 }
 
@@ -245,6 +284,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProductsSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/policies_/warranty': {
+      id: '/policies_/warranty'
+      path: '/policies/warranty'
+      fullPath: '/policies/warranty'
+      preLoaderRoute: typeof PoliciesWarrantyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/policies_/returns': {
+      id: '/policies_/returns'
+      path: '/policies/returns'
+      fullPath: '/policies/returns'
+      preLoaderRoute: typeof PoliciesReturnsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/policies_/payment': {
+      id: '/policies_/payment'
+      path: '/policies/payment'
+      fullPath: '/policies/payment'
+      preLoaderRoute: typeof PoliciesPaymentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/collections_/$id': {
       id: '/collections_/$id'
       path: '/collections/$id'
@@ -266,6 +326,9 @@ const rootRouteChildren: RootRouteChildren = {
   RobotsDottxtRoute: RobotsDottxtRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   CollectionsIdRoute: CollectionsIdRoute,
+  PoliciesPaymentRoute: PoliciesPaymentRoute,
+  PoliciesReturnsRoute: PoliciesReturnsRoute,
+  PoliciesWarrantyRoute: PoliciesWarrantyRoute,
   ProductsSlugRoute: ProductsSlugRoute,
 }
 export const routeTree = rootRouteImport

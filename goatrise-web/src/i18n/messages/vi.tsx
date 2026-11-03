@@ -60,7 +60,7 @@ export const vi = {
     policies: {
       title: "Chính sách",
       description:
-        "Chính sách bảo hành, đổi trả và vận chuyển khi mua sắm tại GOAT RISE.",
+        "Chính sách đổi trả, thanh toán và bảo hành khi mua sắm tại GOAT RISE.",
     },
     checkout: { title: "Thanh toán" },
     account: { title: "Tài khoản" },
@@ -83,6 +83,12 @@ export const vi = {
 
   footer: {
     policies: "Chính sách",
+    description: "Trang phục cho chuyển động và nhịp sống mỗi ngày.",
+    explore: "Khám phá",
+    connect: "Kết nối",
+    instagramAriaLabel: "GOAT RISE trên Instagram (mở trong tab mới)",
+    facebookAriaLabel: "GOAT RISE trên Facebook (mở trong tab mới)",
+    tiktokAriaLabel: "GOAT RISE trên TikTok (mở trong tab mới)",
   },
 
   search: {
@@ -117,9 +123,9 @@ export const vi = {
     details: "Thông tin chi tiết",
     policy: "Chính sách",
     policySummary: [
-      "Hỗ trợ đổi kích cỡ hoặc sản phẩm cùng mẫu trong 3 ngày kể từ ngày mua, với sản phẩm chưa sử dụng, chưa giặt và còn nguyên tem mác. Không áp dụng hoàn tiền khi đổi hàng.",
-      "Hỗ trợ trả hàng trong 3 ngày kể từ ngày mua đối với sản phẩm có lỗi từ GOAT RISE.",
-      "Giao hàng toàn quốc, thanh toán khi nhận hàng (COD). Phí vận chuyển được hiển thị tại bước thanh toán.",
+      "Hỗ trợ đổi size hoặc sản phẩm cùng loại khi nhận không đúng size, và trả hàng lỗi từ nhà sản xuất trong 3 ngày kể từ ngày nhận hàng. Sản phẩm cần chưa sử dụng, chưa giặt và còn nguyên tag, nhãn mác.",
+      "Bảo hành lỗi từ nhà sản xuất bằng cách đổi sản phẩm cùng loại. Liên hệ trong 3 ngày kể từ ngày nhận hàng, kèm video hoặc hình ảnh lỗi.",
+      "Thanh toán bằng chuyển khoản vào tài khoản CONG TY TNHH GOAT RISE hoặc thanh toán khi nhận hàng (COD).",
     ],
     fullPolicy: "Xem chính sách đầy đủ",
     updating: "Đang cập nhật.",
@@ -362,7 +368,7 @@ export const vi = {
     },
     brandIntro: {
       manifesto:
-        "GOAT RISE tin rằng tiến bộ thật sự không đến từ một cú bứt phá, mà từ những gì bạn lặp lại mỗi ngày. Chúng tôi làm quần áo cho nhịp đó: bền bỉ, tối giản, và tốt hơn một chút sau mỗi lần mặc.",
+        "Với chúng tôi, GOAT không phải danh hiệu cho ai khác. Đó là phiên bản tốt nhất của chính bạn, và bạn tạo ra nó mỗi ngày. Mỗi món đồ của GOAT RISE nhắc bạn nhớ mục tiêu mình đang theo đuổi, và ý chí không bỏ cuộc của chính mình.",
       eyebrow: "Goat Rise · Est. 2026",
       // mỗi phần tử là một dòng
       tagline: ["Real Improvement", "Start Everyday"],

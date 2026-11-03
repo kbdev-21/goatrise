@@ -62,7 +62,7 @@ export const en: Messages = {
     policies: {
       title: "Policies",
       description:
-        "Warranty, exchange & return and shipping policies when shopping at GOAT RISE.",
+        "Exchange & return, payment and warranty policies when shopping at GOAT RISE.",
     },
     checkout: { title: "Checkout" },
     account: { title: "Account" },
@@ -87,6 +87,12 @@ export const en: Messages = {
 
   footer: {
     policies: "Policies",
+    description: "Made for movement and the rhythm of everyday life.",
+    explore: "Explore",
+    connect: "Connect",
+    instagramAriaLabel: "GOAT RISE on Instagram (opens in a new tab)",
+    facebookAriaLabel: "GOAT RISE on Facebook (opens in a new tab)",
+    tiktokAriaLabel: "GOAT RISE on TikTok (opens in a new tab)",
   },
 
   search: {
@@ -122,9 +128,9 @@ export const en: Messages = {
     details: "Details",
     policy: "Policies",
     policySummary: [
-      "We offer exchanges for another size or the same style within 3 days of purchase. Please keep items unused, unwashed and with original tags attached. Refunds are not available for exchanges.",
-      "We accept returns within 3 days of purchase for items with defects caused by GOAT RISE.",
-      "Delivery is available throughout Vietnam with cash on delivery (COD). Shipping fees are shown at checkout.",
+      "Exchange for another size or a product of the same type if the size is incorrect, or return items with manufacturing defects, within 3 days of delivery. Items must be unused, unwashed and have all original tags and labels attached.",
+      "Manufacturing defects are covered by replacement with a product of the same type. Contact us within 3 days of delivery with a video or photos of the defect.",
+      "Pay by bank transfer to CONG TY TNHH GOAT RISE or cash on delivery (COD).",
     ],
     fullPolicy: "View full policies",
     updating: "Coming soon.",
@@ -362,7 +368,7 @@ export const en: Messages = {
     },
     brandIntro: {
       manifesto:
-        "GOAT RISE believes real progress doesn't come from a single breakthrough, but from what you repeat every day. We make clothes for that rhythm: durable, minimal, and a little better every time you wear them.",
+        "To us, GOAT isn't a title reserved for someone else. It's the best version of you, built by you every day. Every GOAT RISE piece reminds you of the goals you're chasing and your own will to never give up.",
       eyebrow: "Goat Rise · Est. 2026",
       tagline: ["Real Improvement", "Start Everyday"],
       follow: "Follow Us",

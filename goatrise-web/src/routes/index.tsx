@@ -8,7 +8,7 @@ import { IntroLeap } from "@/components/home/intro-leap";
 import { FeaturedCollections } from "@/components/home/featured-collections";
 import { FeaturedProducts } from "@/components/home/featured-products";
 import { CollectionStack } from "@/components/home/collection-stack";
-import { BrandIntro } from "@/components/home/brand-intro";
+import { BrandQuotes } from "@/components/home/brand-quotes";
 import { seo } from "@/lib/seo";
 
 const FEATURED_PRODUCT_LIMIT = 8;
@@ -67,7 +67,7 @@ function App() {
       <FeaturedProducts products={featuredProducts} />
       <FeaturedCollections collections={featuredCategories} />
       <CollectionStack collections={stackCollections} />
-      <BrandIntro />
+      <BrandQuotes />
     </>
   );
 }

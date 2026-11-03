@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import { Link } from "@tanstack/react-router";
 import { ChevronRight, Minus, Plus } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination } from "swiper/modules";
@@ -8,6 +7,7 @@ import "swiper/css/pagination";
 
 import type { ProductDetail } from "@/api/product/api";
 import { RollText } from "@/components/shared/roll-text";
+import { PolicyLinks } from "@/components/shared/policy-links";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -146,12 +146,7 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
                   <li key={summary}>{summary}</li>
                 ))}
               </ul>
-              <Link
-                to="/policies"
-                className="mt-4 inline-block font-medium underline underline-offset-4 transition-opacity hover:opacity-60"
-              >
-                {t.product.fullPolicy}
-              </Link>
+              <PolicyLinks className="mt-4" />
             </Accordion>
           </div>
         </div>

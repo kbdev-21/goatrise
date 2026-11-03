@@ -9,7 +9,7 @@ import { useReveal } from "@/hooks/use-reveal";
 import { useScrollProgress } from "@/hooks/use-scroll-progress";
 import { useT } from "@/i18n";
 
-export function BrandIntro() {
+export function BrandQuotes() {
   const t = useT();
   // mỗi từ một span để sáng dần lần lượt theo cuộn
   const words = t.home.brandIntro.manifesto.split(" ");

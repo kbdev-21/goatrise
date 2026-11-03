@@ -4,6 +4,7 @@ import { FaInstagram } from "react-icons/fa6";
 import { INSTAGRAM_URL } from "@/constant/social";
 import { Reveal } from "@/components/shared/reveal";
 import { RollText } from "@/components/shared/roll-text";
+import { PolicyLinks } from "@/components/shared/policy-links";
 import { getLenis } from "@/hooks/use-smooth-scroll";
 import { useT } from "@/i18n";
 
@@ -62,6 +63,8 @@ export function PolicyPage({
           {t.policyPage.updated(updatedAt)}
         </p>
       </header>
+
+      <PolicyLinks className="mt-8 border-t border-border pt-4 text-muted-foreground" />
 
       <div className="mt-8 grid grid-cols-1 gap-10 border-t border-border pt-10 lg:grid-cols-12 lg:pt-16">
         {/* Mục lục: chỉ desktop, ghim theo khi cuộn */}

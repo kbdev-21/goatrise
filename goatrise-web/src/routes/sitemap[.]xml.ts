@@ -13,7 +13,15 @@ type SitemapEntry = {
 };
 
 // trang tĩnh được index (checkout / account cố ý không có: đã noindex + chặn ở robots.txt)
-const STATIC_PATHS = ["/", "/products", "/collections", "/about", "/policies"];
+const STATIC_PATHS = [
+  "/",
+  "/products",
+  "/collections",
+  "/about",
+  "/policies/returns",
+  "/policies/payment",
+  "/policies/warranty",
+];
 
 export const Route = createFileRoute("/sitemap.xml")({
   server: {
