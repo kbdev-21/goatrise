@@ -28,8 +28,9 @@ function AboutPage() {
   const { about } = useT();
   const revealRef = useReveal<HTMLElement>();
   const headingClass =
-    "font-logo text-xl leading-relaxed font-semibold tracking-tight sm:text-2xl";
-  const sectionClass = "space-y-6";
+    "mx-auto max-w-2xl font-logo text-2xl leading-tight font-semibold tracking-tight text-balance sm:text-4xl";
+  const sectionClass = "space-y-7 sm:space-y-9";
+  const bodyClass = "mx-auto max-w-2xl text-foreground/80";
 
   return (
     <article
@@ -37,14 +38,14 @@ function AboutPage() {
       className="mx-auto max-w-3xl px-5 pt-12 pb-20 text-center text-base leading-[1.85] sm:px-8 sm:pt-20 sm:pb-28 lg:max-w-4xl"
     >
       <header className="rise-fade">
-        <h1 className="font-logo text-3xl leading-tight font-semibold tracking-tight sm:text-4xl">
+        <h1 className="font-logo text-[clamp(2.5rem,6vw,4.5rem)] leading-none font-semibold tracking-[-0.04em] text-balance">
           {about.title}
         </h1>
-        <p className="mt-7 text-foreground/80">{about.intro}</p>
+        <p className={`mt-7 sm:mt-9 ${bodyClass}`}>{about.intro}</p>
       </header>
 
-      <div className="mt-12 space-y-14 sm:mt-16 sm:space-y-20">
-        <div className="space-y-6 text-foreground/80">
+      <div className="mt-12 space-y-20 sm:mt-16 sm:space-y-28">
+        <div className="space-y-12 text-foreground/80 sm:space-y-16">
           <figure className="rise-fade">
             <img
               src={founderImg}
@@ -52,18 +53,21 @@ function AboutPage() {
               width={768}
               height={1365}
               loading="lazy"
-              className="mx-auto mb-7 h-auto w-full max-w-sm"
+              className="mx-auto h-auto w-full max-w-64 sm:max-w-xs"
             />
-            <blockquote className="italic">
-              <p>
-                {about.founder.role}: “{about.founder.quote}”
-              </p>
+            <blockquote className="mx-auto mt-8 max-w-2xl font-logo text-2xl leading-snug font-medium tracking-tight text-balance text-foreground sm:mt-10 sm:text-4xl">
+              <p>“{about.founder.quote}”</p>
             </blockquote>
-            <figcaption className="mt-2 text-sm">
-              — {about.founder.name}
+            <figcaption className="mt-5 text-xs tracking-wide">
+              <span className="block font-semibold text-foreground">
+                {about.founder.name}
+              </span>
+              <span className="mt-1 block text-muted-foreground">
+                {about.founder.role}
+              </span>
             </figcaption>
           </figure>
-          <figure data-reveal className="pt-4">
+          <figure data-reveal>
             <img
               src={cofoundersImg}
               alt={about.images.cofounders}
@@ -72,7 +76,7 @@ function AboutPage() {
               loading="lazy"
               className="h-auto w-full"
             />
-            <figcaption className="mt-5 italic">
+            <figcaption className="mx-auto mt-5 max-w-lg text-sm leading-relaxed text-muted-foreground">
               {about.founder.cofounders}
             </figcaption>
           </figure>
@@ -83,10 +87,14 @@ function AboutPage() {
           aria-labelledby="about-goat"
           className={sectionClass}
         >
+          <span
+            aria-hidden="true"
+            className="mx-auto block h-px w-10 bg-foreground/40"
+          />
           <h2 id="about-goat" className={headingClass}>
             {about.goat.title}
           </h2>
-          <p className="text-foreground/80">{about.goat.paragraph}</p>
+          <p className={bodyClass}>{about.goat.paragraph}</p>
         </section>
 
         <section
@@ -97,14 +105,16 @@ function AboutPage() {
           <h2 id="about-rise" className={headingClass}>
             {about.rise.title}
           </h2>
-          <p className="italic">{about.rise.lead}</p>
-          <p className="font-semibold">{about.rise.tagline}</p>
-          <div className="grid grid-cols-3 gap-1 sm:gap-2">
+          <p className="text-sm text-muted-foreground">{about.rise.lead}</p>
+          <p className="mx-auto max-w-xl font-logo text-3xl leading-none font-semibold tracking-tight text-balance sm:text-5xl">
+            {about.rise.tagline}
+          </p>
+          <div className="grid grid-cols-3 items-start gap-2 pt-2 sm:gap-4 sm:pt-4">
             {[
               { src: movementImg, alt: about.images.movement },
               { src: tennisImg, alt: about.images.tennis },
               { src: basketballImg, alt: about.images.basketball },
-            ].map(({ src, alt }) => (
+            ].map(({ src, alt }, index) => (
               <img
                 key={src}
                 src={src}
@@ -112,11 +122,11 @@ function AboutPage() {
                 width={720}
                 height={900}
                 loading="lazy"
-                className="h-auto w-full"
+                className={`h-auto w-full ${index === 1 ? "mt-6 sm:mt-10" : ""}`}
               />
             ))}
           </div>
-          <p className="text-foreground/80">{about.rise.paragraph}</p>
+          <p className={bodyClass}>{about.rise.paragraph}</p>
         </section>
 
         <section
@@ -127,28 +137,28 @@ function AboutPage() {
           <h2 id="about-mission" className={headingClass}>
             {about.mission.title}
           </h2>
-          <p className="text-foreground/80">{about.mission.intro}</p>
-          <dl className="space-y-3 text-foreground/80">
-            <div>
-              <dt className="inline font-semibold text-foreground">
-                {about.mission.visionLabel}:
-              </dt>{" "}
-              <dd className="inline">{about.mission.vision}</dd>
+          <p className={bodyClass}>{about.mission.intro}</p>
+          <dl className="grid grid-cols-1 border-y border-border py-8 text-foreground/80 sm:grid-cols-2 sm:py-10">
+            <div className="px-5 pb-7 sm:px-8 sm:pb-0">
+              <dt className="text-xs font-semibold tracking-[0.12em] text-foreground uppercase">
+                {about.mission.visionLabel}
+              </dt>
+              <dd className="mx-auto mt-4 max-w-xs">{about.mission.vision}</dd>
             </div>
-            <div>
-              <dt className="inline font-semibold text-foreground">
-                {about.mission.missionLabel}:
-              </dt>{" "}
-              <dd className="inline">{about.mission.mission}</dd>
+            <div className="border-t border-border px-5 pt-7 sm:border-t-0 sm:border-l sm:px-8 sm:pt-0">
+              <dt className="text-xs font-semibold tracking-[0.12em] text-foreground uppercase">
+                {about.mission.missionLabel}
+              </dt>
+              <dd className="mx-auto mt-4 max-w-xs">{about.mission.mission}</dd>
             </div>
           </dl>
-          <p className="text-foreground/80">{about.mission.closing}</p>
+          <p className={bodyClass}>{about.mission.closing}</p>
         </section>
 
         <section
           data-reveal
           aria-labelledby="about-promise"
-          className={sectionClass}
+          className="isolate"
         >
           <img
             src={labelsImg}
@@ -156,14 +166,16 @@ function AboutPage() {
             width={1400}
             height={788}
             loading="lazy"
-            className="mb-10 h-auto w-full sm:mb-12"
+            className="h-auto w-full"
           />
-          <h2 id="about-promise" className={headingClass}>
-            {about.promise.title}
-          </h2>
-          <p className="text-lg leading-relaxed text-foreground/80 italic sm:text-xl">
-            {about.promise.paragraph}
-          </p>
+          <div className="relative mx-4 -mt-6 border border-border bg-background px-5 py-9 sm:mx-12 sm:-mt-10 sm:px-10 sm:py-12">
+            <h2 id="about-promise" className={headingClass}>
+              {about.promise.title}
+            </h2>
+            <p className="mx-auto mt-6 max-w-xl text-base leading-[1.85] text-foreground/80">
+              {about.promise.paragraph}
+            </p>
+          </div>
         </section>
       </div>
     </article>
