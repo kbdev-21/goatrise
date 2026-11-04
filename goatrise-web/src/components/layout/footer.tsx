@@ -23,27 +23,62 @@ export function Footer() {
             <Link
               to="/"
               aria-label={t.common.homeAriaLabel}
-              className="inline-flex min-h-11 max-w-full flex-col items-center gap-4 py-2 text-[clamp(1.5rem,2.5vw,2rem)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-foreground"
+              className="inline-flex min-h-11 max-w-full items-center py-2 text-[clamp(1.5rem,2.5vw,2rem)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-foreground"
             >
-              {/* Crop the original logo's white margins without changing the shared asset. */}
-              <span
-                aria-hidden="true"
-                className="relative block aspect-[1528/1150] w-20 shrink-0 overflow-hidden mix-blend-multiply dark:mix-blend-screen dark:invert"
-              >
-                <img
-                  src="/goatrise-bg-logo.png"
-                  alt=""
-                  width={2779}
-                  height={2779}
-                  loading="lazy"
-                  className="absolute top-[-67.57%] left-[-34.29%] w-[181.87%] max-w-none"
-                />
-              </span>
               <BrandWordmark />
             </Link>
             <p className="mt-5 max-w-64 text-sm leading-relaxed text-muted-foreground">
               {t.footer.description}
             </p>
+            <nav
+              aria-label={t.footer.connect}
+              className="mt-4 -ml-3 text-muted-foreground"
+            >
+              <ul className="flex items-center gap-2">
+                {[
+                  {
+                    href: INSTAGRAM_URL,
+                    label: t.footer.instagramAriaLabel,
+                    Icon: FaInstagram,
+                    iconClassName: "size-[18px]",
+                  },
+                  {
+                    href: FACEBOOK_URL,
+                    label: t.footer.facebookAriaLabel,
+                    Icon: FaFacebookF,
+                    iconClassName: "size-4",
+                  },
+                  {
+                    href: TIKTOK_URL,
+                    label: t.footer.tiktokAriaLabel,
+                    Icon: FaTiktok,
+                    iconClassName: "size-4",
+                  },
+                ].map(({ href, label, Icon, iconClassName }) => (
+                  <li key={label}>
+                    {href ? (
+                      <a
+                        href={href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={label}
+                        className="inline-flex size-11 items-center justify-center transition-colors duration-200 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-foreground"
+                      >
+                        <Icon aria-hidden className={iconClassName} />
+                      </a>
+                    ) : (
+                      <span
+                        role="img"
+                        aria-label={label}
+                        className="inline-flex size-11 items-center justify-center"
+                      >
+                        <Icon aria-hidden className={iconClassName} />
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </nav>
           </div>
 
           <nav aria-label={t.footer.explore}>
@@ -56,7 +91,6 @@ export function Footer() {
                     className={LINK_CLASS}
                     activeProps={{
                       "aria-current": "page",
-                      className: "font-semibold text-foreground",
                     }}
                   >
                     {t.nav[item.key]}
@@ -68,58 +102,17 @@ export function Footer() {
 
           <div>
             <h2 className={LABEL_CLASS}>{t.footer.policies}</h2>
-            <PolicyLinks className="text-muted-foreground [&_ul]:flex-col [&_ul]:gap-0" />
+            <PolicyLinks
+              highlightActive={false}
+              className="text-muted-foreground [&_ul]:flex-col [&_ul]:gap-0"
+            />
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-1 border-t border-border pt-4 pb-20 text-xs text-muted-foreground md:pb-16">
-          <span className="text-sm">© {new Date().getFullYear()} GOAT RISE</span>
-          <nav aria-label={t.footer.connect}>
-            <ul className="flex items-center gap-2">
-              {[
-                {
-                  href: INSTAGRAM_URL,
-                  label: t.footer.instagramAriaLabel,
-                  Icon: FaInstagram,
-                  iconClassName: "size-[18px]",
-                },
-                {
-                  href: FACEBOOK_URL,
-                  label: t.footer.facebookAriaLabel,
-                  Icon: FaFacebookF,
-                  iconClassName: "size-4",
-                },
-                {
-                  href: TIKTOK_URL,
-                  label: t.footer.tiktokAriaLabel,
-                  Icon: FaTiktok,
-                  iconClassName: "size-4",
-                },
-              ].map(({ href, label, Icon, iconClassName }) => (
-                <li key={label}>
-                  {href ? (
-                    <a
-                      href={href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      aria-label={label}
-                      className="inline-flex size-11 items-center justify-center transition-colors duration-200 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-foreground"
-                    >
-                      <Icon aria-hidden className={iconClassName} />
-                    </a>
-                  ) : (
-                    <span
-                      role="img"
-                      aria-label={label}
-                      className="inline-flex size-11 items-center justify-center"
-                    >
-                      <Icon aria-hidden className={iconClassName} />
-                    </span>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </nav>
+        <div className="flex items-center justify-center border-t border-border pt-6 pb-20 text-center text-sm text-muted-foreground md:pb-16">
+          <span className="text-sm">
+            © {new Date().getFullYear()} GOAT RISE · MADE IN SAIGON, VIETNAM
+          </span>
         </div>
       </div>
     </footer>

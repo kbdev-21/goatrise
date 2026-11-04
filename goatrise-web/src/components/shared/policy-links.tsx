@@ -3,7 +3,13 @@ import { Link } from "@tanstack/react-router";
 import { useLocale, useT } from "@/i18n";
 import { getPolicyContent, POLICY_LINKS } from "@/i18n/content/policies";
 
-export function PolicyLinks({ className }: { className?: string }) {
+export function PolicyLinks({
+  className,
+  highlightActive = true,
+}: {
+  className?: string;
+  highlightActive?: boolean;
+}) {
   const locale = useLocale();
   const t = useT();
 
@@ -17,7 +23,7 @@ export function PolicyLinks({ className }: { className?: string }) {
               className="inline-flex min-h-11 items-center text-sm transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-foreground"
               activeProps={{
                 "aria-current": "page",
-                className: "font-semibold text-foreground",
+                className: highlightActive ? "font-semibold text-foreground" : "",
               }}
             >
               {getPolicyContent(locale, id).title}

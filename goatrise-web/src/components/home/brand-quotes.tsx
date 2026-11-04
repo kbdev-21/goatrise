@@ -25,28 +25,7 @@ export function BrandQuotes() {
 
   return (
     <section className="border-t border-border">
-      <div
-        ref={textRef}
-        className="mx-auto max-w-[1500px] px-5 py-24 lg:px-10 lg:py-36"
-      >
-        <p
-          className="max-w-4xl text-[clamp(1.25rem,3.2vw,2.5rem)] leading-[1.3] font-extrabold tracking-[-0.02em]"
-          style={{ "--n": words.length } as CSSProperties}
-        >
-          {words.map((word, index) => (
-            <Fragment key={`${word}-${index}`}>
-              <span
-                className="manifesto-word"
-                style={{ "--i": index } as CSSProperties}
-              >
-                {word}
-              </span>{" "}
-            </Fragment>
-          ))}
-        </p>
-      </div>
-
-      {/* Kết bài: ảnh chạy hết bề ngang, eyebrow + tagline + nút gom thành một cụm ở giữa */}
+      {/* Ảnh chạy hết bề ngang, tagline và nút căn giữa */}
       <div
         ref={mediaRef}
         className="relative aspect-[4/5] w-full overflow-hidden bg-muted sm:aspect-[16/9] lg:aspect-[21/9]"
@@ -60,18 +39,17 @@ export function BrandQuotes() {
         />
         <div aria-hidden className="absolute inset-0 bg-black/40" />
 
-        {/* cụm chữ hiện lần lượt eyebrow → tagline → nút khi ảnh cuộn tới */}
+        {/* Tagline hiện khi ảnh cuộn tới */}
         <div
           ref={ctaRef}
           className="absolute inset-0 flex flex-col items-center justify-center px-5 text-center text-white"
         >
           <p
             data-reveal
-            className="text-[11px] font-bold tracking-[0.22em] text-white/70 uppercase"
+            className="text-[11px] font-bold tracking-[0.22em] text-white/70"
           >
             {t.home.brandIntro.eyebrow}
           </p>
-
           <p
             data-reveal
             style={{ "--reveal-delay": "120ms" } as CSSProperties}
@@ -84,8 +62,6 @@ export function BrandQuotes() {
               </Fragment>
             ))}
           </p>
-
-          {/* bọc riêng: transition-colors của nút sẽ đè transition của data-reveal */}
           <div
             data-reveal
             style={{ "--reveal-delay": "240ms" } as CSSProperties}
@@ -102,6 +78,26 @@ export function BrandQuotes() {
             </a>
           </div>
         </div>
+      </div>
+      <div
+        ref={textRef}
+        className="mx-auto max-w-[1500px] px-5 py-24 lg:px-10 lg:py-36"
+      >
+        <p
+          className="mx-auto max-w-4xl text-center text-[clamp(1.25rem,3.2vw,2.5rem)] leading-[1.3] font-extrabold tracking-[-0.02em]"
+          style={{ "--n": words.length } as CSSProperties}
+        >
+          {words.map((word, index) => (
+            <Fragment key={`${word}-${index}`}>
+              <span
+                className="manifesto-word"
+                style={{ "--i": index } as CSSProperties}
+              >
+                {word}
+              </span>{" "}
+            </Fragment>
+          ))}
+        </p>
       </div>
     </section>
   );

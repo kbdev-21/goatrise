@@ -83,7 +83,7 @@ export const vi = {
 
   footer: {
     policies: "Chính sách",
-    description: "Trang phục cho chuyển động và nhịp sống mỗi ngày.",
+    description: "Vietnam, Activewear & Classic for Life",
     explore: "Khám phá",
     connect: "Kết nối",
     instagramAriaLabel: "GOAT RISE trên Instagram (mở trong tab mới)",
@@ -369,9 +369,9 @@ export const vi = {
     brandIntro: {
       manifesto:
         "Với chúng tôi, GOAT không phải danh hiệu cho ai khác. Đó là phiên bản tốt nhất của chính bạn, và bạn tạo ra nó mỗi ngày. Mỗi món đồ của GOAT RISE nhắc bạn nhớ mục tiêu mình đang theo đuổi, và ý chí không bỏ cuộc của chính mình.",
-      eyebrow: "Goat Rise · Est. 2026",
+      eyebrow: "GOAT RISE · FOUNDED IN 2026",
       // mỗi phần tử là một dòng
-      tagline: ["Real Improvement", "Start Everyday"],
+      tagline: ["Real Improvements Start Everyday"],
       follow: "Follow Us",
     },
     scrollManifesto: {

@@ -87,7 +87,7 @@ export const en: Messages = {
 
   footer: {
     policies: "Policies",
-    description: "Made for movement and the rhythm of everyday life.",
+    description: "Vietnam, Activewear & Classic for Life",
     explore: "Explore",
     connect: "Connect",
     instagramAriaLabel: "GOAT RISE on Instagram (opens in a new tab)",
@@ -369,8 +369,8 @@ export const en: Messages = {
     brandIntro: {
       manifesto:
         "To us, GOAT isn't a title reserved for someone else. It's the best version of you, built by you every day. Every GOAT RISE piece reminds you of the goals you're chasing and your own will to never give up.",
-      eyebrow: "Goat Rise · Est. 2026",
-      tagline: ["Real Improvement", "Start Everyday"],
+      eyebrow: "GOAT RISE · FOUNDED IN 2026",
+      tagline: ["Real Improvements Start Everyday"],
       follow: "Follow Us",
     },
     scrollManifesto: {
