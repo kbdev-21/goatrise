@@ -10,14 +10,14 @@ export const policiesVi: Record<PolicyId, PolicyContent> = {
     updatedAt: "03.11.2026",
     intro: (
       <p>
-        Chúng mình hỗ trợ đổi trả trong vòng <strong>3 ngày</strong> kể từ ngày
+        Chúng tôi hỗ trợ đổi trả trong vòng <strong>3 ngày</strong> kể từ ngày
         bạn nhận hàng.
       </p>
     ),
     sections: [
       {
         id: "ho-tro",
-        title: "Chúng mình hỗ trợ",
+        title: "Chúng tôi hỗ trợ",
         content: (
           <ul>
             <li>
@@ -48,7 +48,7 @@ export const policiesVi: Record<PolicyId, PolicyContent> = {
         content: (
           <p>
             Bạn hãy quay video cho thấy rõ tình trạng sản phẩm (lỗi hoặc size
-            không đúng) và gửi kèm mã đơn hàng. Có video, chúng mình kiểm tra và
+            không đúng) và gửi kèm mã đơn hàng. Có video, chúng tôi kiểm tra và
             xử lý nhanh hơn.
           </p>
         ),
@@ -66,7 +66,7 @@ export const policiesVi: Record<PolicyId, PolicyContent> = {
             <li>Bạn gửi sản phẩm về theo hướng dẫn của GOAT RISE.</li>
             <li>
               GOAT RISE gửi sản phẩm mới đến bạn đối với trường hợp đổi hàng.
-              Với trường hợp trả hàng lỗi, chúng mình xác nhận cách xử lý khi
+              Với trường hợp trả hàng lỗi, chúng tôi xác nhận cách xử lý khi
               liên hệ.
             </li>
           </ol>
@@ -74,7 +74,7 @@ export const policiesVi: Record<PolicyId, PolicyContent> = {
       },
       {
         id: "khong-ap-dung",
-        title: "Chúng mình không thể đổi trả khi",
+        title: "Chúng tôi không thể đổi trả khi",
         content: (
           <ul>
             <li>Đã quá 3 ngày kể từ ngày nhận hàng.</li>
@@ -158,7 +158,7 @@ export const policiesVi: Record<PolicyId, PolicyContent> = {
         title: "Cách bảo hành",
         content: (
           <p>
-            Chúng mình đổi cho bạn sản phẩm cùng loại. Bạn liên hệ trong vòng{" "}
+            Chúng tôi đổi cho bạn sản phẩm cùng loại. Bạn liên hệ trong vòng{" "}
             <strong>3 ngày</strong> kể từ ngày nhận hàng, kèm video hoặc hình
             ảnh ghi lại lỗi để được xử lý nhanh hơn.
           </p>

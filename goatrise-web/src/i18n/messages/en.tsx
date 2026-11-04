@@ -57,7 +57,7 @@ export const en: Messages = {
     about: {
       title: "About us",
       description:
-        "The story of GOAT RISE - a Vietnamese activewear and classic fashion brand, making clothes for a steady, everyday rhythm.",
+        "GOAT RISE is a Vietnamese fashion brand founded in 2026, sharing a mindset of everyday progress through fashion, action and community.",
     },
     policies: {
       title: "Policies",
@@ -181,18 +181,54 @@ export const en: Messages = {
   },
 
   about: {
-    eyebrow: "Goat Rise · Est. 2026",
-    title: "About us",
-    heading: ["Activewear", "& Classic", "For Life"],
-    story: [
-      "GOAT RISE is a Vietnamese activewear and classic fashion brand, born from a simple idea: training clothes shouldn't only look good on the court, and everyday clothes shouldn't be afraid to move.",
-      "We take our cues from classic sportswear, the tipped polos and clean-cut shorts of the tennis court, and rework them in fabrics and fits made for life today: breathable, durable, easy to style, from a morning session to an evening out.",
-    ],
-    imageAlt: ["GOAT RISE on the tennis court", "GOAT RISE polo and skirt"],
-    closingEyebrow: "Hey Goat,",
-    closingTitle: "Ready to rise?",
-    shop: "Shop products",
-    follow: "Follow on Instagram",
+    title: "ABOUT GOAT RISE",
+    images: {
+      founder: "Trần Gia Lập, CEO and founder of GOAT RISE",
+      cofounders: "The GOAT RISE co-founders, also known as the Goat Pen",
+      movement:
+        "GOAT RISE campaign featuring an athlete jumping against a blue sky",
+      tennis: "GOAT RISE campaign featuring a tennis player serving",
+      basketball: "GOAT RISE campaign featuring a basketball player dunking",
+      labels: "GOAT RISE clothing labels bearing Made in Viet Nam",
+    },
+    intro:
+      "GOAT RISE is a Vietnamese fashion brand founded in 2026. We stand for a simple mindset: real progress starts every day, and we want to share it through fashion.",
+    founder: {
+      role: "CEO & Founder",
+      quote: "It's never over unless your mind says it's over.",
+      name: "Trần Gia Lập",
+      cofounders:
+        "The other co-founders, also known as the Goat Pen: simply because we were all born in the Year of the Goat.",
+    },
+    goat: {
+      title: "SO WHO IS THE REAL GOAT?",
+      paragraph:
+        "GOAT stands for Greatest Of All Time. But we see it a little differently. We aren't chasing the image of being the best. We're chasing a better version of who we were yesterday. The real GOAT isn't someone above you. It's the person who keeps showing up every day and getting a little better.",
+    },
+    rise: {
+      title: "SO HOW DO YOU BECOME A GOAT?",
+      lead: "It all comes down to RISE",
+      tagline: "REAL IMPROVEMENTS START EVERYDAY.",
+      paragraph:
+        "You only become your best self when you embrace the mindset that you must be better than yesterday's version of you. Not through one big moment, but through small choices repeated every day. You don't have to be the best. Just better than yesterday.",
+    },
+    mission: {
+      title: "OUR VISION AND MISSION",
+      intro:
+        "We hope GOAT RISE will be remembered as more than a fashion brand.",
+      visionLabel: "Vision",
+      vision: "a brand that makes people want to live better.",
+      missionLabel: "Mission",
+      mission:
+        "to inspire through action, products and community, starting in Vietnam and reaching the world.",
+      closing:
+        "One product won't change your life. But if every time you wear it, you're reminded that you can push a little further, then it has fulfilled its purpose.",
+    },
+    promise: {
+      title: "OUR PROMISE",
+      paragraph:
+        "We will always keep learning. Keep improving. Because the spirit of GOAT RISE has never been about becoming number one. It's about never stopping moving forward.",
+    },
   },
 
   form: {

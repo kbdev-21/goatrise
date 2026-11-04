@@ -55,7 +55,7 @@ export const vi = {
     about: {
       title: "Về chúng tôi",
       description:
-        "Câu chuyện của GOAT RISE - thương hiệu hoạt phục và thời trang cổ điển Việt Nam, làm quần áo cho nhịp sống bền bỉ mỗi ngày.",
+        "GOAT RISE là thương hiệu thời trang Việt Nam, thành lập năm 2026, lan toả tinh thần tiến bộ mỗi ngày qua thời trang, hành động và cộng đồng.",
     },
     policies: {
       title: "Chính sách",
@@ -174,20 +174,54 @@ export const vi = {
   },
 
   about: {
-    eyebrow: "Goat Rise · Est. 2026",
-    title: "Về chúng tôi",
-    // mỗi phần tử là một dòng
-    heading: ["Activewear", "& Classic", "For Life"],
-    // mỗi phần tử là một đoạn
-    story: [
-      "GOAT RISE là thương hiệu hoạt phục và thời trang cổ điển Việt Nam, bắt đầu từ một ý nghĩ đơn giản: đồ tập không nên chỉ đẹp trên sân, và đồ mặc hằng ngày không nên ngại vận động.",
-      "Chúng tôi lấy cảm hứng từ tinh thần thể thao cổ điển, những chiếc polo viền cổ và quần short gọn gàng của sân quần vợt, rồi làm lại bằng chất liệu và phom dáng hợp với nhịp sống hôm nay: thoáng, bền, dễ phối, mặc được từ buổi tập sáng đến cuộc hẹn tối.",
-    ],
-    imageAlt: ["GOAT RISE trên sân quần vợt", "Polo và chân váy GOAT RISE"],
-    closingEyebrow: "Hey Goat,",
-    closingTitle: "Ready to rise?",
-    shop: "Xem sản phẩm",
-    follow: "Theo dõi Instagram",
+    title: "ABOUT GOAT RISE",
+    images: {
+      founder: "Trần Gia Lập, CEO và nhà sáng lập GOAT RISE",
+      cofounders: "Nhóm co-founder GOAT RISE, còn gọi là Chuồng Dê",
+      movement:
+        "Hình ảnh GOAT RISE với vận động viên bật nhảy trên nền trời xanh",
+      tennis: "Hình ảnh GOAT RISE với vận động viên giao bóng tennis",
+      basketball: "Hình ảnh GOAT RISE với vận động viên úp rổ bóng rổ",
+      labels: "Nhãn áo GOAT RISE với dòng chữ Made in Viet Nam",
+    },
+    intro:
+      "GOAT RISE là thương hiệu thời trang Việt Nam, thành lập năm 2026. Chúng tôi đại diện cho một mindset giản dị: tiến bộ thật sự bắt đầu từ mỗi ngày, và muốn lan toả nó qua thời trang.",
+    founder: {
+      role: "CEO & Founder",
+      quote: "Sẽ không bao giờ là kết thúc trừ khi tâm trí mày bảo nó kết thúc",
+      name: "Trần Gia Lập",
+      cofounders:
+        "Các co-founder khác hay còn gọi là Chuồng Dê: đơn giản vì cả đám đều tuổi con dê",
+    },
+    goat: {
+      title: "VẬY AI MỚI THẬT SỰ LÀ GOAT?",
+      paragraph:
+        "GOAT hay còn gọi là Greatest Of All Time. Nhưng chúng tôi muốn nhìn theo một cách khác. Chúng tôi không theo đuổi hình ảnh của người giỏi nhất. Chúng tôi theo đuổi phiên bản tốt hơn của chính mình hôm qua. GOAT thật sự không phải là ai đó đứng trên bạn, mà là người vẫn xuất hiện mỗi ngày và tốt hơn một chút.",
+    },
+    rise: {
+      title: "VẬY LÀM THẾ NÀO ĐỂ TRỞ THÀNH GOAT?",
+      lead: "Tất cả nằm ở chữ RISE",
+      tagline: "REAL IMPROVEMENTS START EVERYDAY.",
+      paragraph:
+        "Bạn chỉ thật sự trở thành phiên bản tốt nhất khi mindset của bạn chấp nhận rằng mình phải tốt hơn version của ngày hôm qua. Không phải bằng một khoảnh khắc lớn, mà bằng những lựa chọn nhỏ được lặp lại mỗi ngày. Không cần là người giỏi nhất. Chỉ cần tốt hơn hôm qua",
+    },
+    mission: {
+      title: "TẦM NHÌN VÀ SỨ MỆNH",
+      intro:
+        "Chúng tôi mong GOAT RISE không chỉ được nhớ đến như một thương hiệu thời trang.",
+      visionLabel: "Tầm nhìn",
+      vision: "một thương hiệu khiến mọi người muốn sống tốt hơn.",
+      missionLabel: "Sứ mệnh",
+      mission:
+        "truyền cảm hứng bằng hành động, sản phẩm và cộng đồng, bắt đầu từ Việt Nam và vươn ra thế giới.",
+      closing:
+        "Một sản phẩm sẽ không thay đổi cuộc đời bạn. Nhưng nếu mỗi lần mặc nó, bạn lại nhớ rằng mình còn có thể cố gắng thêm một chút, thì sản phẩm ấy đã hoàn thành sứ mệnh của nó.",
+    },
+    promise: {
+      title: "LỜI HỨA CỦA CHÚNG TÔI",
+      paragraph:
+        "Chúng tôi sẽ luôn tiếp tục học hỏi. Tiếp tục cải thiện. Bởi vì tinh thần của GOAT RISE chưa bao giờ là trở thành số một. Mà là không bao giờ ngừng tiến lên.",
+    },
   },
 
   // ô nhập dùng chung cho form thanh toán và form thông tin mua hàng (tài khoản)
