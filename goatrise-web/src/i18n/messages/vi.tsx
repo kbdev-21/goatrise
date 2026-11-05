@@ -184,8 +184,17 @@ export const vi = {
       basketball: "Hình ảnh GOAT RISE với vận động viên úp rổ bóng rổ",
       labels: "Nhãn áo GOAT RISE với dòng chữ Made in Viet Nam",
     },
-    intro:
-      "GOAT RISE là thương hiệu thời trang Việt Nam, thành lập năm 2026. Chúng tôi đại diện cho một mindset giản dị: tiến bộ thật sự bắt đầu từ mỗi ngày, và muốn lan toả nó qua thời trang.",
+    intro: (
+      <>
+        {
+          "GOAT RISE là thương hiệu thời trang Việt Nam, thành lập năm 2026. Chúng tôi đại diện cho một mindset giản dị: "
+        }
+        <strong className="font-bold">
+          tiến bộ thật sự bắt đầu từ mỗi ngày
+        </strong>
+        {", và muốn lan toả nó qua thời trang."}
+      </>
+    ),
     founder: {
       role: "CEO & Founder",
       quote: "Sẽ không bao giờ là kết thúc trừ khi tâm trí mày bảo nó kết thúc",
@@ -195,13 +204,20 @@ export const vi = {
     },
     goat: {
       title: "VẬY AI MỚI THẬT SỰ LÀ GOAT?",
-      paragraph:
-        "GOAT hay còn gọi là Greatest Of All Time. Nhưng chúng tôi muốn nhìn theo một cách khác. Chúng tôi không theo đuổi hình ảnh của người giỏi nhất. Chúng tôi theo đuổi phiên bản tốt hơn của chính mình hôm qua. GOAT thật sự không phải là ai đó đứng trên bạn, mà là người vẫn xuất hiện mỗi ngày và tốt hơn một chút.",
+      paragraph: (
+        <>
+          {"GOAT hay còn gọi là "}
+          <strong className="font-bold">Greatest Of All Time</strong>
+          {
+            ". Nhưng chúng tôi muốn nhìn theo một cách khác. Chúng tôi không theo đuổi hình ảnh của người giỏi nhất. Chúng tôi theo đuổi phiên bản tốt hơn của chính mình hôm qua. GOAT thật sự không phải là ai đó đứng trên bạn, mà là người vẫn xuất hiện mỗi ngày và tốt hơn một chút."
+          }
+        </>
+      ),
     },
     rise: {
       title: "VẬY LÀM THẾ NÀO ĐỂ TRỞ THÀNH GOAT?",
       lead: "Tất cả nằm ở chữ RISE",
-      tagline: "REAL IMPROVEMENTS START EVERYDAY.",
+      tagline: "REAL IMPROVEMENTS START EVERYDAY",
       paragraph:
         "Bạn chỉ thật sự trở thành phiên bản tốt nhất khi mindset của bạn chấp nhận rằng mình phải tốt hơn version của ngày hôm qua. Không phải bằng một khoảnh khắc lớn, mà bằng những lựa chọn nhỏ được lặp lại mỗi ngày. Không cần là người giỏi nhất. Chỉ cần tốt hơn hôm qua",
     },

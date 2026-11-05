@@ -100,13 +100,13 @@ function AboutPage() {
         <section
           data-reveal
           aria-labelledby="about-rise"
-          className={sectionClass}
+          className={`@container ${sectionClass}`}
         >
           <h2 id="about-rise" className={headingClass}>
             {about.rise.title}
           </h2>
           <p className="text-sm text-muted-foreground">{about.rise.lead}</p>
-          <p className="mx-auto max-w-xl font-logo text-3xl leading-none font-semibold tracking-tight text-balance sm:text-5xl">
+          <p className="font-logo text-[min(5.5cqw,3rem)] leading-none font-semibold tracking-tight whitespace-nowrap">
             {about.rise.tagline}
           </p>
           <div className="grid grid-cols-3 items-start gap-2 pt-2 sm:gap-4 sm:pt-4">

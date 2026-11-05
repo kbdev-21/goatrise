@@ -184,31 +184,46 @@ export const en: Messages = {
     title: "ABOUT GOAT RISE",
     images: {
       founder: "Trần Gia Lập, CEO and founder of GOAT RISE",
-      cofounders: "The GOAT RISE co-founders, also known as the Goat Pen",
+      cofounders:
+        "The GOAT RISE co-founders, also known as Chuong De (Goat Barn)",
       movement:
         "GOAT RISE campaign featuring an athlete jumping against a blue sky",
       tennis: "GOAT RISE campaign featuring a tennis player serving",
       basketball: "GOAT RISE campaign featuring a basketball player dunking",
       labels: "GOAT RISE clothing labels bearing Made in Viet Nam",
     },
-    intro:
-      "GOAT RISE is a Vietnamese fashion brand founded in 2026. We stand for a simple mindset: real progress starts every day, and we want to share it through fashion.",
+    intro: (
+      <>
+        {
+          "GOAT RISE is a Vietnamese fashion brand founded in 2026. We stand for a simple mindset: "
+        }
+        <strong className="font-bold">real progress starts every day</strong>
+        {", and we want to share it through fashion."}
+      </>
+    ),
     founder: {
       role: "CEO & Founder",
       quote: "It's never over unless your mind says it's over.",
       name: "Trần Gia Lập",
       cofounders:
-        "The other co-founders, also known as the Goat Pen: simply because we were all born in the Year of the Goat.",
+        "The other co-founders, also known as Chuong De (Goat Barn), simply because we were all born in the Year of the Goat.",
     },
     goat: {
       title: "SO WHO IS THE REAL GOAT?",
-      paragraph:
-        "GOAT stands for Greatest Of All Time. But we see it a little differently. We aren't chasing the image of being the best. We're chasing a better version of who we were yesterday. The real GOAT isn't someone above you. It's the person who keeps showing up every day and getting a little better.",
+      paragraph: (
+        <>
+          {"GOAT stands for "}
+          <strong className="font-bold">Greatest Of All Time</strong>
+          {
+            ". But we see it a little differently. We aren't chasing the image of being the best. We're chasing a better version of who we were yesterday. The real GOAT isn't someone above you. It's the person who keeps showing up every day and getting a little better."
+          }
+        </>
+      ),
     },
     rise: {
       title: "SO HOW DO YOU BECOME A GOAT?",
       lead: "It all comes down to RISE",
-      tagline: "REAL IMPROVEMENTS START EVERYDAY.",
+      tagline: "REAL IMPROVEMENTS START EVERYDAY",
       paragraph:
         "You only become your best self when you embrace the mindset that you must be better than yesterday's version of you. Not through one big moment, but through small choices repeated every day. You don't have to be the best. Just better than yesterday.",
     },
